@@ -15,7 +15,8 @@ It is an installable Progressive Web App with two run modes:
 
 | Piece | Where | Updates automatically when you push to `main` |
 |---|---|---|
-| Web app (frontend) | **Vercel**: builds with `node scripts/build-www.mjs` and serves `www/` ([`vercel.json`](vercel.json)) | Yes (Vercel Git integration) |
+| Institution app (mobile / PWA): institutions submit applications, documents and FDRs | **Vercel**: builds with `node scripts/build-www.mjs` and serves `www/` ([`vercel.json`](vercel.json)) | Yes (Vercel Git integration) |
+| Staff portal (website): AICTE officers, administrators and bank officials | **Vercel**, second project with Root Directory `web-portal` ([web-portal/README.md](web-portal/README.md)) | Yes |
 | Database, auth, storage, functions (backend) | **Supabase** project `csnindvgpfphcstjcsag` (Mumbai) | Yes, for changes under `supabase/` ([GitHub Action](.github/workflows/supabase-deploy.yml)) |
 
 [`config.js`](config.js) already points at the Supabase project, so the deployed app runs in **Supabase mode**. The anon key is public by design; row-level security and the server functions protect the data.
@@ -36,6 +37,16 @@ It is an installable Progressive Web App with two run modes:
    select public.admin_invite_user('someone@gmail.com', '1-10928371');   -- institution PID; activates now or on first sign-in
    ```
    `msg2gmanikandan@gmail.com` is already approved for DITS Delhi (`1-10928371`).
+
+### Staff accounts (website)
+Staff sign in to the staff portal with Google, or with an email and password. To give someone access, approve their
+email with a role. If they have no account yet, it activates the first time they sign in:
+```sql
+select public.admin_invite_staff('officer@gmail.com', 'ADMIN', 'Full Name', 'Administrator');                 -- or 'REVIEWER'
+select public.admin_invite_staff('bank.officer@gmail.com', 'BANK_OFFICIAL', 'Full Name', 'Branch Manager', 'State Bank of India');
+```
+After that, an administrator can invite more people from **User Management** on the website. A password account
+for someone without Google can be created in Supabase under *Authentication → Users → Add user* (tick *Auto confirm*).
 
 Google refuses OAuth inside app WebViews, so in the **Android app** the Google button asks the user to sign in with email and password or an OTP instead. Google sign-in works on the web and installed-PWA versions.
 
@@ -194,13 +205,15 @@ These are clearly labelled in the app. AICTE Admin Portal screens are outside th
 
 ```bash
 npm install                  # dev tools only: PGlite, supabase-js, puppeteer-core (uses your installed Edge)
-npm run test:db              # 59 checks — runs all migrations + seed in embedded Postgres under RLS (incl. Google sign-in approval)
+npm run test:db              # 78 checks — all migrations + seed in embedded Postgres under RLS (incl. Google sign-in, staff portal roles)
 npm run test:ai              # 17 checks — AI document reader with a fake Claude client (no cost)
 npm run serve:demo           # (terminal 1) serves the app in demo mode (empty keys) for the browser tests, then:
 npm run test:e2e:demo        # full institution walkthrough in demo mode
 npm run test:e2e:onboarding  # layout at 320–430 px widths, slideshow motion, skip/next, legal links, fallbacks
 npm run mock:supabase        # (terminal 2) local Supabase stand-in running the real SQL — TEST ONLY
 npm run test:e2e:supabase    # app + supabase-js against that stand-in: auth, RLS, uploads, AI reading, validation, idempotency, workflow, expiry
+npm run web:test-server      # (terminal 3) staff portal on :3100 against the stand-in, then:
+npm run test:e2e:staff       # staff portal: sign-in rules, scrutiny, deficiency notice, override, final approval, FDR request, invites, bank lien
 node tests/e2e/hindi.e2e.cjs # Hindi coverage report + layout   (AI_DOWN=1 on the mock and the supabase test checks the AI-outage fallback)
 ```
 Set `EDGE_PATH` if Microsoft Edge is installed elsewhere. Screenshots are written to `tests/output/`.

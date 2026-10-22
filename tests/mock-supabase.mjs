@@ -46,6 +46,8 @@ await createUser('principal@dits-delhi.edu.in', 'Dits@2026');
 await createUser('director@bce-bangalore.edu.in', 'Bce@2026');
 await createUser('reviewer.mehta@aicte-india.org', 'Rev@2026');
 await createUser('admin.verma@aicte-india.org', 'Admin@2026');
+await db.exec(`select public.admin_invite_staff('fdr.officer@sbi.co.in', 'BANK_OFFICIAL', 'Shri Amitesh Kumar', 'Branch Manager', 'State Bank of India')`);
+await createUser('fdr.officer@sbi.co.in', 'Bank@2026');
 await db.exec(`
   select public.admin_link_user('principal@dits-delhi.edu.in', '1-10928371');
   select public.admin_link_user('director@bce-bangalore.edu.in', '1-14829104');
@@ -71,11 +73,51 @@ const send = (res, code, body, type = 'application/json') => {
 const readBody = req => new Promise(r => { const c = []; req.on('data', d => c.push(d)); req.on('end', () => r(Buffer.concat(c))); });
 const pgArg = v => v === null || v === undefined ? null : Array.isArray(v) && v.every(x => typeof x === 'string') ? `{${v.map(x => `"${x}"`).join(',')}}` : typeof v === 'object' ? JSON.stringify(v) : v;
 
-async function asUser(uid, fn) {
-  await db.query(`select set_config('request.jwt.claim.sub', $1, false)`, [uid || '']);
-  await db.exec(uid ? 'set role authenticated' : 'set role anon');
-  try { return await fn(); } finally { await db.exec('reset role'); }
+// One connection: serialise role switches so concurrent requests never run under each other's identity.
+let roleLock = Promise.resolve();
+function asUser(uid, fn) {
+  const run = roleLock.then(async () => {
+    await db.query(`select set_config('request.jwt.claim.sub', $1, false)`, [uid || '']);
+    await db.exec(uid ? 'set role authenticated' : 'set role anon');
+    try { return await fn(); } finally { await db.exec('reset role'); }
+  });
+  roleLock = run.catch(() => {});
+  return run;
 }
+// Relationships the staff portal embeds: one = many-to-one / one-to-one (object), many = one-to-many (array).
+const RELATIONS = {
+  applications: { institutions: ['one', 'institution_id', 'id'], application_documents: ['many', 'id', 'application_id'], findings: ['many', 'id', 'application_id'],
+    scrutiny: ['one', 'id', 'application_id'], compliance_responses: ['many', 'id', 'application_id'], status_history: ['many', 'id', 'application_id'] },
+  fdrs: { institutions: ['one', 'institution_id', 'id'], fdr_requests: ['many', 'id', 'fdr_id'] },
+  profiles: { institutions: ['one', 'institution_id', 'id'] },
+};
+const ident = s => { if (!/^\w+$/.test(s)) throw new Error(`bad identifier ${s}`); return `"${s}"`; };
+function restSelectSql(table, params) {
+  const select = params.get('select') || '*';
+  const parts = []; let depth = 0, cur = '';
+  for (const ch of select) { if (ch === '(') depth++; if (ch === ')') depth--; if (ch === ',' && depth === 0) { parts.push(cur.trim()); cur = ''; } else cur += ch; }
+  if (cur.trim()) parts.push(cur.trim());
+  const cols = [];
+  for (const part of parts) {
+    const m = /^(\w+)(?:!\w+)?\((.*)\)$/.exec(part);
+    if (!m) { cols.push(part === '*' ? `to_jsonb(t.*)` : `jsonb_build_object('${part}', t.${ident(part)})`); continue; }
+    const [kind, local, remote] = RELATIONS[table][m[1]];
+    const inner = m[2].trim() === '*' ? 'to_jsonb(e.*)' : `jsonb_build_object(${m[2].split(',').map(c => `'${c.trim()}', e.${ident(c.trim())}`).join(', ')})`;
+    cols.push(kind === 'one'
+      ? `jsonb_build_object('${m[1]}', (select ${inner} from public.${ident(m[1])} e where e.${ident(remote)} = t.${ident(local)} limit 1))`
+      : `jsonb_build_object('${m[1]}', coalesce((select jsonb_agg(${inner}) from public.${ident(m[1])} e where e.${ident(remote)} = t.${ident(local)}), '[]'::jsonb))`);
+  }
+  const where = [];
+  for (const [k, v] of params) {
+    if (['select', 'order', 'limit', 'offset'].includes(k)) continue;
+    const f = /^eq\.(.*)$/.exec(v);
+    if (f) where.push(`t.${ident(k)}::text = '${f[1].replace(/'/g, "''")}'`);
+  }
+  const order = (params.get('order') || '').split(',').filter(Boolean).map(o => { const [c, dir] = o.split('.'); return `t.${ident(c)} ${dir === 'desc' ? 'desc' : 'asc'}`; });
+  const limit = params.get('limit') ? ` limit ${parseInt(params.get('limit'), 10)}` : '';
+  return `select ${cols.join(' || ')} as j from public.${ident(table)} t${where.length ? ' where ' + where.join(' and ') : ''}${order.length ? ' order by ' + order.join(', ') : ''}${limit}`;
+}
+
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.png': 'image/png', '.webp': 'image/webp', '.webmanifest': 'application/manifest+json', '.json': 'application/json', '.pdf': 'application/pdf' };
 
 http.createServer(async (req, res) => {
@@ -115,6 +157,17 @@ http.createServer(async (req, res) => {
         const v = r.rows[0].r;
         return v === null || v === undefined ? send(res, 204) : send(res, 200, v);
       } catch (e) { return send(res, /permission denied/.test(e.message) ? 401 : 400, { code: e.code || 'P0001', message: e.message, details: e.detail || null, hint: null }); }
+    }
+    // ---- PostgREST table reads (staff web portal): select with one level of embeds, eq filters, order, limit.
+    //      Runs as the caller, so row-level security applies to the main table and every embed.
+    const tbl = /^\/rest\/v1\/(\w+)$/.exec(p);
+    if (tbl && req.method === 'GET') {
+      if (bearer && !uid) return send(res, 401, { code: 'PGRST301', message: 'JWT expired', details: null, hint: null });
+      const rows = await asUser(uid, () => db.query(restSelectSql(tbl[1], url.searchParams))).then(r => r.rows.map(x => x.j), e => { throw e; });
+      if (/vnd\.pgrst\.object/.test(req.headers.accept || '')) {
+        return rows.length === 1 ? send(res, 200, rows[0]) : send(res, 406, { code: 'PGRST116', message: 'JSON object requested, multiple (or no) rows returned', details: `${rows.length} rows`, hint: null });
+      }
+      return send(res, 200, rows);
     }
     // ---- Edge Function: analyze-document. Runs the REAL analyzeDocument()/crossCheck(); only the Claude call is faked:
     //      the fake "reads" the declared values back, unless the test PDF contains TAMPER_AMOUNT / OTHER_INSTITUTION markers.

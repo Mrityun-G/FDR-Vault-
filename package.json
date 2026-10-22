@@ -2,7 +2,7 @@
   "name": "aicte-institution-mobile",
   "version": "1.1.0",
   "private": true,
-  "description": "AICTE Intelligent Regulatory Validation Platform \u2014 Institution (Applicant) mobile portal (PWA) with Supabase backend",
+  "description": "AICTE Intelligent Regulatory Validation Platform — Institution (Applicant) mobile portal (PWA) with Supabase backend",
   "scripts": {
     "serve": "python -m http.server 8765",
     "serve:demo": "node tests/serve-demo.mjs",
@@ -15,7 +15,9 @@
     "test:ai": "node supabase/functions/analyze-document/extract.test.ts",
     "build:www": "node scripts/build-www.mjs",
     "android:sync": "node scripts/build-www.mjs && npx cap sync android",
-    "android:apk": "npm run android:sync && cd android && gradlew.bat assembleDebug"
+    "android:apk": "npm run android:sync && cd android && gradlew.bat assembleDebug",
+    "web:test-server": "node tests/web-test-server.mjs",
+    "test:e2e:staff": "node tests/e2e/staff-portal.e2e.cjs"
   },
   "devDependencies": {
     "@capacitor/cli": "^6.2.2",
