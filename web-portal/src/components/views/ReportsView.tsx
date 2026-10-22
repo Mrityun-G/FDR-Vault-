@@ -79,7 +79,7 @@ export const ReportsView: React.FC = () => {
           </div>
           <button
             onClick={handleExportCsv}
-            className="px-4 py-2 bg-[#1a56db] hover:bg-blue-700 text-white font-bold text-xs rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
+            className="px-4 py-2 bg-brand hover:brightness-110 text-white font-bold text-xs rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
           >
             <Download className="w-4 h-4" />
             Export Executive CSV Report

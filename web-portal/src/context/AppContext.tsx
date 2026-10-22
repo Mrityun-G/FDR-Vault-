@@ -39,6 +39,7 @@ interface AppContextType {
   // Server data
   loading: boolean;
   dataError: string | null;
+  lastSyncedAt: Date | null;
   refresh: () => Promise<void>;
   applications: InstitutionApplication[];
   selectedAppId: string | null;
@@ -64,6 +65,13 @@ interface AppContextType {
   setGlobalSearchQuery: (query: string) => void;
   isDisclaimerOpen: boolean;
   setIsDisclaimerOpen: (open: boolean) => void;
+  /** Status filter the Scrutiny Workbench opens with ('ALL' or an application status). */
+  scrutinyFilter: string;
+  setScrutinyFilter: (status: string) => void;
+  /** Jump to the Scrutiny Workbench with one application selected. */
+  openApplication: (appId: string) => void;
+  /** Jump to the Scrutiny Workbench filtered to one status. */
+  openQueue: (status: string) => void;
 
   // Actions (server functions; each reloads data on success and throws ApiError on failure)
   submitScrutinyDecision: (
@@ -108,6 +116,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [activeSidebarTab, setActiveSidebarTab] = useState<SidebarTab>('dashboard');
   const [globalSearchQuery, setGlobalSearchQuery] = useState('');
   const [isDisclaimerOpen, setIsDisclaimerOpen] = useState(false);
+  const [scrutinyFilter, setScrutinyFilter] = useState('ALL');
+  const [lastSyncedAt, setLastSyncedAt] = useState<Date | null>(null);
 
   const userRef = useRef<User>(GUEST);
   const entering = useRef(false);
@@ -130,6 +140,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setFdrRecords(fdrs);
       setAuditLogs(audit);
       setDataError(null);
+      setLastSyncedAt(new Date());
     } catch (e) {
       const err = toApiError(e);
       setDataError(err.message);
@@ -239,6 +250,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     await supabase.auth.signOut();
   };
 
+  /* ---------------------------------------------------------------- navigation helpers */
+
+  const openApplication = (appId: string) => {
+    setSelectedAppId(appId);
+    setScrutinyFilter('ALL');
+    setActiveSidebarTab('verification_center');
+  };
+  const openQueue = (status: string) => {
+    setScrutinyFilter(status);
+    setActiveSidebarTab('verification_center');
+  };
+
   /* ---------------------------------------------------------------- derived state */
 
   const activeApp = applications.find(a => a.id === selectedAppId) || applications[0] || null;
@@ -312,6 +335,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         logout,
         loading,
         dataError,
+        lastSyncedAt,
         refresh,
         applications,
         selectedAppId,
@@ -333,6 +357,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setGlobalSearchQuery,
         isDisclaimerOpen,
         setIsDisclaimerOpen,
+        scrutinyFilter,
+        setScrutinyFilter,
+        openApplication,
+        openQueue,
         submitScrutinyDecision,
         startScrutiny,
         finalDecision,

@@ -54,9 +54,11 @@ export const AppHeader: React.FC<Props> = ({ onToggleMobileMenu }) => {
   };
 
   return (
-    <header className="sticky top-0 z-30 bg-white border-b border-slate-200 shadow-2xs">
-      {/* Tricolor India Stripe */}
-      <div className="h-1 w-full bg-linear-to-r from-[#FF9933] via-white to-[#138808]" />
+    <header className="sticky top-0 z-30 glass border-b border-slate-200/70 shadow-2xs">
+      {/* Tricolor India Stripe with a light sweep */}
+      <div className="relative h-1 w-full bg-linear-to-r from-[#FF9933] via-white to-[#138808] overflow-hidden">
+        <div className="absolute inset-0 shimmer" />
+      </div>
 
       <div className="px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
         {/* Left: Mobile Toggle & Global Search */}
@@ -79,7 +81,7 @@ export const AppHeader: React.FC<Props> = ({ onToggleMobileMenu }) => {
               value={globalSearchQuery}
               onChange={e => setGlobalSearchQuery(e.target.value)}
               placeholder="Search institutions, PID, FDR certificate number, bank..."
-              className="w-full pl-9 pr-8 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg text-slate-900 placeholder:text-slate-400 focus:outline-hidden focus:bg-white focus:border-[#1a56db] focus:ring-1 focus:ring-[#1a56db]/30 transition-all"
+              className="w-full pl-9 pr-8 py-2 text-xs bg-white/70 border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-hidden focus:bg-white focus:border-violet-400 focus:ring-4 focus:ring-violet-500/15 transition-all"
             />
             {globalSearchQuery && (
               <button

@@ -167,7 +167,7 @@ export const UserManagementView: React.FC = () => {
           </button>
           {isAdmin && (
             <>
-              <button onClick={() => openInvite('STAFF')} className="px-3 py-2 text-xs font-bold bg-[#1a56db] text-white rounded-lg flex items-center gap-1.5 cursor-pointer">
+              <button onClick={() => openInvite('STAFF')} className="px-3 py-2 text-xs font-bold bg-brand text-white rounded-lg flex items-center gap-1.5 cursor-pointer">
                 <UserPlus className="w-3.5 h-3.5" /> Invite staff
               </button>
               <button onClick={() => openInvite('INSTITUTION')} className="px-3 py-2 text-xs font-bold border border-[#1a56db] text-[#1a56db] bg-white rounded-lg flex items-center gap-1.5 cursor-pointer">
@@ -442,7 +442,7 @@ export const UserManagementView: React.FC = () => {
                 <button type="button" onClick={() => setInviteOpen(null)} className="px-4 py-2 border border-slate-300 rounded-md font-semibold">
                   Cancel
                 </button>
-                <button type="submit" disabled={busy} className="px-4 py-2 bg-[#1a56db] text-white font-bold rounded-md disabled:opacity-60">
+                <button type="submit" disabled={busy} className="px-4 py-2 bg-brand text-white font-bold rounded-md disabled:opacity-60">
                   {busy ? 'Saving…' : 'Approve'}
                 </button>
               </div>

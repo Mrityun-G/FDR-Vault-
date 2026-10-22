@@ -4,6 +4,7 @@
  */
 
 import React from 'react';
+import { motion } from 'motion/react';
 import { useApp } from '../../context/AppContext';
 import { SidebarTab } from '../../types';
 import { AicteLogo } from '../AicteLogo';
@@ -79,13 +80,15 @@ export const AppSidebar: React.FC<Props> = ({ isMobileOpen, setIsMobileOpen }) =
 
       {/* Sidebar Container */}
       <aside
-        className={`fixed top-0 bottom-0 left-0 z-50 w-64 bg-[#0a192f] border-r border-[#152e50] text-slate-300 flex flex-col justify-between transition-transform duration-200 ease-in-out md:translate-x-0 ${
+        className={`fixed top-0 bottom-0 left-0 z-50 w-64 bg-linear-to-b from-[#0b1033] via-[#16124a] to-[#0b1b3a] border-r border-white/5 text-slate-300 flex flex-col justify-between transition-transform duration-200 ease-in-out md:translate-x-0 overflow-hidden ${
           isMobileOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div>
+        <div className="pointer-events-none absolute -top-20 -left-20 w-60 h-60 rounded-full bg-indigo-500/25 blur-3xl animate-float-slow" aria-hidden="true" />
+        <div className="pointer-events-none absolute bottom-10 -right-24 w-60 h-60 rounded-full bg-fuchsia-500/15 blur-3xl animate-float" aria-hidden="true" />
+        <div className="relative">
           {/* Sidebar Branding Header */}
-          <div className="p-4 border-b border-[#152e50] bg-[#0c1f38]">
+          <div className="p-4 border-b border-white/10 bg-white/[0.03]">
             <div className="flex items-center gap-3">
               <AicteLogo size={40} className="w-10 h-10 shrink-0" />
               <div>
@@ -95,7 +98,7 @@ export const AppSidebar: React.FC<Props> = ({ isMobileOpen, setIsMobileOpen }) =
                     GOVT OF INDIA
                   </span>
                 </div>
-                <p className="text-[11px] font-medium text-slate-400 truncate leading-tight mt-0.5">
+                <p className="text-[11px] font-semibold truncate leading-tight mt-0.5 text-gradient-light">
                   Security Deposit / FDR Portal
                 </p>
               </div>
@@ -114,21 +117,26 @@ export const AppSidebar: React.FC<Props> = ({ isMobileOpen, setIsMobileOpen }) =
                 <button
                   key={item.id}
                   onClick={() => handleNavClick(item.id)}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                    isActive
-                      ? 'bg-[#1a56db] text-white shadow-md shadow-blue-900/40 font-bold'
-                      : 'text-slate-300 hover:bg-[#122847] hover:text-white'
+                  className={`relative w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer ${
+                    isActive ? 'text-white font-bold' : 'text-slate-300 hover:bg-white/5 hover:text-white'
                   }`}
                 >
-                  <div className="flex items-center gap-3 truncate">
+                  {isActive && (
+                    <motion.span
+                      layoutId="nav-active"
+                      className="absolute inset-0 rounded-xl bg-linear-to-r from-indigo-500 via-violet-500 to-fuchsia-500 shadow-lg shadow-violet-900/40"
+                      transition={{ type: 'spring', stiffness: 380, damping: 32 }}
+                    />
+                  )}
+                  <div className="relative flex items-center gap-3 truncate">
                     <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : 'text-slate-400'}`} />
                     <span className="truncate">{item.label}</span>
                   </div>
 
                   {item.badge !== undefined && item.badge > 0 && (
                     <span
-                      className={`px-1.5 py-0.2 text-[10px] font-bold rounded-full ${
-                        isActive ? 'bg-white text-[#1a56db]' : 'bg-rose-500 text-white'
+                      className={`relative px-1.5 py-0.2 text-[10px] font-bold rounded-full ${
+                        isActive ? 'bg-white text-violet-700' : 'bg-rose-500 text-white animate-pulse'
                       }`}
                     >
                       {item.badge}
@@ -141,8 +149,8 @@ export const AppSidebar: React.FC<Props> = ({ isMobileOpen, setIsMobileOpen }) =
         </div>
 
         {/* Footer: User Profile & Role Info */}
-        <div className="p-3 border-t border-[#152e50] bg-[#0c1f38] text-xs">
-          <div className="p-2.5 rounded-lg bg-[#0a192f] border border-[#1b3a63] flex items-center justify-between">
+        <div className="relative p-3 border-t border-white/10 bg-white/[0.03] text-xs">
+          <div className="p-2.5 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between">
             <div className="flex items-center gap-2.5 truncate">
               <div
                 className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs text-white shrink-0 ${
@@ -173,7 +181,7 @@ export const AppSidebar: React.FC<Props> = ({ isMobileOpen, setIsMobileOpen }) =
 
           </div>
 
-          <div className="flex items-center justify-between mt-2 pt-2 border-t border-[#152e50] px-1 text-[11px] text-slate-400">
+          <div className="flex items-center justify-between mt-2 pt-2 border-t border-white/10 px-1 text-[11px] text-slate-400">
             <span>Engine: v2026.1</span>
             <button
               onClick={() => void logout()}

@@ -125,7 +125,7 @@ const one = async q => (await sql(q))[0] || {};
     // Staff invitation
     await click('User Management');
     await waitText('Stakeholder Accounts');
-    ok((await text()).includes('Dr. Sunil K. Mehta'), 'user directory lists real accounts');
+    ok(await waitText('Dr. Sunil K. Mehta').catch(() => false), 'user directory lists real accounts');
     await click('Invite staff');
     await fill('form input[type=email]', 'new.reviewer@aicte-india.org');
     const inputs = await page.$$('form input:not([type=email])');

@@ -3,13 +3,106 @@
 @theme {
   --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  --animate-gradient: gradient-shift 12s ease infinite;
+  --animate-marquee: marquee 45s linear infinite;
+  --animate-float: float 9s ease-in-out infinite;
+  --animate-float-slow: float 14s ease-in-out infinite;
+  --animate-shimmer: shimmer 2.8s linear infinite;
+  --animate-pulse-ring: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+
+  @keyframes gradient-shift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+  @keyframes float {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(30px, -24px) scale(1.06); }
+    66% { transform: translate(-22px, 18px) scale(0.96); }
+  }
+  @keyframes shimmer {
+    from { background-position: -200% 0; }
+    to { background-position: 200% 0; }
+  }
+  @keyframes pulse-ring {
+    0% { box-shadow: 0 0 0 0 rgb(16 185 129 / 0.55); }
+    80%, 100% { box-shadow: 0 0 0 8px rgb(16 185 129 / 0); }
+  }
 }
 
 @layer base {
   body {
     font-family: var(--font-sans);
-    background-color: #f8fafc;
+    background-color: #f5f7fc;
     color: #0f172a;
+  }
+}
+
+@layer utilities {
+  /* Moving multi-colour background (hero banners, primary buttons, login backdrop). */
+  .bg-aurora {
+    background-image: linear-gradient(120deg, #1e1b4b, #3730a3, #6d28d9, #0e7490, #1d4ed8, #1e1b4b);
+    background-size: 300% 300%;
+    animation: var(--animate-gradient);
+  }
+  .bg-brand {
+    background-image: linear-gradient(110deg, #4f46e5, #7c3aed 45%, #0891b2);
+    background-size: 200% 200%;
+    animation: var(--animate-gradient);
+  }
+  /* Animated gradient text. */
+  .text-gradient {
+    background-image: linear-gradient(90deg, #4f46e5, #c026d3, #0891b2, #4f46e5);
+    background-size: 300% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: var(--animate-gradient);
+  }
+  .text-gradient-light {
+    background-image: linear-gradient(90deg, #fde68a, #f9a8d4, #a5f3fc, #fde68a);
+    background-size: 300% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: var(--animate-gradient);
+  }
+  /* Sweep of light across an element (tricolour strip, skeletons). */
+  .shimmer {
+    background-image: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.65), transparent);
+    background-size: 200% 100%;
+    animation: var(--animate-shimmer);
+  }
+  .glass {
+    background-color: rgb(255 255 255 / 0.72);
+    -webkit-backdrop-filter: blur(14px) saturate(1.4);
+    backdrop-filter: blur(14px) saturate(1.4);
+  }
+  /* Edge fade for the scrolling ticker. */
+  .mask-fade-x {
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+  }
+  .card-hover {
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  }
+  .card-hover:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 14px 30px -12px rgb(79 70 229 / 0.28);
+  }
+}
+
+/* Respect the operating-system "reduce motion" setting everywhere. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
   }
 }
 
@@ -19,12 +112,16 @@
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: #eef1f8;
 }
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #c7cde0;
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
+}
+
+@media print {
+  .no-print { display: none !important; }
 }

@@ -64,7 +64,7 @@ export const NotificationsView: React.FC = () => {
             <button
               onClick={() => setFilterType('ALL')}
               className={`px-3 py-1.5 text-xs font-bold rounded-lg cursor-pointer ${
-                filterType === 'ALL' ? 'bg-[#1a56db] text-white' : 'text-slate-600 hover:bg-slate-100'
+                filterType === 'ALL' ? 'bg-brand text-white' : 'text-slate-600 hover:bg-slate-100'
               }`}
             >
               All Alerts ({notifications.length})
@@ -72,7 +72,7 @@ export const NotificationsView: React.FC = () => {
             <button
               onClick={() => setFilterType('UNREAD')}
               className={`px-3 py-1.5 text-xs font-bold rounded-lg cursor-pointer ${
-                filterType === 'UNREAD' ? 'bg-[#1a56db] text-white' : 'text-slate-600 hover:bg-slate-100'
+                filterType === 'UNREAD' ? 'bg-brand text-white' : 'text-slate-600 hover:bg-slate-100'
               }`}
             >
               Unread ({notifications.filter(n => !n.isRead).length})
@@ -80,7 +80,7 @@ export const NotificationsView: React.FC = () => {
             <button
               onClick={() => setFilterType('CRITICAL')}
               className={`px-3 py-1.5 text-xs font-bold rounded-lg cursor-pointer ${
-                filterType === 'CRITICAL' ? 'bg-[#1a56db] text-white' : 'text-slate-600 hover:bg-slate-100'
+                filterType === 'CRITICAL' ? 'bg-brand text-white' : 'text-slate-600 hover:bg-slate-100'
               }`}
             >
               Critical Expiries

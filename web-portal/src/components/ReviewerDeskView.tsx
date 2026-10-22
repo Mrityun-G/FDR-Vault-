@@ -3,7 +3,7 @@
  * Reviewer Scrutiny Workbench & Split-View Document Inspector
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useApp } from '../context/AppContext';
 import {
   FileSearch,
@@ -42,7 +42,8 @@ export const ReviewerDeskView: React.FC = () => {
     submitScrutinyDecision,
     finalDecision,
     authorityAdapters,
-    pingAuthorityAdapter
+    pingAuthorityAdapter,
+    scrutinyFilter
   } = useApp();
   const isAdmin = currentUser.role === 'ADMIN';
 
@@ -59,7 +60,8 @@ export const ReviewerDeskView: React.FC = () => {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRegion, setSelectedRegion] = useState('ALL');
-  const [selectedStatus, setSelectedStatus] = useState('ALL');
+  const [selectedStatus, setSelectedStatus] = useState(scrutinyFilter);
+  useEffect(() => setSelectedStatus(scrutinyFilter), [scrutinyFilter]);
   const [activeDocIndex, setActiveDocIndex] = useState(0);
 
   // Override Modal state

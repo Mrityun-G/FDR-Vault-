@@ -8,6 +8,8 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { INSTITUTION_APP_URL } from '../lib/supabase';
 import { AicteLogo } from './AicteLogo';
+import { motion } from 'motion/react';
+import { RotatingText, Ticker } from './fx';
 import {
   ShieldCheck,
   Building2,
@@ -97,12 +99,19 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#edf3f8] flex flex-col justify-between font-sans">
+    <div className="relative min-h-screen bg-aurora flex flex-col justify-between font-sans overflow-hidden">
+      {/* Floating colour light */}
+      <div className="pointer-events-none absolute -top-32 -left-24 w-[28rem] h-[28rem] rounded-full bg-fuchsia-500/35 blur-3xl animate-float" aria-hidden="true" />
+      <div className="pointer-events-none absolute top-1/3 -right-32 w-[32rem] h-[32rem] rounded-full bg-cyan-400/30 blur-3xl animate-float-slow" aria-hidden="true" />
+      <div className="pointer-events-none absolute -bottom-40 left-1/4 w-[26rem] h-[26rem] rounded-full bg-amber-300/20 blur-3xl animate-float" aria-hidden="true" />
+
       {/* Top Tricolor Strip */}
-      <div className="h-1.5 w-full bg-linear-to-r from-[#FF9933] via-white to-[#138808]" />
+      <div className="relative h-1.5 w-full bg-linear-to-r from-[#FF9933] via-white to-[#138808] overflow-hidden">
+        <div className="absolute inset-0 shimmer" />
+      </div>
 
       {/* Header matching government portal style */}
-      <header className="bg-white border-b border-blue-100/80 shadow-xs">
+      <header className="relative glass border-b border-white/40 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-3.5">
@@ -124,8 +133,28 @@ export const LoginPage: React.FC = () => {
       </header>
 
       {/* Main Login Section */}
-      <main className="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-8">
-        <div className="w-full max-w-4xl bg-white rounded-2xl shadow-xl shadow-blue-900/5 border border-blue-100 overflow-hidden">
+      <main className="relative flex-1 flex flex-col items-center justify-center gap-6 p-4 sm:p-6 lg:p-8">
+        <motion.div
+          initial={{ opacity: 0, y: -12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          className="text-center text-white max-w-2xl"
+        >
+          <p className="text-[11px] font-extrabold uppercase tracking-[0.3em] text-indigo-100">Regulation, made</p>
+          <h2 className="mt-1 text-3xl sm:text-4xl font-extrabold tracking-tight">
+            <RotatingText items={['Transparent.', 'Secure.', 'Accountable.', 'Paperless.', 'Real-time.']} className="text-gradient-light pb-1" />
+          </h2>
+          <p className="mt-2 text-sm text-indigo-100">
+            Institutions file from the mobile app. Officers, administrators and banks act here, on the same live record.
+          </p>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 24, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.7, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+          className="w-full max-w-4xl bg-white rounded-3xl shadow-2xl shadow-indigo-950/40 ring-1 ring-white/40 overflow-hidden"
+        >
           <div className="grid grid-cols-1 md:grid-cols-12 min-h-[540px]">
             {/* LEFT SECTION — Login Form (7 cols) */}
             <div className="md:col-span-7 p-6 sm:p-10 flex flex-col justify-between border-b md:border-b-0 md:border-r border-slate-100">
@@ -133,7 +162,7 @@ export const LoginPage: React.FC = () => {
                 <div className="flex items-center gap-3 mb-6">
                   <AicteLogo size={42} className="w-10 h-10" />
                   <div>
-                    <h3 className="text-sm font-extrabold text-[#0a2540] tracking-tight">Staff Sign-in</h3>
+                    <h3 className="text-base font-extrabold tracking-tight text-gradient">Staff Sign-in</h3>
                     <p className="text-xs text-slate-500 font-medium">AICTE scrutiny officers, administrators and bank officials</p>
                   </div>
                 </div>
@@ -148,11 +177,13 @@ export const LoginPage: React.FC = () => {
                   </div>
                 )}
 
-                <button
+                <motion.button
                   type="button"
+                  whileHover={{ y: -1 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={handleGoogle}
                   disabled={isGoogleLoading || isLoading}
-                  className="w-full py-2.5 px-4 bg-white border border-slate-300 hover:bg-slate-50 text-slate-800 font-bold text-xs rounded-lg transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+                  className="w-full py-2.5 px-4 bg-white border border-slate-300 hover:border-indigo-300 hover:shadow-md text-slate-800 font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
                 >
                   {isGoogleLoading ? (
                     <div className="w-3.5 h-3.5 border-2 border-slate-300 border-t-slate-700 rounded-full animate-spin" />
@@ -160,7 +191,7 @@ export const LoginPage: React.FC = () => {
                     <GoogleIcon />
                   )}
                   <span>{isGoogleLoading ? 'Redirecting to Google…' : 'Continue with Google'}</span>
-                </button>
+                </motion.button>
 
                 <div className="flex items-center gap-3 my-5 text-[11px] font-bold text-slate-400">
                   <div className="h-px flex-1 bg-slate-200" />
@@ -246,7 +277,7 @@ export const LoginPage: React.FC = () => {
                     <button
                       type="submit"
                       disabled={isLoading || isGoogleLoading}
-                      className="w-full py-2.5 px-4 bg-[#0f4299] hover:bg-[#0c367d] active:bg-[#092a63] text-white font-bold text-xs rounded-lg shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+                      className="w-full py-2.5 px-4 bg-brand hover:brightness-110 active:brightness-95 text-white font-bold text-xs rounded-xl shadow-lg shadow-indigo-500/30 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
                     >
                       {isLoading ? (
                         <>
@@ -267,7 +298,7 @@ export const LoginPage: React.FC = () => {
             </div>
 
             {/* RIGHT SECTION — Who signs in where (5 cols) */}
-            <div className="md:col-span-5 bg-[#f8fbfe] p-6 sm:p-8 flex flex-col justify-between">
+            <div className="md:col-span-5 bg-linear-to-br from-indigo-50/80 via-white to-fuchsia-50/60 p-6 sm:p-8 flex flex-col justify-between">
               <div>
                 <div className="mb-4">
                   <h3 className="text-sm font-extrabold text-[#0a2540] tracking-tight">Who signs in here</h3>
@@ -275,9 +306,9 @@ export const LoginPage: React.FC = () => {
                 </div>
 
                 <div className="space-y-3">
-                  <div className="p-4 rounded-xl border bg-white border-slate-200/90">
+                  <div className="p-4 rounded-2xl border bg-white border-slate-200/90 card-hover">
                     <div className="flex items-start gap-3">
-                      <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 bg-[#0f4299] text-white">
+                      <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-linear-to-br from-indigo-500 to-violet-600 text-white shadow-md">
                         <ShieldCheck className="w-5 h-5" />
                       </div>
                       <div>
@@ -290,9 +321,9 @@ export const LoginPage: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="p-4 rounded-xl border bg-white border-slate-200/90">
+                  <div className="p-4 rounded-2xl border bg-white border-slate-200/90 card-hover">
                     <div className="flex items-start gap-3">
-                      <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 bg-[#0f4299] text-white">
+                      <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-linear-to-br from-indigo-500 to-violet-600 text-white shadow-md">
                         <Landmark className="w-5 h-5" />
                       </div>
                       <div>
@@ -306,10 +337,10 @@ export const LoginPage: React.FC = () => {
 
                   <a
                     href={INSTITUTION_APP_URL}
-                    className="block p-4 rounded-xl border bg-amber-50/60 border-amber-200 hover:bg-amber-50 transition-colors"
+                    className="block p-4 rounded-2xl border bg-amber-50/60 border-amber-200 hover:bg-amber-50 card-hover"
                   >
                     <div className="flex items-start gap-3">
-                      <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 bg-amber-600 text-white">
+                      <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-linear-to-br from-amber-500 to-orange-600 text-white shadow-md">
                         <Building2 className="w-5 h-5" />
                       </div>
                       <div>
@@ -337,10 +368,22 @@ export const LoginPage: React.FC = () => {
               </div>
             </div>
           </div>
-        </div>
+        </motion.div>
+
+        <Ticker
+          label="PORTAL"
+          className="w-full max-w-4xl"
+          items={[
+            { id: 'a', text: 'Live scrutiny queue of applications submitted from the institution app', tone: 'info' },
+            { id: 'b', text: 'Deficiency notices reach institutions instantly as app notifications', tone: 'warning' },
+            { id: 'c', text: 'Bank officials endorse the AICTE joint lien with their CBS reference', tone: 'success' },
+            { id: 'd', text: 'Every decision is recorded in a tamper-evident, hash-chained audit trail', tone: 'info' },
+            { id: 'e', text: 'Duplicate documents across institutions are caught by SHA-256 fingerprints', tone: 'critical' }
+          ]}
+        />
       </main>
 
-      <footer className="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500">
+      <footer className="relative glass border-t border-white/40 py-4 text-center text-xs text-slate-600">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px]">
           <p>© 2026 All India Council for Technical Education (AICTE), New Delhi. All Rights Reserved.</p>
           <div className="flex items-center gap-3 text-slate-600 font-medium">

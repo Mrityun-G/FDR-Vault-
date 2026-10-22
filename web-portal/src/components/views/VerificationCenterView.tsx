@@ -35,7 +35,7 @@ export const VerificationCenterView: React.FC = () => {
                 key={t.id}
                 onClick={() => setActiveSubTab(t.id)}
                 className={`px-4 py-2 font-bold rounded-lg transition-all flex items-center gap-2 cursor-pointer ${
-                  activeSubTab === t.id ? 'bg-[#1a56db] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'
+                  activeSubTab === t.id ? 'bg-brand text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'
                 }`}
               >
                 <Icon className="w-4 h-4" />

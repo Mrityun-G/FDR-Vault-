@@ -4,6 +4,7 @@
  */
 
 import React, { useState } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
 import { useApp } from '../../context/AppContext';
 import { AppSidebar } from './AppSidebar';
 import { AppHeader } from './AppHeader';
@@ -54,12 +55,17 @@ export const AppShell: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row antialiased text-slate-800 font-sans selection:bg-blue-100 selection:text-blue-900">
+    <div className="min-h-screen bg-[#f5f7fc] flex flex-col md:flex-row antialiased text-slate-800 font-sans selection:bg-indigo-100 selection:text-indigo-900">
+      {/* Soft colour wash behind every page */}
+      <div className="pointer-events-none fixed inset-0 -z-0 md:pl-64" aria-hidden="true">
+        <div className="absolute -top-40 right-0 w-[38rem] h-[38rem] rounded-full bg-indigo-200/30 blur-3xl animate-float-slow" />
+        <div className="absolute bottom-0 left-1/3 w-[30rem] h-[30rem] rounded-full bg-fuchsia-200/25 blur-3xl animate-float" />
+      </div>
       {/* Fixed Left Sidebar */}
       <AppSidebar isMobileOpen={isMobileOpen} setIsMobileOpen={setIsMobileOpen} />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 md:pl-64">
+      <div className="relative flex-1 flex flex-col min-w-0 md:pl-64">
         {/* Top White Header */}
         <AppHeader onToggleMobileMenu={() => setIsMobileOpen(prev => !prev)} />
 
@@ -101,11 +107,22 @@ export const AppShell: React.FC = () => {
 
         {/* Dynamic Tab Page Content */}
         <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
-          {renderActiveView()}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeSidebarTab}
+              // Opacity and position only: a lingering filter/transform would trap the pages' fixed-position dialogs.
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0, transitionEnd: { transform: 'none' } }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+            >
+              {renderActiveView()}
+            </motion.div>
+          </AnimatePresence>
         </main>
 
         {/* Footer */}
-        <footer className="mt-auto border-t border-slate-200 bg-white py-4 px-6 text-center text-xs text-slate-500">
+        <footer className="mt-auto border-t border-slate-200/70 glass py-4 px-6 text-center text-xs text-slate-500">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-2 max-w-7xl mx-auto">
             <div>
               &copy; {new Date().getFullYear()} All India Council for Technical Education (AICTE), Ministry of Education, Govt. of India.
