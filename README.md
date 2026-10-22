@@ -13,6 +13,19 @@ It is an installable Progressive Web App with two run modes:
 
 ## 0. Deployment (live prototype)
 
+**Live links**
+
+| Who | Link | Sign-in |
+|---|---|---|
+| Institution (user) | https://fdr-vault.vercel.app | Institution accounts (Google or email/password) |
+| Officer portal | https://fdr-vault-sbf7.vercel.app/officer | Scrutiny officers (`REVIEWER`) and bank officials (`BANK_OFFICIAL`) |
+| Admin console | https://fdr-vault-sbf7.vercel.app/admin | Administrators (`ADMIN`) |
+
+All three use the same Google sign-in and the same Supabase project. Each account has exactly one role, and each portal
+admits only its own roles. Staff accounts can be Google accounts or email/password users created in Supabase
+(*Authentication → Users → Add user*, tick *Auto confirm*; the email does not need a real inbox). Give each account its
+role with `admin_invite_staff` (see *Staff accounts* below).
+
 | Piece | Where | Updates automatically when you push to `main` |
 |---|---|---|
 | Institution app (mobile / PWA): institutions submit applications, documents and FDRs | **Vercel**: builds with `node scripts/build-www.mjs` and serves `www/` ([`vercel.json`](vercel.json)) | Yes (Vercel Git integration) |
