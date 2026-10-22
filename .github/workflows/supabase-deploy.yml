@@ -2,7 +2,7 @@
 # Repository secrets needed (GitHub → Settings → Secrets and variables → Actions):
 #   SUPABASE_ACCESS_TOKEN  – https://supabase.com/dashboard/account/tokens
 #   SUPABASE_DB_PASSWORD   – Supabase → Project Settings → Database (reset it there if unknown)
-#   SUPABASE_PROJECT_ID    – vugrvrphquujgzttqtun
+#   SUPABASE_PROJECT_ID    – csnindvgpfphcstjcsag
 name: Deploy backend (Supabase)
 
 on:
@@ -27,8 +27,8 @@ jobs:
           version: latest
       - name: Link project
         run: supabase link --project-ref "$PROJECT_ID" --password "$SUPABASE_DB_PASSWORD"
-      - name: Drop migration-history rows from the initial dashboard setup (no-op once removed)
-        run: supabase migration repair --status reverted 20261022144459 20261022144602 20261022144733 --password "$SUPABASE_DB_PASSWORD" || true
+      - name: Record the migrations that were run by hand in the SQL Editor (no-op once recorded)
+        run: supabase migration repair --status applied 20261022000000 20261022000001 --password "$SUPABASE_DB_PASSWORD"
       - name: Apply new migrations
         run: supabase db push --password "$SUPABASE_DB_PASSWORD"
       - name: Deploy Edge Functions

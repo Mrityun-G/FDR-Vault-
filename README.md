@@ -16,18 +16,18 @@ It is an installable Progressive Web App with two run modes:
 | Piece | Where | Updates automatically when you push to `main` |
 |---|---|---|
 | Web app (frontend) | **Vercel**: builds with `node scripts/build-www.mjs` and serves `www/` ([`vercel.json`](vercel.json)) | Yes (Vercel Git integration) |
-| Database, auth, storage, functions (backend) | **Supabase** project `vugrvrphquujgzttqtun` (Mumbai) | Yes, for changes under `supabase/` ([GitHub Action](.github/workflows/supabase-deploy.yml)) |
+| Database, auth, storage, functions (backend) | **Supabase** project `csnindvgpfphcstjcsag` (Mumbai) | Yes, for changes under `supabase/` ([GitHub Action](.github/workflows/supabase-deploy.yml)) |
 
 [`config.js`](config.js) already points at the Supabase project, so the deployed app runs in **Supabase mode**. The anon key is public by design; row-level security and the server functions protect the data.
 
 **One-time setup for the backend auto-deploy.** In GitHub → *Settings → Secrets and variables → Actions*, add:
 `SUPABASE_ACCESS_TOKEN` (from supabase.com/dashboard/account/tokens), `SUPABASE_DB_PASSWORD` (Project Settings → Database) and
-`SUPABASE_PROJECT_ID` = `vugrvrphquujgzttqtun`. To change the database, add a **new** file in `supabase/migrations/`; never edit an applied one.
+`SUPABASE_PROJECT_ID` = `csnindvgpfphcstjcsag`. To change the database, add a **new** file in `supabase/migrations/`; never edit an applied one.
 
 ### Google sign-in
 1. In [Google Cloud Console](https://console.cloud.google.com/apis/credentials), go to *Create credentials → OAuth client ID → Web application*.
    - **Authorized JavaScript origins:** your Vercel URL (and `http://localhost:8765` for local testing)
-   - **Authorized redirect URI:** `https://vugrvrphquujgzttqtun.supabase.co/auth/v1/callback`
+   - **Authorized redirect URI:** `https://csnindvgpfphcstjcsag.supabase.co/auth/v1/callback`
    - Set up the OAuth consent screen (External). While it is in *Testing*, add the Google accounts that should sign in as test users.
 2. In Supabase, go to *Authentication → Sign In / Providers → Google*. Turn it on and paste the Client ID and Client Secret.
 3. In Supabase, go to *Authentication → URL Configuration*. Set **Site URL** to the Vercel URL, and add the Vercel URL and `http://localhost:8765` to **Redirect URLs**.
@@ -41,7 +41,8 @@ Google refuses OAuth inside app WebViews, so in the **Android app** the Google b
 
 ## 1. Connect Supabase (≈10 minutes)
 
-> Already done for the deployed prototype (schema, demo data, storage bucket, daily FDR reminders, `analyze-document` function).
+> Already done for the deployed prototype (schema, demo data, storage bucket, daily FDR reminders). The `analyze-document`
+> function deploys through the GitHub Action once its secrets are set (step 7 covers the API key).
 > These steps are for setting up a fresh project.
 
 1. Create a project at [supabase.com](https://supabase.com) (region: Mumbai `ap-south-1`).
