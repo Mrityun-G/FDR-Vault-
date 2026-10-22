@@ -5,6 +5,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
+import { PORTAL } from './portal';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://csnindvgpfphcstjcsag.supabase.co';
 const SUPABASE_ANON_KEY =
@@ -17,5 +18,5 @@ export const DOCUMENTS_BUCKET = 'institution-documents';
 export const INSTITUTION_APP_URL = import.meta.env.VITE_INSTITUTION_APP_URL || 'https://fdr-vault.vercel.app';
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storageKey: 'aicte-staff-auth' }
+  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storageKey: `aicte-staff-auth-${PORTAL?.id || 'root'}` }
 });

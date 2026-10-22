@@ -9,6 +9,8 @@ import { LoginPage } from './components/LoginPage';
 import { AppShell } from './components/common/AppShell';
 import { supabase } from './lib/supabase';
 import { toApiError } from './services/backend';
+import { PORTAL } from './lib/portal';
+import { PortalChooser } from './components/PortalChooser';
 
 /** Shown after following a password-reset email: Supabase signs the user in with a recovery session. */
 const PasswordRecoveryModal: React.FC = () => {
@@ -87,6 +89,9 @@ const MainRouter: React.FC = () => {
 };
 
 export default function App() {
+  // Root address: choose between the Officer portal, the Admin console and the institution app.
+  if (!PORTAL) return <PortalChooser />;
+  document.title = `AICTE ${PORTAL.name} · FDR & Approvals`;
   return (
     <AppProvider>
       <MainRouter />

@@ -48,10 +48,10 @@ const one = async q => (await sql(q))[0] || {};
     await page.keyboard.press('Backspace');
     await page.type(selector, value);
   };
-  const login = async (email, password) => {
-    await page.goto(WEB, { waitUntil: 'networkidle0' });
+  const login = async (email, password, portal = '/officer') => {
+    await page.goto(WEB + portal, { waitUntil: 'networkidle0' });
     await page.evaluate(() => localStorage.clear());
-    await page.goto(WEB, { waitUntil: 'networkidle0' });
+    await page.goto(WEB + portal, { waitUntil: 'networkidle0' });
     await fill('#staff-email', email);
     await fill('#staff-password', password);
     await page.click('button[type=submit]');
@@ -59,18 +59,29 @@ const one = async q => (await sql(q))[0] || {};
   };
   const logout = async () => {
     await page.evaluate(() => [...document.querySelectorAll('button')].find(b => /^\s*Logout\s*$/.test(b.textContent))?.click());
-    await waitText('Staff Sign-in');
+    await waitText('Sign-in');
   };
 
   try {
-    console.log('Access control');
+    console.log('Separate portals');
+    await page.goto(WEB, { waitUntil: 'networkidle0' });
+    const chooser = await text();
+    ok(['Officer Portal', 'Admin Console', 'Institution App'].every(t => chooser.includes(t)), 'root page links to the Officer portal, Admin console and institution app');
+    await page.goto(WEB + '/admin', { waitUntil: 'networkidle0' });
+    ok((await text()).includes('Admin Console Sign-in'), '/admin opens the Admin Console');
+    await login('admin.verma@aicte-india.org', 'Admin@2026', '/officer');
+    ok((await text()).includes('signs in at the Admin Console'), 'administrator is sent from the Officer portal to the Admin Console');
+    await login('reviewer.mehta@aicte-india.org', 'Rev@2026', '/admin');
+    ok((await text()).includes('signs in at the Officer Portal'), 'scrutiny officer is sent from the Admin Console to the Officer portal');
+
+    console.log('\nAccess control');
     await login('principal@dits-delhi.edu.in', 'Dits@2026');
     ok((await text()).includes('institution account'), 'institution account is refused on the staff portal (points to the mobile app)');
-    await login('admin.verma@aicte-india.org', 'wrong-password');
+    await login('admin.verma@aicte-india.org', 'wrong-password', '/admin');
     ok((await text()).includes('Invalid email or password'), 'wrong password shows a clear error');
 
     console.log('\nAdministrator');
-    await login('admin.verma@aicte-india.org', 'Admin@2026');
+    await login('admin.verma@aicte-india.org', 'Admin@2026', '/admin');
     await waitText('Shri R. C. Verma');
     ok(true, 'admin signs in with email and password');
     await page.screenshot({ path: path.join(OUT, '1-dashboard.png') });

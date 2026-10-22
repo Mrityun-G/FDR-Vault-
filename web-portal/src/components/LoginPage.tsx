@@ -7,6 +7,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { INSTITUTION_APP_URL } from '../lib/supabase';
+import { PORTAL, PORTALS, portalUrl } from '../lib/portal';
 import { AicteLogo } from './AicteLogo';
 import { motion } from 'motion/react';
 import { RotatingText, Ticker } from './fx';
@@ -23,7 +24,8 @@ import {
   X,
   ExternalLink,
   Info,
-  Smartphone
+  Smartphone,
+  Crown
 } from 'lucide-react';
 
 const GoogleIcon = () => (
@@ -50,6 +52,9 @@ export const LoginPage: React.FC = () => {
   const [resetState, setResetState] = useState<{ busy?: boolean; sent?: boolean; error?: string }>({});
 
   const shownError = errorMessage || authError;
+  const portal = PORTAL ?? PORTALS.officer;
+  const isAdminPortal = portal.id === 'admin';
+  const other = isAdminPortal ? PORTALS.officer : PORTALS.admin;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -124,7 +129,7 @@ export const LoginPage: React.FC = () => {
             </div>
             <div className="sm:text-right border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-100">
               <span className="text-[11px] uppercase tracking-wider font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 inline-block mb-1">
-                Officer &amp; Bank Portal
+                {portal.badge}
               </span>
               <h2 className="text-base sm:text-lg font-extrabold text-[#0a2540] tracking-tight">Security Deposit / FDR Management Portal</h2>
             </div>
@@ -162,8 +167,10 @@ export const LoginPage: React.FC = () => {
                 <div className="flex items-center gap-3 mb-6">
                   <AicteLogo size={42} className="w-10 h-10" />
                   <div>
-                    <h3 className="text-base font-extrabold tracking-tight text-gradient">Staff Sign-in</h3>
-                    <p className="text-xs text-slate-500 font-medium">AICTE scrutiny officers, administrators and bank officials</p>
+                    <h3 className={`text-base font-extrabold tracking-tight bg-linear-to-r ${portal.accent} bg-clip-text text-transparent`}>
+                      {portal.name} Sign-in
+                    </h3>
+                    <p className="text-xs text-slate-500 font-medium">{portal.tagline}</p>
                   </div>
                 </div>
 
@@ -277,7 +284,7 @@ export const LoginPage: React.FC = () => {
                     <button
                       type="submit"
                       disabled={isLoading || isGoogleLoading}
-                      className="w-full py-2.5 px-4 bg-brand hover:brightness-110 active:brightness-95 text-white font-bold text-xs rounded-xl shadow-lg shadow-indigo-500/30 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+                      className={`w-full py-2.5 px-4 bg-linear-to-r ${portal.accent} hover:brightness-110 active:brightness-95 text-white font-bold text-xs rounded-xl shadow-lg shadow-indigo-500/30 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60`}
                     >
                       {isLoading ? (
                         <>
@@ -306,34 +313,40 @@ export const LoginPage: React.FC = () => {
                 </div>
 
                 <div className="space-y-3">
-                  <div className="p-4 rounded-2xl border bg-white border-slate-200/90 card-hover">
-                    <div className="flex items-start gap-3">
-                      <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-linear-to-br from-indigo-500 to-violet-600 text-white shadow-md">
-                        <ShieldCheck className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <h4 className="text-xs font-bold text-[#0a2540]">AICTE Official</h4>
-                        <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">
-                          Scrutiny officers review applications and issue deficiency notices. Administrators grant final approval, decide FDR
-                          requests and manage accounts.
-                        </p>
+                  {(isAdminPortal
+                    ? [{ icon: Crown, title: 'AICTE Administrator', text: 'Grant final approval and issue EoA letters, decide FDR renewal, replacement and release requests, invite staff and approve institution accounts.' }]
+                    : [
+                        { icon: ShieldCheck, title: 'Scrutiny Officer', text: 'Review applications and uploaded documents, override findings with a reason, issue deficiency notices and recommend approval.' },
+                        { icon: Landmark, title: 'Bank Official', text: 'Verify Fixed Deposit Receipts held with your bank and endorse the AICTE joint lien.' }
+                      ]
+                  ).map(c => (
+                    <div key={c.title} className="p-4 rounded-2xl border bg-white border-slate-200/90 card-hover">
+                      <div className="flex items-start gap-3">
+                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-linear-to-br ${portal.accent} text-white shadow-md`}>
+                          <c.icon className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-bold text-[#0a2540]">{c.title}</h4>
+                          <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">{c.text}</p>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  ))}
 
-                  <div className="p-4 rounded-2xl border bg-white border-slate-200/90 card-hover">
+                  <a href={portalUrl(other)} className="block p-4 rounded-2xl border bg-white border-slate-200/90 card-hover">
                     <div className="flex items-start gap-3">
-                      <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-linear-to-br from-indigo-500 to-violet-600 text-white shadow-md">
-                        <Landmark className="w-5 h-5" />
+                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-linear-to-br ${other.accent} text-white shadow-md`}>
+                        {isAdminPortal ? <ShieldCheck className="w-5 h-5" /> : <Crown className="w-5 h-5" />}
                       </div>
                       <div>
-                        <h4 className="text-xs font-bold text-[#0a2540]">Bank Official</h4>
-                        <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">
-                          Verify Fixed Deposit Receipts held with your bank and endorse the AICTE joint lien.
-                        </p>
+                        <h4 className="text-xs font-bold text-[#0a2540] flex items-center gap-1">
+                          {isAdminPortal ? 'Officer or bank official? Open the Officer Portal' : 'Administrator? Open the Admin Console'}
+                          <ExternalLink className="w-3 h-3" />
+                        </h4>
+                        <p className="text-[11px] text-slate-500 mt-0.5 font-mono">{other.path}</p>
                       </div>
                     </div>
-                  </div>
+                  </a>
 
                   <a
                     href={INSTITUTION_APP_URL}

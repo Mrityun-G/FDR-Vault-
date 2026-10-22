@@ -5,6 +5,7 @@
 
 import React from 'react';
 import { motion } from 'motion/react';
+import { PORTAL } from '../../lib/portal';
 import { useApp } from '../../context/AppContext';
 import { SidebarTab } from '../../types';
 import { AicteLogo } from '../AicteLogo';
@@ -99,7 +100,7 @@ export const AppSidebar: React.FC<Props> = ({ isMobileOpen, setIsMobileOpen }) =
                   </span>
                 </div>
                 <p className="text-[11px] font-semibold truncate leading-tight mt-0.5 text-gradient-light">
-                  Security Deposit / FDR Portal
+                  {PORTAL ? `${PORTAL.name} · FDR & Approvals` : 'Security Deposit / FDR Portal'}
                 </p>
               </div>
             </div>
@@ -124,7 +125,7 @@ export const AppSidebar: React.FC<Props> = ({ isMobileOpen, setIsMobileOpen }) =
                   {isActive && (
                     <motion.span
                       layoutId="nav-active"
-                      className="absolute inset-0 rounded-xl bg-linear-to-r from-indigo-500 via-violet-500 to-fuchsia-500 shadow-lg shadow-violet-900/40"
+                      className={`absolute inset-0 rounded-xl bg-linear-to-r ${PORTAL?.accent || 'from-indigo-500 via-violet-500 to-fuchsia-500'} shadow-lg shadow-violet-900/40`}
                       transition={{ type: 'spring', stiffness: 380, damping: 32 }}
                     />
                   )}

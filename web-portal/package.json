@@ -5,7 +5,7 @@
   "type": "module",
   "description": "AICTE staff portal (scrutiny officers, administrators, bank officials) on the shared Supabase backend",
   "scripts": {
-    "dev": "vite --port=3000 --host=0.0.0.0",
+    "dev": "vite --port=5180 --strictPort --host=0.0.0.0",
     "build": "vite build",
     "preview": "vite preview",
     "lint": "tsc --noEmit"

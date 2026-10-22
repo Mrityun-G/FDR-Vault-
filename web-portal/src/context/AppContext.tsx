@@ -20,6 +20,7 @@ import {
 } from '../types';
 import { INITIAL_RULES, INITIAL_AUTHORITY_ADAPTERS } from '../data/mockData';
 import { supabase } from '../lib/supabase';
+import { PORTAL, portalForRole, portalUrl } from '../lib/portal';
 import { actions, buildNotifications, loadApplications, loadAudit, loadFdrs, loadProfile, toApiError } from '../services/backend';
 
 const GUEST: User = { id: '', name: 'Guest', email: '', role: 'REVIEWER', designation: '' };
@@ -162,6 +163,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     entering.current = true;
     try {
       const user = await loadProfile();
+      // Each portal admits only its own roles; point the person to the right address.
+      if (PORTAL && !PORTAL.roles.includes(user.role)) {
+        const home = portalForRole(user.role);
+        throw toApiError({
+          message: `ROLE_MISMATCH: This ${user.role === 'ADMIN' ? 'administrator' : user.role === 'BANK_OFFICIAL' ? 'bank official' : 'scrutiny officer'} account signs in at the ${home?.name || 'staff portal'}${home ? `: ${portalUrl(home)}` : ''}.`
+        });
+      }
       userRef.current = user;
       setCurrentUser(user);
       setIsAuthenticated(true);

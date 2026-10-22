@@ -16,7 +16,7 @@ It is an installable Progressive Web App with two run modes:
 | Piece | Where | Updates automatically when you push to `main` |
 |---|---|---|
 | Institution app (mobile / PWA): institutions submit applications, documents and FDRs | **Vercel**: builds with `node scripts/build-www.mjs` and serves `www/` ([`vercel.json`](vercel.json)) | Yes (Vercel Git integration) |
-| Staff portal (website): AICTE officers, administrators and bank officials | **Vercel**, second project with Root Directory `web-portal` ([web-portal/README.md](web-portal/README.md)) | Yes |
+| Staff site: **Officer portal** at `/officer` (scrutiny officers, bank officials) and **Admin console** at `/admin` (administrators) | **Vercel**, second project with Root Directory `web-portal` ([web-portal/README.md](web-portal/README.md)) | Yes |
 | Database, auth, storage, functions (backend) | **Supabase** project `csnindvgpfphcstjcsag` (Mumbai) | Yes, for changes under `supabase/` ([GitHub Action](.github/workflows/supabase-deploy.yml)) |
 
 [`config.js`](config.js) already points at the Supabase project, so the deployed app runs in **Supabase mode**. The anon key is public by design; row-level security and the server functions protect the data.
