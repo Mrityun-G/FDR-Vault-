@@ -1,0 +1,208 @@
+// End-to-end walkthrough of the Institution mobile portal in Edge (390x844 mobile emulation).
+const puppeteer = require('puppeteer-core');
+const fs = require('fs');
+const path = require('path');
+
+const OUT = path.join(__dirname, '..', 'output', 'e2e');
+fs.mkdirSync(OUT, { recursive: true });
+const BASE = (process.env.APP_URL || 'http://127.0.0.1:8765') + '/index.html';
+const errors = [];
+let step = 0;
+
+(async () => {
+  const browser = await puppeteer.launch({
+    executablePath: process.env.EDGE_PATH || 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',
+    headless: 'new', args: ['--disable-gpu'],
+  });
+  const page = await browser.newPage();
+  await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 1, isMobile: true, hasTouch: true });
+  page.on('pageerror', e => errors.push('pageerror: ' + e.message));
+  page.on('console', m => { if (m.type() === 'error') errors.push('console: ' + m.text()); });
+  const cdp = await page.createCDPSession();
+  await cdp.send('Browser.setDownloadBehavior', { behavior: 'allow', downloadPath: OUT });
+
+  const shot = async name => page.screenshot({ path: path.join(OUT, `${String(++step).padStart(2, '0')}-${name}.png`) });
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  const click = async sel => { await page.waitForSelector(sel, { visible: true, timeout: 8000 }); await page.click(sel); await wait(250); };
+  const clickText = async (text, scope = '') => {
+    const ok = await page.evaluate((t, s) => {
+      const els = [...document.querySelectorAll(`${s} button, ${s} label, ${s} .li, ${s} .type-card`)];
+      const el = els.find(e => e.offsetParent !== null && e.textContent.replace(/\s+/g, ' ').trim().includes(t));
+      if (el) { el.scrollIntoView({ block: 'center' }); el.click(); return true; } return false;
+    }, text, scope);
+    if (!ok) throw new Error(`clickText not found: ${text}`);
+    await wait(300);
+  };
+  const text = () => page.evaluate(() => document.body.innerText);
+  const expect = async (needle, label) => {
+    const t = await text();
+    if (!t.includes(needle)) throw new Error(`EXPECT FAILED [${label}]: "${needle}" not on screen`);
+    console.log('  ✓', label);
+  };
+  const type = async (sel, val) => { await page.waitForSelector(sel); await page.$eval(sel, el => { el.value = ''; }); await page.type(sel, val); };
+
+  await page.goto(BASE, { waitUntil: 'networkidle0' });
+  await page.evaluate(() => localStorage.clear());
+  await page.reload({ waitUntil: 'networkidle0' });
+  await shot('splash');
+
+  console.log('Login & RBAC');
+  await clickText('Login', '.splash-actions');
+  await type('input[name=email]', 'admin.verma@aicte-india.org');
+  await type('input[name=password]', 'Admin@2026');
+  await clickText('Login', 'form');
+  await wait(900);
+  await expect('Access Denied', 'non-institution account refused');
+  await shot('login-denied');
+  await clickText('Institution (DITS Delhi)');
+  await clickText('Login', 'form');
+  await wait(1000);
+  await expect('I Understand', 'prototype notice shown');
+  await shot('notice');
+  await clickText('I Understand');
+  await expect('Delhi Institute of Technology & Science', 'dashboard loaded');
+  await shot('dashboard');
+
+  console.log('New application wizard');
+  await clickText('New Application');
+  await clickText('Approval Application');
+  await clickText('Next');
+  await type('input[name="prog.programme"]', 'M.Tech Cyber-Physical Systems');
+  await type('input[name="prog.programmeIntake"]', '30');
+  await type('input[name="prog.professors"]', '10');
+  await wait(200);
+  await expect('Professors (min 13', 'live norm check reacts');
+  await shot('wizard-norms');
+  await type('input[name="prog.professors"]', '14');
+  await clickText('Next');
+  await expect('FDR is valid and within the required amount', 'FDR on record validated');
+  await clickText('Enter New FDR');
+  await type('input[name="fdr.fdrNumber"]', 'HDFC-FDR-55555-2026');
+  await page.select('select[name="fdr.bankName"]', 'HDFC Bank Ltd');
+  await type('input[name="fdr.branchName"]', 'Connaught Place, New Delhi');
+  await type('input[name="fdr.ifscCode"]', 'SBIN0001234');
+  await type('input[name="fdr.amountRs"]', '5000000');
+  await page.$eval('input[name="fdr.issueDate"]', el => { el.value = '2026-10-01'; el.dispatchEvent(new Event('change', { bubbles: true })); });
+  await wait(200);
+  await expect('does not meet AICTE Chapter VI norms', 'under-funded FDR flagged');
+  await shot('wizard-fdr-bad');
+  await type('input[name="fdr.ifscCode"]', 'HDFC0000043');
+  await type('input[name="fdr.amountRs"]', '10000000');
+  await wait(200);
+  await expect('FDR is valid and within the required amount', 'corrected FDR validates');
+  const mat = await page.$eval('input[name="fdr.maturityDate"]', el => el.value);
+  if (mat !== '2036-09-30') throw new Error('auto maturity wrong: ' + mat);
+  console.log('  ✓ maturity auto-set to', mat);
+  await clickText('Next');
+
+  console.log('Document upload with real SHA-256');
+  const pdf = path.join(OUT, 'test-deed.pdf');
+  fs.writeFileSync(pdf, '%PDF-1.4\n1 0 obj<</Type /Catalog /Pages 2 0 R>>endobj\n2 0 obj<</Type /Pages /Kids [3 0 R 4 0 R] /Count 2>>endobj\n3 0 obj<</Type /Page /Parent 2 0 R>>endobj\n4 0 obj<</Type /Page /Parent 2 0 R>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n');
+  const expectedHash = require('crypto').createHash('sha256').update(fs.readFileSync(pdf)).digest('hex');
+  const input = await page.$('input[type=file][data-doc="LAND_TITLE"]');
+  await input.uploadFile(pdf);
+  await wait(1200);
+  await expect('test-deed.pdf', 'file uploaded');
+  await expect('2 pg', 'PDF page count detected');
+  const shown = await page.evaluate(() => document.querySelector('.up.done .mono').textContent);
+  if (!shown.includes(expectedHash.slice(0, 10))) throw new Error('hash mismatch: ' + shown + ' vs ' + expectedHash);
+  console.log('  ✓ SHA-256 matches Node crypto:', expectedHash.slice(0, 16));
+  await clickText('Attach sample set');
+  await expect('7/7 mandatory', 'all mandatory attached');
+  await shot('wizard-docs');
+  await clickText('Validate');
+  await wait(5500);
+  await expect('Cross-Check Results', 'AI validation completed');
+  await expect('Awaiting bank official endorsement', 'new FDR lien pending noted');
+  await shot('ai-results');
+  await clickText('Continue');
+  await expect('Review Application', 'review screen');
+  await page.click('input[name=declared]');
+  await wait(300);
+  await clickText('Sign & Submit');
+  await expect('Aadhaar', 'e-sign sheet');
+  await type('#aadhaar4', '1234');
+  await page.click('#esConsent');
+  await clickText('Send OTP');
+  const otp = await page.evaluate(() => document.querySelector('.sheet .banner b.mono').textContent);
+  await type('#esOtp', otp);
+  await shot('esign');
+  await clickText('Sign & Submit', '.sheet');
+  await wait(800);
+  await expect('Application Submitted Successfully', 'submitted');
+  const appNo = await page.evaluate(() => [...document.querySelectorAll('div')].map(d => d.textContent).find(t => /^APP-\d{4}-NEW-\d{4}$/.test(t.trim())));
+  console.log('  ✓ reference', appNo);
+  await shot('submitted');
+  await clickText('Download Acknowledgement');
+  await wait(1500);
+  const ack = fs.readdirSync(OUT).find(f => f.endsWith('-Acknowledgement.html'));
+  if (!ack) throw new Error('acknowledgement not downloaded');
+  console.log('  ✓ downloaded', ack);
+  await clickText('View Application');
+  await expect('Submitted', 'detail shows Submitted');
+  await clickText('Findings');
+  await expect('RULE-FDR-CORPUS-07', 'findings listed');
+  await shot('app-findings');
+
+  console.log('FDR renewal & release');
+  await click('[data-tab=fdrs]');
+  await expect('HDFC-FDR-55555-2026', 'new FDR listed under verification');
+  await clickText('SBI-FDR-41207-2016');
+  await clickText('Process Renewal / Replacement');
+  await shot('fdr-renew');
+  await clickText('Submit Statutory Renewal');
+  await wait(600);
+  await expect('Renewal request pending', 'renewal is a pending request (needs bank + AICTE approval)');
+  await expect('Expiring Soon', 'deposit unchanged until approved');
+  await click('[data-tab=fdrs]');
+  await clickText('PNB-FDR-30115-2016');
+  await clickText('Initiate Release Request');
+  await page.$eval('textarea[name=reason]', el => { el.value = 'Completion of mandatory 10-year lock-in period with zero student liabilities.'; });
+  await clickText('Submit Discharge Application');
+  await expect('Certification is required', 'release needs certification');
+  await page.click('input[name=certify]');
+  await clickText('Submit Discharge Application');
+  await wait(600);
+  await expect('Release Pending Bureau Approval', 'release pending');
+  await shot('fdr-release');
+
+  console.log('Alerts, compliance, persona switch, deficiency response');
+  await click('[data-tab=alerts]');
+  await clickText('Mark all read');
+  await expect('Unread (0)', 'all read');
+  await click('[data-tab=profile]');
+  await clickText('Switch Institution');
+  await clickText('Bangalore College of Engineering');
+  await expect('Bangalore College of Engineering', 'switched to BCE');
+  await click('[data-tab=apps]');
+  await clickText('APP-2026-INTAKE-4491');
+  await expect('Action Required', 'deficiency banner');
+  await clickText('Submit Response');
+  await page.$$eval('#respForm textarea', els => els.forEach((e, k) => { e.value = `Recruitment completed for point ${k + 1}; minutes attached.`; }));
+  await page.click('input[name=certify]');
+  await clickText('Submit', '.footer-bar');
+  await wait(600);
+  await expect('Compliance response submitted', 'response recorded');
+  await expect('Under Scrutiny', 'status back to scrutiny');
+  await shot('bce-response');
+
+  console.log('Tickets, password, logout');
+  await click('[data-tab=profile]');
+  await clickText('Grievance');
+  await clickText('Raise New Ticket');
+  await type('input[name=subject]', 'FDR lien endorsement delay');
+  await type('textarea[name=desc]', 'Bank has not endorsed the lien after 10 days.');
+  await clickText('Submit Ticket');
+  await expect('TKT-', 'ticket raised');
+  await page.goBack(); await wait(400);
+  await clickText('Logout');
+  await clickText('Logout', '.sheet');
+  if (!(await page.evaluate(() => !!document.querySelector('form[data-form=login]')))) throw new Error('logout did not return to Login');
+  console.log('  ✓ logged out to Login (onboarding remembered)');
+  await page.reload({ waitUntil: 'networkidle0' });
+  if (!(await page.evaluate(() => !!document.querySelector('form[data-form=login]')))) throw new Error('session survived logout');
+  console.log('  ✓ session stays cleared after reload');
+
+  console.log('\nERRORS:', errors.length ? errors : 'none');
+  await browser.close();
+})().catch(async e => { console.error('FAILED:', e.message); console.log('ERRORS:', errors); process.exit(1); });

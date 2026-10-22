@@ -1,0 +1,33 @@
+{
+  "name": "aicte-institution-mobile",
+  "version": "1.1.0",
+  "private": true,
+  "description": "AICTE Intelligent Regulatory Validation Platform \u2014 Institution (Applicant) mobile portal (PWA) with Supabase backend",
+  "scripts": {
+    "serve": "python -m http.server 8765",
+    "serve:demo": "node tests/serve-demo.mjs",
+    "seed:generate": "node supabase/scripts/generate-seed.mjs",
+    "test:db": "node supabase/tests/backend.test.mjs",
+    "mock:supabase": "node tests/mock-supabase.mjs",
+    "test:e2e:demo": "node tests/e2e/demo.e2e.cjs",
+    "test:e2e:onboarding": "node tests/e2e/onboarding.e2e.cjs",
+    "test:e2e:supabase": "node tests/e2e/supabase.e2e.cjs",
+    "test:ai": "node supabase/functions/analyze-document/extract.test.ts",
+    "build:www": "node scripts/build-www.mjs",
+    "android:sync": "node scripts/build-www.mjs && npx cap sync android",
+    "android:apk": "npm run android:sync && cd android && gradlew.bat assembleDebug"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.2.2",
+    "@electric-sql/pglite": "0.2.17",
+    "@supabase/supabase-js": "2.45.4",
+    "puppeteer-core": "23.11.1"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.2.2",
+    "@capacitor/core": "^6.2.2",
+    "@capacitor/filesystem": "^6.0.4",
+    "@capacitor/share": "^6.0.4"
+  },
+  "type": "module"
+}

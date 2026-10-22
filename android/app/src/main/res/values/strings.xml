@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">AICTE Portal</string>
+    <string name="title_activity_main">AICTE Portal</string>
+    <string name="package_name">com.fdrportal.aicteinstitution</string>
+    <string name="custom_url_scheme">com.fdrportal.aicteinstitution</string>
+</resources>

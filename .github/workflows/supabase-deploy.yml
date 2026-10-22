@@ -1,0 +1,35 @@
+# Deploys the backend to Supabase whenever database or Edge Function code changes on main.
+# Repository secrets needed (GitHub → Settings → Secrets and variables → Actions):
+#   SUPABASE_ACCESS_TOKEN  – https://supabase.com/dashboard/account/tokens
+#   SUPABASE_DB_PASSWORD   – Supabase → Project Settings → Database (reset it there if unknown)
+#   SUPABASE_PROJECT_ID    – vugrvrphquujgzttqtun
+name: Deploy backend (Supabase)
+
+on:
+  push:
+    branches: [main]
+    paths: ['supabase/**', '.github/workflows/supabase-deploy.yml']
+  workflow_dispatch:
+
+concurrency: supabase-deploy
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Link project
+        run: supabase link --project-ref "$PROJECT_ID" --password "$SUPABASE_DB_PASSWORD"
+      - name: Drop migration-history rows from the initial dashboard setup (no-op once removed)
+        run: supabase migration repair --status reverted 20261022144459 20261022144602 20261022144733 --password "$SUPABASE_DB_PASSWORD" || true
+      - name: Apply new migrations
+        run: supabase db push --password "$SUPABASE_DB_PASSWORD"
+      - name: Deploy Edge Functions
+        run: supabase functions deploy analyze-document --project-ref "$PROJECT_ID" --use-api

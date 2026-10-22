@@ -1,0 +1,21 @@
+node_modules/
+tests/output/
+tests/*.log
+dist/
+www/
+.env
+.env.*
+supabase/.temp/
+.vercel/
+
+# Android build output (the project itself is committed)
+android/.gradle/
+android/.idea/
+android/build/
+android/app/build/
+android/capacitor-cordova-android-plugins/build/
+android/local.properties
+*.apk
+*.aab
+*.keystore
+*.jks
