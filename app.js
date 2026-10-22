@@ -263,16 +263,55 @@ window.addEventListener('popstate', () => {
 });
 
 function render(resetScroll) {
+  clearFx();
   let r = topRoute();
   if (!me() && !PUBLIC.includes(r.name)) { UI.stack = [{ name: isOnboarded() ? 'login' : 'splash', params: {} }]; r = topRoute(); }
   if (!V[r.name]) { UI.stack = [{ name: 'dashboard', params: {} }]; r = topRoute(); }
   const prev = $('.content');
   const keep = !resetScroll && prev ? prev.scrollTop : 0;
   const v = V[r.name](r.params || {});
+  // Entrance animation only when the screen changes, not when live data re-renders the same screen.
+  const key = `${r.name}|${JSON.stringify(r.params || {})}`;
+  $('#view').classList.toggle('enter', key !== UI.screenKey && !reducedMotion());
+  UI.screenKey = key;
   $('#view').innerHTML = shell(v);
   const c = $('.content');
   if (c) c.scrollTop = keep;
   v.after && v.after();
+}
+
+/* ---------- motion helpers (timers are cleared on every render) ---------- */
+function clearFx() { (UI.fx || []).forEach(t => { clearInterval(t); cancelAnimationFrame(t); }); UI.fx = []; }
+function rotateText(el, items, every = 3200) {
+  if (!el || items.length < 2 || reducedMotion()) return;
+  let k = 0;
+  UI.fx.push(setInterval(() => {
+    k = (k + 1) % items.length;
+    el.classList.remove('in');
+    el.textContent = I18N.tr(items[k]);
+    void el.offsetWidth;
+    el.classList.add('in');
+  }, every));
+}
+// Counts [data-count] numbers up from zero when a screen opens; the final text is the server value.
+function countUp(root) {
+  if (reducedMotion() || !$('#view').classList.contains('enter')) return;
+  $$('[data-count]', root).forEach(el => {
+    const target = +el.dataset.count, final = el.textContent, fmt = el.dataset.fmt;
+    if (!(target > 0)) return;
+    const t0 = performance.now(), dur = 900;
+    const step = t => {
+      const p = Math.min(1, (t - t0) / dur), v = target * (1 - Math.pow(1 - p, 3));
+      el.textContent = p >= 1 ? final : fmt === 'cr' ? crLabel(v) : String(Math.round(v));
+      if (p < 1) UI.fx.push(requestAnimationFrame(step));
+    };
+    UI.fx.push(requestAnimationFrame(step));
+  });
+}
+function ticker(items) {
+  if (!items.length) return '';
+  const row = hidden => items.map(t => `<button class="ticker-item" style="--dot:${t.dot}" ${t.attrs} ${hidden ? 'aria-hidden="true" tabindex="-1"' : ''}>${esc(t.text)}</button>`).join('');
+  return `<div class="ticker"><span class="ticker-label"><i></i>LIVE</span><div class="ticker-viewport"><div class="ticker-track" translate="no">${row(false)}${row(true)}</div></div></div>`;
 }
 
 function shell(v) {
@@ -890,12 +929,37 @@ V.dashboard = () => {
   const corpus = live.reduce((s, f) => s + f.amountLakhs, 0);
   const primary = [...live].sort((a, b) => b.amountLakhs - a.amountLakhs)[0];
   const sc = s => live.filter(f => fdrStatus(f) === s).length;
-  const tile = (lbl, n, icon, tone, filter) => `<button class="tile" data-act="appsFilter" data-v="${filter}"><span class="tile-ico tone-${tone}">${ic(icon, 20)}</span><span><span class="num">${n}</span><span class="lbl">${lbl}</span></span></button>`;
+  const tile = (lbl, n, icon, tone, filter) => `<button class="tile" data-act="appsFilter" data-v="${filter}"><span class="tile-ico solid-${{ blue: 'blue', amber: 'amber', red: 'red', green: 'green' }[tone]}">${ic(icon, 20)}</span><span><span class="num" data-count="${n}">${n}</span><span class="lbl">${lbl}</span></span></button>`;
   const acts = myAudit().slice(0, 4);
+  const notifs = myNotifs(), unread = notifs.filter(n => !n.isRead).length;
+  const next = live.filter(f => daysUntil(f.maturityDate) > 0).sort((a, b) => a.maturityDate.localeCompare(b.maturityDate))[0];
+  const facts = [
+    `${crLabel(corpus)} secured under AICTE joint lien`,
+    `${cnt(['SUBMITTED', 'UNDER_SCRUTINY'])} application(s) under review`,
+    cnt(['DEFICIENCIES_NOTED']) ? `${cnt(['DEFICIENCIES_NOTED'])} clarification(s) required` : null,
+    `${unread} unread alert(s)`,
+    next ? `Next maturity: ${fmtDate(next.maturityDate)}` : null,
+  ].filter(Boolean);
+  const DOT = { CRITICAL: '#fb7185', WARNING: '#fbbf24', SUCCESS: '#34d399', INFO: '#38bdf8' };
+  const tickerItems = [
+    ...notifs.slice(0, 5).map(n => ({ text: `${n.title} — ${n.message}`, dot: DOT[n.type] || DOT.INFO, attrs: `data-act="openNotif" data-id="${esc(n.id)}"` })),
+    ...myAudit().slice(0, 5).map(a => ({ text: `${a.action.replace(/_/g, ' ')} · ${a.actorName} · ${fmtDT(a.timestamp)}`, dot: '#a78bfa', attrs: 'data-go="activity"' })),
+  ];
   return {
     header: 'brand', tab: 'dashboard',
-    body: `<div class="card inst-card"><div class="inst-ico">${ic('landmark', 28)}</div><div class="grow"><div class="h2">${esc(i.name)}</div>
-        <div class="small muted">PID: <b style="color:var(--text2)">${esc(i.pid)}</b></div><div class="small muted">${esc(i.city)}, ${esc(i.state)} · ${esc(i.region)} Region</div></div></div>
+    after: () => { rotateText($('#heroFact'), facts); countUp($('.content')); },
+    body: `<section class="hero">
+        <div class="hero-top"><span class="hero-chip">Institution Portal</span><span class="live ${Backend.remote ? '' : 'demo'}"><i></i>${Backend.remote ? 'Live' : 'Demo data'}</span></div>
+        <div class="hero-name" translate="no">${esc(i.name)}</div>
+        <div class="hero-meta">PID: <b translate="no">${esc(i.pid)}</b> · <span translate="no">${esc(i.city)}, ${esc(i.state)}</span></div>
+        <div class="hero-fact">${ic('sparkles', 16)}<span class="rot" id="heroFact">${esc(facts[0])}</span></div>
+        <div class="hero-stats">
+          <div><b data-count="${corpus}" data-fmt="cr">${crLabel(corpus)}</b><span>Corpus</span></div>
+          <div><b data-count="${apps.length}">${apps.length}</b><span>Applications</span></div>
+          <div><b data-count="${unread}">${unread}</b><span>Unread</span></div>
+        </div>
+      </section>
+      ${ticker(tickerItems)}
       <div class="tiles mt12">
         ${tile('Total Applications', apps.length, 'files', 'blue', 'ALL')}
         ${tile('Under Scrutiny', cnt(['SUBMITTED', 'UNDER_SCRUTINY']), 'clock', 'amber', 'REVIEW')}

@@ -16,7 +16,7 @@ const sql = async q => (await fetch(`${API}/__sql`, { method: 'POST', body: q })
 const one = async q => (await sql(q))[0] || {};
 
 (async () => {
-  const browser = await puppeteer.launch({ executablePath: process.env.EDGE_PATH || 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe', headless: 'new', args: ['--disable-gpu'], protocolTimeout: 120000 });
+  const browser = await puppeteer.launch({ executablePath: process.env.EDGE_PATH || 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe', headless: 'new', args: ['--disable-gpu', ...(process.env.BLOCK_WEBFONTS ? ['--host-resolver-rules=MAP fonts.gstatic.com ~NOTFOUND'] : [])], protocolTimeout: 120000 });
   const errors = [];
   const ctx = await browser.createBrowserContext();
   const page = await ctx.newPage();

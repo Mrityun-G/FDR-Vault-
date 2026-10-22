@@ -9,7 +9,7 @@ const URL0 = (process.env.APP_URL || 'http://127.0.0.1:8765') + '/index.html';
 const wait = ms => new Promise(r => setTimeout(r, ms));
 
 (async () => {
-  const browser = await puppeteer.launch({ executablePath: process.env.EDGE_PATH || 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe', headless: 'new', args: ['--disable-gpu'] });
+  const browser = await puppeteer.launch({ executablePath: process.env.EDGE_PATH || 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe', headless: 'new', args: ['--disable-gpu', ...(process.env.BLOCK_WEBFONTS ? ['--host-resolver-rules=MAP fonts.gstatic.com ~NOTFOUND'] : [])] });
   let failed = 0;
   const check = (ok, msg) => { console.log(`  ${ok ? '✓' : '✗'} ${msg}`); if (!ok) failed++; };
   for (const [w, h] of SIZES) {

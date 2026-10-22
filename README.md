@@ -216,7 +216,7 @@ npm run web:test-server      # (terminal 3) staff portal on :3100 against the st
 npm run test:e2e:staff       # staff portal: sign-in rules, scrutiny, deficiency notice, override, final approval, FDR request, invites, bank lien
 node tests/e2e/hindi.e2e.cjs # Hindi coverage report + layout   (AI_DOWN=1 on the mock and the supabase test checks the AI-outage fallback)
 ```
-Set `EDGE_PATH` if Microsoft Edge is installed elsewhere. Screenshots are written to `tests/output/`.
+Set `EDGE_PATH` if Microsoft Edge is installed elsewhere, and `BLOCK_WEBFONTS=1` if Google Fonts is unreachable from your network (the browser tests then skip web fonts). Screenshots are written to `tests/output/`.
 
 ## 6. Files
 
