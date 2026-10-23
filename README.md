@@ -56,19 +56,19 @@ The login screens show one-click demo buttons. All four accounts share the passw
 
 | Account | Signs in at | Role |
 |---|---|---|
-| `demo.institution@example.com` | Institution app | INSTITUTION, DITS Delhi (`1-10928371`) |
-| `demo.officer@example.com` | `/officer` | REVIEWER |
-| `demo.bank@example.com` | `/officer` | BANK_OFFICIAL, State Bank of India |
-| `demo.admin@example.com` | `/admin` | ADMIN |
+| `sih_demo.institution@example.com` | Institution app | INSTITUTION, DITS Delhi (`1-10928371`) |
+| `sih_demo.officer@example.com` | `/officer` | REVIEWER |
+| `sih_demo.bank@example.com` | `/officer` | BANK_OFFICIAL, State Bank of India |
+| `sih_demo.admin@example.com` | `/admin` | ADMIN |
 
 To create them: in Supabase *Authentication → Users → Add user → Create new user*, add each email with the password
 above and tick *Auto Confirm User*. Then run this in the SQL Editor:
 ```sql
-select public.admin_link_user('demo.institution@example.com', '1-10928371');
-update public.profiles set full_name = 'Dr. R. K. Sharma (Demo)', designation = 'Principal' where email = 'demo.institution@example.com';
-select public.admin_invite_staff('demo.officer@example.com', 'REVIEWER', 'Demo Scrutiny Officer', 'Scrutiny Officer');
-select public.admin_invite_staff('demo.bank@example.com', 'BANK_OFFICIAL', 'Demo Bank Official', 'Branch Manager', 'State Bank of India');
-select public.admin_invite_staff('demo.admin@example.com', 'ADMIN', 'Demo Administrator', 'Administrator');
+select public.admin_link_user('sih_demo.institution@example.com', '1-10928371');
+update public.profiles set full_name = 'Dr. R. K. Sharma (Demo)', designation = 'Principal' where email = 'sih_demo.institution@example.com';
+select public.admin_invite_staff('sih_demo.officer@example.com', 'REVIEWER', 'Demo Scrutiny Officer', 'Scrutiny Officer');
+select public.admin_invite_staff('sih_demo.bank@example.com', 'BANK_OFFICIAL', 'Demo Bank Official', 'Branch Manager', 'State Bank of India');
+select public.admin_invite_staff('sih_demo.admin@example.com', 'ADMIN', 'Demo Administrator', 'Administrator');
 ```
 The institution app blocks password changes on the demo account so one evaluator cannot lock out the rest.
 

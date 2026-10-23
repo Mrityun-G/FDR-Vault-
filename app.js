@@ -158,8 +158,8 @@ const BANKS = [
   ['Axis Bank Ltd', 'UTIB', 'AXIS'], ['Union Bank of India', 'UBIN', 'UBI'],
 ];
 // Shared evaluator account on the live server (created by hand in Supabase, see README "Demo accounts").
-const DEMO_LOGIN = { label: 'Institution · DITS Delhi', email: 'demo.institution@example.com', password: 'Sih@2026Demo' };
-const isDemoAccount = email => /^demo\.[a-z]+@example\.com$/i.test(email || '');
+const DEMO_LOGIN = { label: 'Institution · DITS Delhi', email: 'sih_demo.institution@example.com', password: 'Sih@2026Demo' };
+const isDemoAccount = email => /^sih_demo\.[a-z]+@example\.com$/i.test(email || '');
 const SAMPLE_REG = { name: 'Rajdhani Institute of Engineering & Technology', pid: '', state: 'Delhi', district: 'South West Delhi', type: 'Unaided - Private', head: 'Dr. Anita Verma', mobile: '9876543210', agree: true };
 const STATES = ['Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka', 'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal', 'Andaman and Nicobar Islands', 'Chandigarh', 'Dadra and Nagar Haveli and Daman and Diu', 'Delhi', 'Jammu and Kashmir', 'Ladakh', 'Lakshadweep', 'Puducherry'];
 const INST_TYPES = ['Unaided - Private', 'Govt. Aided', 'Government', 'Autonomous Institute', 'Autonomous - Private', 'Deemed to be University', 'Private University'];

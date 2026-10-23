@@ -41,10 +41,10 @@ const GoogleIcon = () => (
 const DEMO_PASSWORD = 'Sih@2026Demo';
 const DEMO_ACCOUNTS = {
   officer: [
-    { label: 'Scrutiny Officer', email: 'demo.officer@example.com', icon: ShieldCheck },
-    { label: 'Bank Official (SBI)', email: 'demo.bank@example.com', icon: Landmark }
+    { label: 'Scrutiny Officer', email: 'sih_demo.officer@example.com', icon: ShieldCheck },
+    { label: 'Bank Official (SBI)', email: 'sih_demo.bank@example.com', icon: Landmark }
   ],
-  admin: [{ label: 'Administrator', email: 'demo.admin@example.com', icon: Crown }]
+  admin: [{ label: 'Administrator', email: 'sih_demo.admin@example.com', icon: Crown }]
 };
 
 export const LoginPage: React.FC = () => {
