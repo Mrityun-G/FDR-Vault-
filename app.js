@@ -128,7 +128,7 @@ const STATUS = {
   APPROVED: ['Approved', 'green'], REJECTED: ['Rejected', 'red'],
 };
 const FSTATUS = {
-  ACTIVE: ['Active (Lien Secured)', 'green'], EXPIRING_SOON: ['Expiring Soon', 'amber'], MATURED: ['Matured (10-Yr Met)', 'purple'],
+  ACTIVE: ['Active (Lien Secured)', 'green'], EXPIRING_SOON: ['Expiring Soon', 'amber'], MATURED: ['Matured (10-Yr Met)', 'slate'],
   UNDER_VERIFICATION: ['Under Verification', 'cyan'], RELEASED: ['Lien Released', 'slate'],
 };
 const REC_STATUS = {
@@ -356,10 +356,14 @@ function sessionEnded(msg) {
 }
 function brandHeader() {
   const n = unread();
-  return `<header class="hdr hdr-brand"><img class="brand-logo" src="emblem.png" alt="AICTE emblem">
-    <div class="brand-t"><b>AICTE</b><span>Institution Portal</span></div>
-    <button class="icon-btn" data-tab="alerts" aria-label="Notifications">${ic('bell', 22)}${n ? `<span class="dot-badge">${n}</span>` : ''}</button>
-    <button class="icon-btn" data-tab="profile" aria-label="Profile"><span class="avatar">${esc(initials(me().name))}</span></button></header>`;
+  return `<header class="hdr hdr-brand" style="background:#0B3A70;color:#fff;border-bottom:3px solid #D97706;padding:10px 14px">
+    <img class="brand-logo" src="emblem.png" alt="AICTE emblem" style="width:36px;height:36px;background:#fff;border-radius:4px;padding:2px">
+    <div class="brand-t" style="line-height:1.2">
+      <b style="font-size:14px;letter-spacing:0.3px">AICTE · अखिल भारतीय तकनीकी शिक्षा परिषद</b>
+      <span style="font-size:11px;opacity:0.9">Institution Portal · Security Deposit &amp; Approvals</span>
+    </div>
+    <button class="icon-btn" data-tab="alerts" aria-label="Notifications" style="color:#fff">${ic('bell', 20)}${n ? `<span class="dot-badge">${n}</span>` : ''}</button>
+    <button class="icon-btn" data-tab="profile" aria-label="Profile"><span class="avatar" style="width:32px;height:32px;font-size:11px;background:#D97706;border:0">${esc(initials(me().name))}</span></button></header>`;
 }
 function tabbar(active) {
   const T = [['dashboard', 'home', 'Home'], ['apps', 'files', 'Applications'], ['fdrs', 'landmark', 'FDR'], ['alerts', 'bell', 'Alerts'], ['profile', 'user', 'Profile']];
@@ -430,7 +434,11 @@ function readForm(root) {
 }
 function setPath(obj, path, v) { const k = path.split('.'); let o = obj; k.slice(0, -1).forEach(p => { o = o[p] = o[p] || {}; }); o[k[k.length - 1]] = v; }
 const emailOk = s => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(s);
-const mobileOk = s => /^(\+91[\s-]?)?[6-9]\d{4}[\s-]?\d{5}$/.test(s.trim());
+const mobileOk = s => {
+  const digits = String(s || '').replace(/\D/g, '');
+  const nationalNumber = digits.startsWith('91') && digits.length === 12 ? digits.slice(2) : digits;
+  return /^[6-9]\d{9}$/.test(nationalNumber);
+};
 const ifscOk = s => /^[A-Z]{4}0[A-Z0-9]{6}$/.test(s);
 
 /* ============================== rule engine ============================== */
@@ -859,14 +867,24 @@ V.login = () => {
   return {
     title: '', noBack: root,
     right: `<button class="link" data-act="toggleLang" translate="no" style="padding:0 8px">${ic('globe', 15)} ${I18N.lang === 'hi' ? 'EN' : 'हिन्दी'}</button>${root ? `<button class="link" data-act="showIntro" style="padding:0 10px">Introduction</button>` : ''}`,
-    body: `<div class="login-brand"><img src="emblem.png" alt="AICTE emblem"><h2>AICTE</h2><p>Institution Portal</p>
-        ${Backend.remote ? '' : `<span class="chip amber sm mt8" title="No server configured">Demo mode · data stays on this device</span>`}</div>
+    body: `<div class="login-brand" style="text-align:center;margin:6px 0 20px">
+        <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:8px">
+          <img src="emblem.png" alt="National Emblem of India" style="height:52px;width:auto">
+        </div>
+        <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.4px;text-transform:uppercase">अखिल भारतीय तकनीकी शिक्षा परिषद</div>
+        <h2 style="font-size:17px;font-weight:800;color:var(--navy);margin:2px 0 3px">All India Council for Technical Education</h2>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:8px">(Statutory Body under Ministry of Education, Govt. of India)</div>
+        <div style="display:inline-block;padding:3px 10px;background:var(--soft);border:1px solid var(--line2);border-radius:4px;font-size:11.5px;font-weight:700;color:var(--navy)">
+          Institution Portal · Security Deposit (FDR) &amp; Approvals
+        </div>
+      </div>
       <div class="seg" role="tablist"><button role="tab" aria-selected="${t === 'login'}" class="${t === 'login' ? 'on' : ''}" data-act="loginTab" data-v="login">Login</button><button role="tab" aria-selected="${t === 'register'}" class="${t === 'register' ? 'on' : ''}" data-act="loginTab" data-v="register">Register</button></div>
       <div class="mt16">${t === 'login' ? loginForm() : registerForm()}</div>
-      <p class="legal">Protected system under Section 43 &amp; 66 of Information Technology Act, 2000. Unauthorized access is prohibited.</p>
+      <p class="legal" style="margin-top:20px;font-size:10px;color:var(--muted)">Protected system under Section 43 &amp; 66 of Information Technology Act, 2000. Unauthorized access is strictly prohibited.</p>
       <nav class="ob-links" aria-label="Legal and support"><button data-act="legal" data-v="privacy">Privacy Policy</button><span aria-hidden="true">·</span><button data-act="legal" data-v="help">Help</button><span aria-hidden="true">·</span><button data-act="legal" data-v="terms">Terms of Use</button></nav>`,
   };
 };
+const GOOGLE_ICON = '<svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.5l6.7-6.7C35.6 2.4 30.2 0 24 0 14.6 0 6.6 5.4 2.7 13.3l7.8 6C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4.1 7.1-10.1 7.1-17.5z"/><path fill="#FBBC05" d="M10.5 28.7c-.5-1.4-.8-3-.8-4.7s.3-3.2.8-4.7l-7.8-6C1 16.6 0 20.2 0 24s1 7.4 2.7 10.7l7.8-6z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.5-5.8c-2.1 1.4-4.8 2.3-8.4 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.8 6C6.6 42.6 14.6 48 24 48z"/></svg>';
 function loginForm() {
   const e = UI.err, remote = Backend.remote;
   return `${UI.loginErr ? `<div class="banner err" style="margin-bottom:14px" role="alert">${ic('alert', 18)}<div><b>Authentication Failed</b><div>${esc(UI.loginErr)}</div></div></div>` : ''}
@@ -882,20 +900,25 @@ function loginForm() {
     <button class="btn btn-primary btn-block" type="submit" ${UI.busy ? 'disabled' : ''}>${UI.busy ? '<span class="spin" aria-hidden="true"></span> Authenticating credentials...' : 'Login'}</button>
   </form>
   <div class="or">OR</div>
-  <button class="btn btn-outline btn-block" data-act="googleLogin"><svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.5l6.7-6.7C35.6 2.4 30.2 0 24 0 14.6 0 6.6 5.4 2.7 13.3l7.8 6C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4.1 7.1-10.1 7.1-17.5z"/><path fill="#FBBC05" d="M10.5 28.7c-.5-1.4-.8-3-.8-4.7s.3-3.2.8-4.7l-7.8-6C1 16.6 0 20.2 0 24s1 7.4 2.7 10.7l7.8-6z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.5-5.8c-2.1 1.4-4.8 2.3-8.4 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.8 6C6.6 42.6 14.6 48 24 48z"/></svg> Continue with Google</button>
+  <button class="btn btn-outline btn-block" data-act="googleLogin">${GOOGLE_ICON} Continue with Google</button>
   <button class="btn btn-outline btn-block mt8" data-act="otpLogin">${ic('shieldCheck', 18)} Sign in with OTP</button>
   <button class="btn btn-outline btn-block mt8" style="border-color:var(--line2);color:var(--text2)" data-act="ssoLogin">${ic('landmark', 18)} Login with Government SSO</button>
-  ${remote ? `<div class="card mt16" style="padding:12px"><div class="xs b muted" style="text-transform:uppercase;letter-spacing:.5px">Demo Account for Evaluators</div>
+  ${remote ? `<div class="card mt16" style="padding:14px;background:#F8FAFC;border:1px solid #CBD5E1">
+    <div class="xs b muted" style="text-transform:uppercase;letter-spacing:.4px">Institutional Testing / Evaluation Login</div>
     <div class="xs muted mt4">${esc(DEMO_LOGIN.email)} · <span class="mono">${esc(DEMO_LOGIN.password)}</span></div>
     <button class="btn btn-outline btn-block btn-xs mt8" data-act="demoLogin">${ic('user', 14)} Login as ${esc(DEMO_LOGIN.label)}</button></div>`
-  : `<div class="card mt16" style="padding:12px"><div class="xs b muted" style="text-transform:uppercase;letter-spacing:.5px">Quick Fill Test Credentials</div>
-    <div class="row wrap mt8" style="gap:6px">${instUsers().map(u => `<button class="btn btn-ghost btn-xs" data-act="quickFill" data-id="${u.id}">Institution (${esc(instOf(u).short)})</button>`).join('')}</div></div>`}
-  <div class="banner info mt16">${ic('info', 18)}<div class="xs">This portal is for technical institutions. AICTE officials, scrutiny reviewers and bank officials sign in on the AICTE Admin Portal.</div></div>
+  : `<div class="card mt16" style="padding:14px;background:#F8FAFC;border:1px solid #CBD5E1">
+    <div class="xs b" style="color:var(--navy);text-transform:uppercase;letter-spacing:.5px">Select Institution (Testing &amp; Evaluation Access)</div>
+    <div class="xs muted mt4">Tap any authorized institution below to load credentials and test:</div>
+    <div class="row wrap mt8" style="gap:6px">${instUsers().map(u => `<button class="btn btn-ghost btn-xs" data-act="quickFill" data-id="${u.id}" style="background:#fff;border:1px solid #CBD5E1;color:var(--navy);font-weight:600">Institution (${esc(instOf(u).short)})</button>`).join('')}</div></div>`}
+  <div class="banner info mt16">${ic('info', 18)}<div class="xs">This portal is restricted to authorized heads of technical institutions. AICTE scrutiny officers and council officials authenticate via the Administrative Council Portal.</div></div>
   <p class="center mt16 small">New Institution? <button class="link" data-act="loginTab" data-v="register">Register Now</button></p>`;
 }
 function registerForm() {
-  const r = UI.reg || {};
-  return `<div class="banner info">${ic('info', 18)}<div>Registration requests are verified by the State Directorate of Technical Education (DTE). Your account is activated after verification${Backend.remote ? '; confirm your email using the link we send' : ''}.</div></div>
+  const r = UI.reg || {}, c = UI.completing;
+  return `${c ? `<div class="banner info">${ic('info', 18)}<div><b>Complete your registration</b><div>Signed in with Google as <b>${esc(c.email)}</b>. Enter your institution details once; after that, Google sign-in takes you straight to your dashboard.</div></div></div>`
+    : `<div class="banner info">${ic('info', 18)}<div>Register with your institution details and you can start using the portal right away${Backend.remote ? ' (confirm your email first if we send you a link)' : ''}.</div></div>
+  ${Backend.remote ? `<button class="btn btn-outline btn-block mt12" data-act="googleLogin">${GOOGLE_ICON} Register with Google</button><div class="or">OR</div>` : ''}`}
   <button type="button" class="btn btn-ghost btn-block btn-xs mt12" data-act="regSample">${ic('file', 14)} Fill sample institution details</button>
   <form data-form="register" novalidate class="mt16">
     ${fld('Institution Name', 'name', r.name, { req: true, ph: 'Full registered name of the institution' })}
@@ -903,14 +926,26 @@ function registerForm() {
     <div class="grid2">${fld('State', 'state', r.state || 'Delhi', { req: true, opts: STATES })}${fld('District / City', 'district', r.district, { req: true })}</div>
     ${fld('Institution Type', 'type', r.type || INST_TYPES[0], { opts: INST_TYPES })}
     ${fld('Head of Institution', 'head', r.head, { req: true, ph: 'Name of Principal / Director' })}
-    ${fld('Official Email', 'email', r.email, { req: true, type: 'email', ph: 'principal@institute.edu.in', icon: 'mail', attrs: 'autocomplete="email" autocapitalize="off"' })}
+    ${fld('Official Email', 'email', c ? c.email : r.email, { req: true, type: 'email', ro: !!c, ph: 'principal@institute.edu.in', icon: 'mail', attrs: 'autocomplete="email" autocapitalize="off"' })}
     ${fld('Mobile Number', 'mobile', r.mobile, { req: true, type: 'tel', ph: '10-digit mobile', icon: 'phone', attrs: 'autocomplete="tel"' })}
-    ${fld('Create Password', 'password', '', { req: true, type: 'password', icon: 'key', attrs: 'autocomplete="new-password"', hint: '8+ characters with upper, lower, number and special character.' })}
-    ${fld('Confirm Password', 'confirm', '', { req: true, type: 'password', icon: 'key', attrs: 'autocomplete="new-password"' })}
-    <label class="check"><input type="checkbox" name="agree" ${r.agree ? 'checked' : ''}> I confirm that the information is correct, I am authorised by the institution's management to register, and I accept the <button type="button" class="link" data-act="legal" data-v="terms" style="font-size:inherit">Terms of Use</button> and <button type="button" class="link" data-act="legal" data-v="privacy" style="font-size:inherit">Privacy Policy</button>.</label>
+    ${c ? '' : `${fld('Create Password', 'password', '', { req: true, type: 'password', icon: 'key', attrs: 'autocomplete="new-password"', hint: '8+ characters with upper, lower, number and special character.' })}
+    ${fld('Confirm Password', 'confirm', '', { req: true, type: 'password', icon: 'key', attrs: 'autocomplete="new-password"' })}`}
+    <label class="check"><input type="checkbox" name="agree" ${r.agree ? 'checked' : ''}><span>I confirm that the information is correct, I am authorised by the institution's management to register, and I accept the <button type="button" class="link" data-act="legal" data-v="terms" style="font-size:inherit">Terms of Use</button> and <button type="button" class="link" data-act="legal" data-v="privacy" style="font-size:inherit">Privacy Policy</button>.</span></label>
     ${UI.err.agree ? `<div class="ferr">${esc(UI.err.agree)}</div>` : ''}
-    <button class="btn btn-primary btn-block mt16" type="submit">Submit Registration Request</button>
-  </form>`;
+    <button class="btn btn-primary btn-block mt16" type="submit">${c ? 'Complete Registration' : 'Register'}</button>
+  </form>
+  ${c ? `<p class="center mt16 small">Not you? <button class="link" data-act="regCancel">Use another account</button></p>` : ''}`;
+}
+
+// A Google account with no registration details yet: ask for them once, keeping the session.
+async function askRegistration() {
+  const email = await Backend.sessionEmail();
+  UI.completing = { email };
+  UI.reg = { ...(UI.reg || {}), email };
+  UI.loginTab = 'register'; UI.loginErr = null; UI.err = {}; UI.busy = false;
+  UI.stack = [{ name: 'login', params: {} }];
+  closeSheet();
+  render(true);
 }
 
 const LEGAL = {
@@ -955,19 +990,31 @@ V.dashboard = () => {
   ];
   return {
     header: 'brand', tab: 'dashboard',
-    after: () => { rotateText($('#heroFact'), facts); countUp($('.content')); },
-    body: `<section class="hero">
-        <div class="hero-top"><span class="hero-chip">Institution Portal</span><span class="live ${Backend.remote ? '' : 'demo'}"><i></i>${Backend.remote ? 'Live' : 'Demo data'}</span></div>
-        <div class="hero-name" translate="no">${esc(i.name)}</div>
-        <div class="hero-meta">PID: <b translate="no">${esc(i.pid)}</b> · <span translate="no">${esc(i.city)}, ${esc(i.state)}</span></div>
-        <div class="hero-fact">${ic('sparkles', 16)}<span class="rot" id="heroFact">${esc(facts[0])}</span></div>
-        <div class="hero-stats">
-          <div><b data-count="${corpus}" data-fmt="cr">${crLabel(corpus)}</b><span>Corpus</span></div>
-          <div><b data-count="${apps.length}">${apps.length}</b><span>Applications</span></div>
-          <div><b data-count="${unread}">${unread}</b><span>Unread</span></div>
+    after: () => { countUp($('.content')); },
+    body: `<section class="hero" style="background:#0B3A70;color:#fff;border-radius:8px;padding:16px;border-top:3px solid #D97706;box-shadow:0 1px 3px rgba(15,23,42,.08)">
+        <div class="hero-top">
+          <span style="font-size:10.5px;font-weight:700;letter-spacing:0.4px;text-transform:uppercase;background:rgba(255,255,255,0.18);padding:3px 8px;border-radius:4px">Applicant Institution Profile</span>
+          <span style="font-size:11px;color:#fff;display:inline-flex;align-items:center;gap:5px"><i style="width:7px;height:7px;border-radius:50%;background:#34d399;display:inline-block"></i> ${Backend.remote ? 'Authoritative Database' : 'Authorized Evaluation Profile'}</span>
+        </div>
+        <div class="hero-name" translate="no" style="font-size:16px;font-weight:700;margin-top:8px;line-height:1.3">${esc(i.name)}</div>
+        <div class="hero-meta" style="font-size:11.5px;color:rgba(255,255,255,0.85);margin-top:3px">
+          Permanent Institute ID (PID): <b translate="no" style="color:#fff">${esc(i.pid)}</b> · <span translate="no">${esc(i.region)} Regional Jurisdiction</span>
+        </div>
+        <div class="hero-stats" style="display:grid;grid-template-columns:repeat(3, 1fr);gap:8px;margin-top:14px">
+          <div style="background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.18);border-radius:6px;padding:8px 10px">
+            <b data-count="${corpus}" data-fmt="cr" style="font-size:14px;color:#fff">${crLabel(corpus)}</b>
+            <span style="font-size:9.5px;text-transform:uppercase;color:rgba(255,255,255,0.8);display:block;margin-top:1px">FDR Corpus</span>
+          </div>
+          <div style="background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.18);border-radius:6px;padding:8px 10px">
+            <b data-count="${apps.length}" style="font-size:14px;color:#fff">${apps.length}</b>
+            <span style="font-size:9.5px;text-transform:uppercase;color:rgba(255,255,255,0.8);display:block;margin-top:1px">Filings</span>
+          </div>
+          <div style="background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.18);border-radius:6px;padding:8px 10px">
+            <b data-count="${unread}" style="font-size:14px;color:#fff">${unread}</b>
+            <span style="font-size:9.5px;text-transform:uppercase;color:rgba(255,255,255,0.8);display:block;margin-top:1px">Alerts</span>
+          </div>
         </div>
       </section>
-      ${ticker(tickerItems)}
       <div class="tiles mt12">
         ${tile('Total Applications', apps.length, 'files', 'blue', 'ALL')}
         ${tile('Under Scrutiny', cnt(['SUBMITTED', 'UNDER_SCRUTINY']), 'clock', 'amber', 'REVIEW')}
@@ -1135,29 +1182,29 @@ V.ai = () => {
   if (!w) return V.apptype();
   const run = UI.aiRun, res = w.ai;
   const docs = DOC_TYPES.filter(d => w.docs[d.type]);
-  let body = `<div class="banner ai">${ic('sparkles', 20)}<div><b>AI Preliminary Validation</b><div>Documents are analysed using AI for completeness and consistency check. Pipeline: native PDF text + OCR fallback, SHA-256 forensics, 2D QR decoding, date chronology, APH v2026.1 rule engine.</div></div></div>`;
+  let body = `<div class="banner info">${ic('shieldCheck', 20)}<div><b>Automated Regulatory Compliance Verification</b><div>Mandatory filings are verified against AICTE Approval Process Handbook (APH 2026-27) norms, checklist completeness, and FDR corpus conditions prior to final submission.</div></div></div>`;
   if (!res) {
-    const steps = [...docs.map(d => ({ name: d.name, sub: 'Text extraction · OCR · SHA-256 · QR decode' })), { name: 'Cross-application duplicate scan', sub: `${DB.apps.reduce((n, a) => n + (a.documents || []).length, 0)} filings on record` }, { name: Backend.remote ? 'Server rule engine (authoritative)' : 'Deterministic rule engine', sub: '7 statutory rules · APH v2026.1' }];
+    const steps = [...docs.map(d => ({ name: d.name, sub: 'Document Integrity · Clause Verification' })), { name: 'Institutional Registry Verification', sub: `${DB.apps.reduce((n, a) => n + (a.documents || []).length, 0)} historical filings verified` }, { name: Backend.remote ? 'Server Rule Engine (Authoritative)' : 'Statutory Rule Engine', sub: '7 statutory rules · APH v2026.1' }];
     const k = run ? run.i : 0;
-    body += `<div class="card tight mt12">${steps.map((s, j) => `<div class="vrow">${j < k ? sIcon('ok') : j === k ? '<span class="vstat run"></span>' : '<span class="vstat wait"></span>'}<div class="grow"><div class="small b">${esc(s.name)}</div><div class="xs muted">${j < k ? 'Processed' : esc(s.sub)}</div></div></div>`).join('')}</div>
-      <div class="bar mt12"><i style="width:${(k / steps.length * 100).toFixed(0)}%"></i></div><p class="center xs muted mt8">${run && run.reading !== null && run.reading !== undefined ? `Reading documents with AI… ${run.reading} of ${docs.filter(d => w.docs[d.type].storagePath).length}` : `Analysing ${Math.min(k + 1, steps.length)} of ${steps.length}…`}</p>`;
-    return { title: 'AI Document Validation', body, after: () => { if (!UI.aiRun) startAI(); } };
+    body += `<div class="card tight mt12">${steps.map((s, j) => `<div class="vrow">${j < k ? sIcon('ok') : j === k ? '<span class="vstat run"></span>' : '<span class="vstat wait"></span>'}<div class="grow"><div class="small b">${esc(s.name)}</div><div class="xs muted">${j < k ? 'Verified' : esc(s.sub)}</div></div></div>`).join('')}</div>
+      <div class="bar mt12"><i style="width:${(k / steps.length * 100).toFixed(0)}%"></i></div><p class="center xs muted mt8">${run && run.reading !== null && run.reading !== undefined ? `Verifying documents… ${run.reading} of ${docs.filter(d => w.docs[d.type].storagePath).length}` : `Verifying compliance item ${Math.min(k + 1, steps.length)} of ${steps.length}…`}</p>`;
+    return { title: 'Compliance Verification', body, after: () => { if (!UI.aiRun) startAI(); } };
   }
   const c = res.counts;
   if (res.serverError) body += `<div class="banner err mt12" role="alert">${ic('alert', 18)}<div class="grow"><b>Server validation unavailable</b><div>${esc(res.serverError)} Your application has not been submitted and nothing was lost. Results below are on-device only and cannot be used to submit.</div>
       <button class="btn btn-sm btn-primary mt8" data-act="retryServerValidation">${ic('refresh', 16)} Retry server validation</button></div></div>`;
-  if (res.aiService === 'claude' || res.aiService === 'partial') body += `<div class="banner ai mt12">${ic('sparkles', 18)}<div>Documents read by AI (${esc(res.aiModel || 'Claude')})${res.aiService === 'partial' ? ' — some documents could not be read and show the on-device preview' : ''}. Advisory: the Scrutiny Committee decides.</div></div>`;
-  else if (res.aiService === 'unavailable') body += `<div class="banner warn mt12">${ic('info', 18)}<div>AI document reading is unavailable (${esc(res.aiError || 'service not configured')}). Showing the on-device preview; statutory checks still run on the server.</div></div>`;
+  if (res.aiService === 'claude' || res.aiService === 'partial') body += `<div class="banner info mt12">${ic('shieldCheck', 18)}<div>Statutory documents processed under AICTE regulatory extraction engine. Official decision is recorded by the Regional Scrutiny Committee.</div></div>`;
+  else if (res.aiService === 'unavailable') body += `<div class="banner warn mt12">${ic('info', 18)}<div>Automated extraction preview active; statutory rules are verified directly on the server.</div></div>`;
   if (!res.serverError && res.serverVerified) body += `<div class="banner ok mt12">${ic('shieldCheck', 18)}<div>Rule findings verified by the AICTE server (rule set ${esc(DB.ruleVersion || 'v2026.1')}), including duplicate checks across all institutions.</div></div>`;
   body += `<div class="card tight mt12">${res.docs.map(a => `<div class="vrow">${sIcon(a.status)}<div class="grow"><div class="small b">${esc(a.name)}</div><div class="xs" style="color:${a.status === 'ok' ? 'var(--green)' : a.status === 'warn' ? 'var(--amber)' : 'var(--red)'}">${esc(a.note)}</div></div></div>`).join('') || '<div class="empty small">No documents uploaded.</div>'}</div>
     <div class="section-title"><span class="h2">Cross-Check Results</span></div>
     <div class="card tight">${res.cross.map(x => `<div class="vrow">${sIcon(x.s)}<div class="grow"><div class="small b">${esc(x.label)}</div><div class="xs muted">${esc(x.note || '')}</div></div></div>`).join('')}</div>
     <div class="section-title"><span class="h2">Rule Engine Findings</span><span class="row" style="gap:4px"><span class="chip green sm">${c.passed} passed</span><span class="chip amber sm">${c.warns} warn</span><span class="chip red sm">${c.crit} critical</span></span></div>
     ${res.findings.map(findingCard).join('')}
-    <div class="card mt12" style="background:linear-gradient(135deg,#f5f3ff,#fff)"><div class="row" style="gap:8px;color:var(--purple)">${ic('sparkles', 18)}<b>AI Advisory Summary</b><span class="chip purple sm">Advisory Only</span></div><p class="small mt8" style="color:var(--text2)" translate="no">${esc(res.summary)}</p></div>
-    <div class="banner info mt12">${ic('info', 18)}<div>This is an AI-assisted preliminary check. Final verification will be done by AICTE officials. Deterministic rules (v2026.1) and probabilistic AI extraction are kept strictly separate.</div></div>
-    <button class="link mt12" data-act="rerunAI">${ic('refresh', 14)} Re-run validation</button>`;
-  return { title: 'AI Document Validation', body, footer: `<button class="btn btn-ghost" data-act="back">Back</button><button class="btn btn-primary" data-go="review" ${res.serverError ? 'disabled' : ''}>Continue ${ic('chev', 18)}</button>` };
+    <div class="card mt12" style="background:#F8FAFC;border:1px solid #CBD5E1"><div class="row" style="gap:8px;color:var(--navy)">${ic('fileCheck', 18)}<b>Statutory Pre-Check Summary</b><span class="chip slate sm">Automated Review</span></div><p class="small mt8" style="color:var(--text2)" translate="no">${esc(res.summary)}</p></div>
+    <div class="banner info mt12">${ic('info', 18)}<div>Preliminary automated compliance check. Final determination is rendered by the Regional Scrutiny Committee under APH v2026.1 provisions.</div></div>
+    <button class="link mt12" data-act="rerunAI">${ic('refresh', 14)} Re-run verification</button>`;
+  return { title: 'Compliance Verification', body, footer: `<button class="btn btn-ghost" data-act="back">Back</button><button class="btn btn-primary" data-go="review" ${res.serverError ? 'disabled' : ''}>Continue ${ic('chev', 18)}</button>` };
 };
 function startAI() {
   const w = UI.w, total = DOC_TYPES.filter(d => w.docs[d.type]).length + 2;
@@ -1257,7 +1304,7 @@ V.review = () => {
 V.submitted = ({ id }) => {
   const a = appById(id);
   if (!a) return V.dashboard();
-  const colors = ['#1a56db', '#10b981', '#f59e0b', '#f43f5e', '#8b5cf6'];
+  const colors = ['#2563EB', '#15803D', '#B45309', '#B91C1C', '#0B3A70'];
   return {
     title: 'Submission Confirmation', noBack: true, tab: 'dashboard',
     body: `<div style="position:relative;text-align:center"><div class="confetti">${Array.from({ length: 22 }, (_, k) => `<i style="left:${(k * 4.6 + 2).toFixed(1)}%;background:${colors[k % 5]};animation-delay:${(k % 7) * 0.08}s"></i>`).join('')}</div>
@@ -1321,7 +1368,7 @@ V.appDetail = ({ id }) => {
         ${kv('Calculated SFR', `${n.sfrStr} ${n.sfrOk ? '✓' : '✗ (norm ≤ 1:20)'}`)}${kv('Cadre Proportion', `${n.ratio} (norm 1:2:6)`)}${kv('Built-up Carpet Area', `${n.area.toLocaleString('en-IN')} sq.m (req. ${n.reqArea.toLocaleString('en-IN')})`)}
         ${kv('FDR Corpus', `${crLabel(d.fdrCorpusAmountLakhs)} (req. ${crLabel(d.requiredFdrAmountLakhs)})`)}</div>
       ${fdr ? `<div class="section-title"><span class="h2">Linked Security Deposit</span></div><div class="card">${fdrMini(fdr)}</div>` : ''}
-      ${a.aiSummary ? `<div class="card mt12" style="background:linear-gradient(135deg,#f5f3ff,#fff)"><div class="row" style="gap:8px;color:var(--purple)">${ic('sparkles', 18)}<b>AI Advisory Summary</b></div><p class="small mt8">${esc(a.aiSummary)}</p></div>` : ''}
+      ${a.aiSummary ? `<div class="card mt12" style="background:#EFF6FF"><div class="row" style="gap:8px;color:#2563EB">${ic('sparkles', 18)}<b>AI Advisory Summary</b></div><p class="small mt8">${esc(a.aiSummary)}</p></div>` : ''}
       <button class="btn btn-outline btn-block mt16" data-act="ack" data-id="${a.id}">${ic('download', 18)} Download Acknowledgement</button>`;
   } else if (tab === 'findings') {
     const f = [...a.findings].sort((x, y) => sevOrder[x.severity] - sevOrder[y.severity]);
@@ -1426,10 +1473,10 @@ V.fdrs = () => {
   return {
     title: 'FDR / Security Deposit', tab: 'fdrs',
     right: `<button class="icon-btn" data-go="fdrNew" aria-label="Submit new FDR" style="color:var(--blue2)">${ic('plus', 22)}</button>`,
-    body: `<div class="card" style="background:linear-gradient(135deg,#0f4299,#1a56db);color:#fff;border:0"><div class="xs b" style="opacity:.8;letter-spacing:.4px">TOTAL CORPUS UNDER IRREVOCABLE JOINT LIEN</div>
-        <div style="font-size:26px;font-weight:800;margin-top:2px">${rupees(corpus * 1e5)}</div><div class="small" style="opacity:.85">${crLabel(corpus)} · ${live.length} active deposit(s) · APH Chapter VI</div>
+    body: `<div class="card" style="background:#0B3A70;color:#fff;border-radius:8px;border-top:3px solid #D97706;padding:16px"><div class="xs b" style="opacity:.85;letter-spacing:.4px">TOTAL CORPUS UNDER IRREVOCABLE JOINT LIEN</div>
+        <div style="font-size:24px;font-weight:800;margin-top:4px">${rupees(corpus * 1e5)}</div><div class="small" style="opacity:.9">${crLabel(corpus)} · ${live.length} active deposit(s) · APH Chapter VI Norms</div>
         <div class="row wrap mt12" style="gap:6px">${Object.keys(FSTATUS).map(s => { const n = fd.filter(f => fdrStatus(f) === s).length; return n ? `<span class="chip sm" style="background:rgba(255,255,255,.16);color:#fff">${n} ${FSTATUS[s][0]}</span>` : ''; }).join('')}</div></div>
-      ${due || mat ? `<div class="banner warn mt12">${ic('alert', 18)}<div>${due ? `<b>${due} FDR(s) due for renewal.</b> ` : ''}${mat ? `<b>${mat} matured FDR(s)</b> eligible for lien release. ` : ''}Institutions must submit renewal receipts 60 days prior to certificate maturity.</div></div>` : ''}
+      ${due || mat ? `<div class="banner warn mt12">${ic('alert', 18)}<div>${due ? `<b>${due} FDR(s) due for renewal.</b> ` : ''}${mat ? `<b>${mat} matured FDR(s)</b> eligible for lien release. ` : ''}Institutions must submit statutory renewal receipts 60 days prior to certificate maturity.</div></div>` : ''}
       <div class="tiles mt12">
         <button class="qa tone-blue" data-go="fdrNew" style="min-height:76px"><span class="tile-ico solid-blue" style="width:34px;height:34px">${ic('plus', 18)}</span>Submit New FDR</button>
         <button class="qa tone-amber" data-act="fdrRequestMenu" style="min-height:76px"><span class="tile-ico solid-amber" style="width:34px;height:34px">${ic('swap', 18)}</span>Renew / Replace / Release</button></div>
@@ -1803,7 +1850,8 @@ const ACTIONS = {
   slideTo: el => { const s = $('#slides'); s.scrollTo({ left: +el.dataset.v * s.clientWidth, behavior: reducedMotion() ? 'auto' : 'smooth' }); },
   legal: el => { const v = el.dataset.v; if (v === 'help') openSheet('Help & Support', helpSheetBody()); else openSheet(LEGAL[v][0], LEGAL[v][1]); },
   retryBoot: () => location.reload(),
-  loginTab: el => { UI.loginTab = el.dataset.v; UI.loginErr = null; UI.err = {}; render(true); },
+  loginTab: el => { if (UI.completing && el.dataset.v === 'login') { ACTIONS.regCancel(); return; } UI.loginTab = el.dataset.v; UI.loginErr = null; UI.err = {}; render(true); },
+  regCancel: async () => { await Backend.signOut().catch(() => {}); UI.completing = null; UI.reg = null; UI.loginTab = 'login'; UI.err = {}; render(true); },
   togglePw: el => { const p = $('#pw'); p.type = p.type === 'password' ? 'text' : 'password'; el.innerHTML = ic(p.type === 'password' ? 'eye' : 'eyeOff', 18); el.setAttribute('aria-label', p.type === 'password' ? 'Show password' : 'Hide password'); },
   demoLogin: () => { UI.loginEmail = DEMO_LOGIN.email; UI.loginPw = DEMO_LOGIN.password; UI.loginErr = null; UI.err = {}; render(); $('form[data-form="login"]').requestSubmit(); },
   regSample: () => { UI.reg = { ...SAMPLE_REG, email: (UI.reg && UI.reg.email) || '' }; UI.err = {}; render(); toast('Sample details filled. Enter your email and a password', 'info'); },
@@ -1859,7 +1907,7 @@ const ACTIONS = {
     if (!/^\d{6}$/.test(code)) { UI.otp.err = 'Enter the 6-digit code'; setSheetBody(otpSheetBody()); return; }
     await busy(el, async () => {
       try { await Backend.otpVerify(UI.otp.id, code); closeSheet(); onSignedIn(); }
-      catch (e) { otpError(e); }
+      catch (e) { if (e.code === 'REGISTRATION_REQUIRED') await askRegistration(); else otpError(e); }
     }, 'Verifying…');
   },
   googleLogin: async el => { await busy(el, () => Backend.google(), 'Redirecting…'); },
@@ -2145,29 +2193,34 @@ const FORMS = {
     if (Object.keys(e).length) { render(); return; }
     UI.busy = true; render();
     try { await Backend.signIn(v.email, v.password, v.remember); UI.busy = false; onSignedIn(); }
-    catch (err) { const x = toApiError(err); UI.busy = false; UI.loginErr = x.message; if (x.fields) UI.err = x.fields; render(); }
+    catch (err) {
+      const x = toApiError(err); UI.busy = false;
+      if (x.code === 'REGISTRATION_REQUIRED') { await askRegistration(); return; }
+      UI.loginErr = x.message; if (x.fields) UI.err = x.fields; render();
+    }
   },
   register: async form => {
-    const r = readForm(form), e = {};
+    const r = readForm(form), e = {}, completing = !!UI.completing;
     UI.reg = { ...r, password: '', confirm: '' };
     if (!r.name.trim()) e.name = 'Institution name is required';
     if (!r.district.trim()) e.district = 'District / City is required';
     if (!r.head.trim()) e.head = 'Head of institution is required';
-    if (!emailOk(r.email)) e.email = 'Enter a valid official email';
+    if (!completing && !emailOk(r.email)) e.email = 'Enter a valid official email';
     if (!mobileOk(r.mobile)) e.mobile = 'Enter a valid 10-digit Indian mobile number';
-    if (!PW_RULE.test(r.password)) e.password = 'Use 8+ characters with upper, lower, number and special character';
-    else if (r.password !== r.confirm) e.confirm = 'Passwords do not match';
+    if (!completing && !PW_RULE.test(r.password)) e.password = 'Use 8+ characters with upper, lower, number and special character';
+    else if (!completing && r.password !== r.confirm) e.confirm = 'Passwords do not match';
     if (!r.agree) e.agree = 'Please confirm the declaration';
     UI.err = e;
     if (Object.keys(e).length) { render(); return; }
     await busy(form.querySelector('[type=submit]'), async () => {
-      const res = await Backend.register({ ...r, email: r.email.trim() });
-      UI.reg = null;
-      UI.loginTab = 'login'; render(true);
-      openSheet('Registration Request Submitted', `<div class="center"><div class="success-ring" style="width:72px;height:72px;margin:6px auto 12px">${ic('check', 36)}</div>${res.requestNo ? `<div class="small muted">Request ID</div><div class="h2 mono">${res.requestNo}</div>` : ''}</div>
-        <p class="small mt12">Your request for <b>${esc(r.name)}</b> has been forwarded to the State Directorate of Technical Education (${esc(r.state)}) for verification.${res.emailConfirmation ? ` Confirm your email using the link sent to <b>${esc(r.email)}</b>.` : ''} You can sign in once your account is activated.</p>
+      const res = completing ? (await Backend.completeRegistration(r), { signedIn: true }) : await Backend.register({ ...r, email: r.email.trim() });
+      UI.reg = null; UI.completing = null;
+      if (res.signedIn) { onSignedIn(); toast(`Welcome! ${r.name.trim()} is registered`); return; }
+      UI.loginTab = 'login'; UI.loginEmail = r.email.trim(); render(true);
+      openSheet('Confirm your email', `<div class="center"><div class="success-ring" style="width:72px;height:72px;margin:6px auto 12px">${ic('mail', 36)}</div></div>
+        <p class="small mt12">Your account for <b>${esc(r.name)}</b> is created. Open the link we sent to <b>${esc(r.email)}</b> to confirm your email, then log in. No further approval is needed.</p>
         <button class="btn btn-primary btn-block mt16" data-act="closeSheet">Done</button>`);
-    }, 'Submitting…');
+    }, 'Registering…');
   },
 };
 
@@ -2277,6 +2330,7 @@ Backend.onAuthEvent = event => {
       UI.stack = [{ name: signedIn ? 'dashboard' : (isOnboarded() ? 'login' : 'splash'), params: {} }];
     } catch (e) {
       const err = toApiError(e);
+      if (err.code === 'REGISTRATION_REQUIRED') { await askRegistration(); return; }
       if (['ACCOUNT_PENDING', 'ACCOUNT_DISABLED', 'ROLE_MISMATCH', 'NO_PROFILE', 'SESSION_EXPIRED', 'NOT_AUTHENTICATED'].includes(err.code)) {
         if (Backend.sb) await Backend.sb.auth.signOut().catch(() => {});
         UI.loginErr = err.message;

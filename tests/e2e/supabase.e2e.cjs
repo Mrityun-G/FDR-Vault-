@@ -48,7 +48,7 @@ const pdf = (name, seed, pages = 2) => {
   await h.type('input[name=email]', '1-10928371'); await h.type('input[name=password]', 'x1234'); await h.click('Login', 'form'); await wait(600);
   ok(await h.has('registered official email'), 'PID login rejected — email required');
   await h.type('input[name=email]', 'reviewer.mehta@aicte-india.org'); await h.type('input[name=password]', 'Rev@2026'); await h.click('Login', 'form');
-  ok(await h.waitText('not authorized for the INSTITUTION portal'), 'reviewer account refused (server ROLE_MISMATCH)');
+  ok(await h.waitText('Sign in on the AICTE staff portal instead'), 'reviewer account refused (server ROLE_MISMATCH)');
   await h.type('input[name=email]', 'principal@dits-delhi.edu.in'); await h.type('input[name=password]', 'wrong-pass'); await h.click('Login', 'form');
   ok(await h.waitText('Invalid User ID or Password'), 'wrong password rejected');
   await h.type('input[name=password]', 'Dits@2026'); await h.click('Login', 'form');
@@ -180,13 +180,13 @@ const pdf = (name, seed, pages = 2) => {
   await h.type('input[name=name]', 'New Horizon Institute of Technology'); await h.type('input[name=district]', 'Lucknow');
   await h.type('input[name=head]', 'Dr. Meera Iyer'); await h.type('input[name=email]', 'principal@nhit.edu.in'); await h.type('input[name=mobile]', '9876543210');
   await h.type('input[name=password]', 'Nhit@2026!'); await h.type('input[name=confirm]', 'Nhit@2026!');
-  await page.click('input[name=agree]'); await h.click('Submit Registration Request');
-  ok(await h.waitText('Registration Request Submitted'), 'registration created a pending account');
+  await page.click('input[name=agree]'); await h.click('Register', 'form');
+  ok(await h.waitText('Confirm your email'), 'registration asks only for email confirmation');
   const reg = await sql(`select r.request_no, p.status from public.registration_requests r join public.profiles p on p.id = r.user_id where p.email = 'principal@nhit.edu.in'`);
-  ok(reg.length === 1 && reg[0].status === 'PENDING_VERIFICATION', `server: ${reg[0] && reg[0].request_no} PENDING_VERIFICATION`);
+  ok(reg.length === 1 && reg[0].status === 'ACTIVE', `server: ${reg[0] && reg[0].request_no} ACTIVE without approval`);
   await h.click('Done');
-  await h.type('input[name=email]', 'principal@nhit.edu.in'); await h.type('input[name=password]', 'Nhit@2026!'); await h.click('Login', 'form');
-  ok(await h.waitText('awaiting verification'), 'pending account cannot sign in until activated');
+  await h.type('input[name=password]', 'Nhit@2026!'); await h.click('Login', 'form');
+  ok(await h.waitText('New Horizon Institute of Technology'), 'registered account signs straight in');
   ok(page.errors.length === 0, `no JS errors ${page.errors.join(' | ')}`);
 
   await browser.close();

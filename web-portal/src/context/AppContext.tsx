@@ -21,7 +21,7 @@ import {
 import { INITIAL_RULES, INITIAL_AUTHORITY_ADAPTERS } from '../data/mockData';
 import { supabase } from '../lib/supabase';
 import { PORTAL, portalForRole, portalUrl } from '../lib/portal';
-import { actions, buildNotifications, loadApplications, loadAudit, loadFdrs, loadProfile, toApiError } from '../services/backend';
+import { actions, buildNotifications, loadApplications, loadAudit, loadFdrs, loadProfile, toApiError, StaffRegistration } from '../services/backend';
 
 const GUEST: User = { id: '', name: 'Guest', email: '', role: 'REVIEWER', designation: '' };
 const READ_KEY = 'aicte-staff-read-notifications';
@@ -34,6 +34,11 @@ interface AppContextType {
   authError: string | null;
   loginWithPassword: (email: string, password: string) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
+  /** Set when a signed-in account (usually a first Google sign-in) still has to enter its registration details. */
+  pendingRegistration: { email: string } | null;
+  register: (email: string, password: string, details: StaffRegistration) => Promise<'SIGNED_IN' | 'CONFIRM_EMAIL'>;
+  completeRegistration: (details: StaffRegistration) => Promise<void>;
+  cancelRegistration: () => Promise<void>;
   sendPasswordReset: (email: string) => Promise<void>;
   logout: () => Promise<void>;
 
@@ -103,6 +108,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authReady, setAuthReady] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [pendingRegistration, setPendingRegistration] = useState<{ email: string } | null>(null);
 
   const [loading, setLoading] = useState(false);
   const [dataError, setDataError] = useState<string | null>(null);
@@ -174,12 +180,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setCurrentUser(user);
       setIsAuthenticated(true);
       setAuthError(null);
+      setPendingRegistration(null);
       setActiveSidebarTab(user.role === 'BANK_OFFICIAL' ? 'verification_center' : 'dashboard');
       await refresh();
       return null;
     } catch (e) {
+      const err = toApiError(e);
+      userRef.current = GUEST;
+      setCurrentUser(GUEST);
+      setIsAuthenticated(false);
+      if (err.code === 'REGISTRATION_REQUIRED') {
+        // Keep the session: the login page asks for the registration details once.
+        const { data } = await supabase.auth.getUser();
+        setAuthError(null);
+        setPendingRegistration({ email: data.user?.email || '' });
+        return null;
+      }
       // Signed in to Supabase, but not as active AICTE staff: show why and sign out.
-      const message = toApiError(e).message;
+      const message = err.message;
       setAuthError(message);
       userRef.current = GUEST;
       setCurrentUser(GUEST);
@@ -199,6 +217,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_OUT' || !session) {
+        setPendingRegistration(null);
         userRef.current = GUEST;
         setCurrentUser(GUEST);
         setIsAuthenticated(false);
@@ -247,6 +266,31 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       options: { redirectTo: window.location.origin + window.location.pathname, queryParams: { prompt: 'select_account' } }
     });
     if (error) throw toApiError(error);
+  };
+
+  const register = async (email: string, password: string, details: StaffRegistration) => {
+    setAuthError(null);
+    const { data, error } = await supabase.auth.signUp({
+      email: email.trim(),
+      password,
+      options: { emailRedirectTo: window.location.origin + window.location.pathname, data: { full_name: details.fullName, registration: details } }
+    });
+    if (error) throw toApiError(error);
+    if (!data.session) return 'CONFIRM_EMAIL';
+    const refused = await enterSession();
+    if (refused) throw toApiError({ message: `FORBIDDEN: ${refused}` });
+    return 'SIGNED_IN';
+  };
+
+  const completeRegistration = async (details: StaffRegistration) => {
+    await actions.completeRegistration(details);
+    const refused = await enterSession();
+    if (refused) throw toApiError({ message: `FORBIDDEN: ${refused}` });
+  };
+
+  const cancelRegistration = async () => {
+    setPendingRegistration(null);
+    await supabase.auth.signOut();
   };
 
   const sendPasswordReset = async (email: string) => {
@@ -339,6 +383,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         authError,
         loginWithPassword,
         loginWithGoogle,
+        pendingRegistration,
+        register,
+        completeRegistration,
+        cancelRegistration,
         sendPasswordReset,
         logout,
         loading,

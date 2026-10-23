@@ -9,6 +9,7 @@ import { useApp } from '../context/AppContext';
 import { INSTITUTION_APP_URL } from '../lib/supabase';
 import { PORTAL, PORTALS, portalUrl } from '../lib/portal';
 import { AicteLogo } from './AicteLogo';
+import { StaffRegisterForm } from './StaffRegisterForm';
 import { motion } from 'motion/react';
 import { RotatingText, Ticker } from './fx';
 import {
@@ -48,7 +49,9 @@ const DEMO_ACCOUNTS = {
 };
 
 export const LoginPage: React.FC = () => {
-  const { loginWithPassword, loginWithGoogle, sendPasswordReset, authError } = useApp();
+  const { loginWithPassword, loginWithGoogle, sendPasswordReset, authError, pendingRegistration } = useApp();
+
+  const [mode, setMode] = useState<'login' | 'register'>('login');
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -194,6 +197,26 @@ export const LoginPage: React.FC = () => {
                   </div>
                 </div>
 
+                {!pendingRegistration && (
+                  <div role="tablist" className="mb-5 grid grid-cols-2 p-1 rounded-xl bg-slate-100 text-xs font-bold">
+                    {(['login', 'register'] as const).map(m => (
+                      <button
+                        key={m}
+                        role="tab"
+                        type="button"
+                        aria-selected={mode === m}
+                        onClick={() => {
+                          setMode(m);
+                          setErrorMessage(null);
+                        }}
+                        className={`py-2 rounded-lg transition-all cursor-pointer ${mode === m ? 'bg-white shadow-sm text-[#0a2540]' : 'text-slate-500'}`}
+                      >
+                        {m === 'login' ? 'Login' : 'Register'}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
                 {shownError && (
                   <div role="alert" className="mb-5 p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-900 text-xs flex items-start gap-2.5">
                     <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
@@ -204,6 +227,10 @@ export const LoginPage: React.FC = () => {
                   </div>
                 )}
 
+                {pendingRegistration || mode === 'register' ? (
+                  <StaffRegisterForm roles={portal.roles} accent={portal.accent} onGoogle={handleGoogle} googleBusy={isGoogleLoading} googleIcon={<GoogleIcon />} />
+                ) : (
+                <>
                 <motion.button
                   type="button"
                   whileHover={{ y: -1 }}
@@ -340,6 +367,8 @@ export const LoginPage: React.FC = () => {
                     ))}
                   </div>
                 </div>
+                </>
+                )}
               </div>
 
               <div className="pt-4 mt-6 border-t border-slate-100 text-[10px] text-slate-400 text-center">
@@ -352,12 +381,12 @@ export const LoginPage: React.FC = () => {
               <div>
                 <div className="mb-4">
                   <h3 className="text-sm font-extrabold text-[#0a2540] tracking-tight">Who signs in here</h3>
-                  <p className="text-xs text-slate-500 mt-0.5">Your role is assigned by an AICTE administrator and checked on the server.</p>
+                  <p className="text-xs text-slate-500 mt-0.5">Register with your role and start right away. The server checks your role on every action.</p>
                 </div>
 
                 <div className="space-y-3">
                   {(isAdminPortal
-                    ? [{ icon: Crown, title: 'AICTE Administrator', text: 'Grant final approval and issue EoA letters, decide FDR renewal, replacement and release requests, invite staff and approve institution accounts.' }]
+                    ? [{ icon: Crown, title: 'AICTE Administrator', text: 'Grant final approval and issue EoA letters, decide FDR renewal, replacement and release requests, manage staff and institution accounts.' }]
                     : [
                         { icon: ShieldCheck, title: 'Scrutiny Officer', text: 'Review applications and uploaded documents, override findings with a reason, issue deficiency notices and recommend approval.' },
                         { icon: Landmark, title: 'Bank Official', text: 'Verify Fixed Deposit Receipts held with your bank and endorse the AICTE joint lien.' }

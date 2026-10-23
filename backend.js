@@ -15,6 +15,18 @@ const BUCKET = CFG.STORAGE_BUCKET || 'institution-documents';
 const uuid = () => (crypto.randomUUID ? crypto.randomUUID()
   : ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c => (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)));
 const safeName = n => n.normalize('NFKD').replace(/[^\w.-]+/g, '_').replace(/_+/g, '_').slice(-120);
+// AICTE regional office for a state (same mapping as public._region_for on the server).
+const REGION_OF = {
+  Central: ['Madhya Pradesh', 'Chhattisgarh', 'Gujarat'],
+  Eastern: ['West Bengal', 'Odisha', 'Jharkhand', 'Bihar', 'Assam', 'Arunachal Pradesh', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'Sikkim', 'Tripura', 'Andaman and Nicobar Islands'],
+  'North-Central': ['Uttar Pradesh', 'Uttarakhand'],
+  'North-Western': ['Punjab', 'Haryana', 'Himachal Pradesh', 'Jammu and Kashmir', 'Ladakh', 'Chandigarh'],
+  'South-Central': ['Andhra Pradesh', 'Telangana'],
+  Southern: ['Tamil Nadu', 'Puducherry'],
+  'South-Western': ['Karnataka', 'Kerala', 'Lakshadweep'],
+  Western: ['Maharashtra', 'Goa', 'Dadra and Nagar Haveli and Daman and Diu'],
+};
+const regionFor = state => Object.keys(REGION_OF).find(k => REGION_OF[k].includes(state)) || 'Northern';
 
 function setRemember(on) { try { localStorage.setItem('aicte-remember', on === false ? '0' : '1'); } catch (e) { /* ignore */ } }
 const rememberStorage = {
@@ -104,7 +116,11 @@ const Remote = {
     return data;
   },
   async afterSignIn(method) {
-    try { await this.refresh(); } catch (e) { await this.sb.auth.signOut().catch(() => {}); throw e; }
+    try { await this.refresh(); } catch (e) {
+      // A new Google account keeps its session so the user can enter their registration details.
+      if (e.code !== 'REGISTRATION_REQUIRED') await this.sb.auth.signOut().catch(() => {});
+      throw e;
+    }
     this.rpc('log_client_event', { p_action: 'USER_LOGIN_SUCCESS', p_details: `Institution portal login via ${method} (mobile).` }).catch(() => {});
     this.subscribe();
   },
@@ -153,11 +169,22 @@ const Remote = {
     const { password, confirm, agree, ...registration } = r;
     const { data, error } = await this.sb.auth.signUp({
       email: r.email.trim(), password,
-      options: { emailRedirectTo: location.origin + location.pathname, data: { full_name: r.head, registration } },
+      options: { emailRedirectTo: location.origin + location.pathname, data: { full_name: r.head, registration: { ...registration, role: 'INSTITUTION' } } },
     });
     if (error) throw toApiError(error);
-    if (data.session) await this.sb.auth.signOut();   // account stays pending until DTE / AICTE activation
-    return { requestNo: null, emailConfirmation: !data.session };
+    if (!data.session) return { signedIn: false, emailConfirmation: true };   // active once the email is confirmed
+    await this.afterSignIn('REGISTRATION');
+    return { signedIn: true };
+  },
+  // Registration details for an account created by Google sign-in (asked once, on the first login).
+  async completeRegistration(r) {
+    const { password, confirm, agree, email, ...registration } = r;
+    await this.rpc('complete_registration', { p: { ...registration, role: 'INSTITUTION' } });
+    await this.afterSignIn('GOOGLE');
+  },
+  async sessionEmail() {
+    const { data } = await this.sb.auth.getSession();
+    return data.session ? data.session.user.email : '';
   },
   async signOut() {
     await this.rpc('log_client_event', { p_action: 'USER_LOGOUT', p_details: 'Signed out of the mobile portal.' }).catch(() => {});
@@ -286,7 +313,7 @@ const Local = {
     const q = email.trim().toLowerCase();
     const u = DB.users.find(x => x.email.toLowerCase() === q || x.id.toLowerCase() === q || (x.pid && x.pid.toLowerCase() === q));
     if (!u) throw new ApiError('INVALID_CREDENTIALS', 'Invalid User ID or Password. Check your credentials and try again.');
-    if (u.role !== 'INSTITUTION') throw new ApiError('ROLE_MISMATCH', `Access Denied: This account (${u.name}) is registered as ${u.role.replace('_', ' ')} and is not authorized for the INSTITUTION portal.`);
+    if (u.role !== 'INSTITUTION') throw new ApiError('ROLE_MISMATCH', `This account (${u.name}) is registered as ${u.role.replace('_', ' ')}. Sign in on the AICTE staff portal instead.`);
     if (!password || password.length < 4) throw new ApiError('INVALID_CREDENTIALS', 'Invalid password. Password must be at least 4 characters.');
     if (DB.pwHash[u.id] && DB.pwHash[u.id] !== await sha256(password)) throw new ApiError('INVALID_CREDENTIALS', 'Invalid User ID or Password. Check your credentials and try again.');
     this.startSession(u, 'PASSWORD', remember);
@@ -300,7 +327,7 @@ const Local = {
     const q = id.trim().toLowerCase();
     const u = DB.users.find(x => x.email.toLowerCase() === q || (x.pid && x.pid === q) || x.id === q);
     if (!u) throw new ApiError('NOT_FOUND', 'No account found for this Email / PID.');
-    if (u.role !== 'INSTITUTION') throw new ApiError('ROLE_MISMATCH', `Access Denied: This account (${u.name}) is registered as ${u.role.replace('_', ' ')} and is not authorized for the INSTITUTION portal.`);
+    if (u.role !== 'INSTITUTION') throw new ApiError('ROLE_MISMATCH', `This account (${u.name}) is registered as ${u.role.replace('_', ' ')}. Sign in on the AICTE staff portal instead.`);
     this.otp = { user: u.id, code: String(rand(100000, 999999)) };
     return { delivery: 'demo', demoCode: this.otp.code, mask: (u.mobile || '').slice(-4) };
   },
@@ -312,13 +339,25 @@ const Local = {
   async ssoAs(userId) { this.startSession(DB.users.find(u => u.id === userId), 'SSO', true); },
   async google() { throw new ApiError('NOT_CONFIGURED', 'Google sign-in needs the Supabase backend. In demo mode, use the test credentials below.'); },
   async sendReset() { throw new ApiError('NOT_SUPPORTED', 'Password reset emails are not available in demo mode.'); },
+  // Registration activates the account immediately (no DTE / AICTE approval step).
   async register(r) {
     if (DB.users.some(u => u.email.toLowerCase() === r.email.toLowerCase())) throw new ApiError('VALIDATION', 'This email is already registered — please login.', { email: 'This email is already registered — please login' });
-    const id = `REG-${now().getFullYear()}-${rand(10000, 99999)}`;
+    const pid = (r.pid || '').trim().toUpperCase() || `1-${rand(20000000, 29999999)}`;
+    let i = DB.institutions.find(x => x.pid.toUpperCase() === pid);
+    if (i && DB.users.some(u => u.institutionId === i.id)) throw new ApiError('VALIDATION', 'This PID is already registered to another account. Sign in with that account.', { pid: 'This PID is already registered' });
+    if (!i) {
+      i = { id: uid('inst'), name: r.name.trim(), short: r.name.trim().split(/\s+/).map(w => w[0]).join('').slice(0, 6).toUpperCase(), pid, city: r.district.trim(), district: r.district.trim(), state: r.state,
+        region: regionFor(r.state), type: r.type, address: `${r.district.trim()}, ${r.state}`, website: '', sanctionedIntake: 0, totalStudents: 0, sfr: '—', requiredFdrLakhs: 100 };
+      DB.institutions.push(i);
+      DB.adapters[i.id] = seedAdapters(i, null);
+    }
+    const u = { id: uid('user'), name: r.head.trim(), email: r.email.trim(), role: 'INSTITUTION', designation: 'Head of Institution', institutionId: i.id, pid: i.pid, region: i.region, mobile: r.mobile.trim() };
+    DB.users.push(u);
+    DB.pwHash[u.id] = await sha256(r.password);
     const { password, confirm, ...rest } = r;
-    DB.registrations.push({ id, ...rest, at: now().toISOString(), status: 'FORWARDED_TO_DTE' });
-    save();
-    return { requestNo: id };
+    DB.registrations.push({ id: `REG-${now().getFullYear()}-${rand(10000, 99999)}`, ...rest, at: now().toISOString(), status: 'ACTIVATED' });
+    this.startSession(u, 'REGISTRATION', true);
+    return { signedIn: true };
   },
   async signOut() { logAudit('USER_LOGOUT', 'USER', me().id, 'Signed out of the mobile portal.'); DB.session = null; save(); },
   async changePassword(email, current, next) {

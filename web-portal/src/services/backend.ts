@@ -22,6 +22,15 @@ import {
 } from '../types';
 
 export const STAFF_ROLES: UserRole[] = ['REVIEWER', 'ADMIN', 'BANK_OFFICIAL'];
+
+/** Details a staff member registers with (stored by the server's _register_profile; the account is active at once). */
+export interface StaffRegistration {
+  role: UserRole;
+  fullName: string;
+  designation: string;
+  mobile: string;
+  bankName?: string;
+}
 const EXPIRING_SOON_DAYS = 180;
 const MIN_SQM_PER_STUDENT = 5.5;
 
@@ -74,7 +83,7 @@ export async function loadProfile(): Promise<User> {
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) throw new ApiError('NOT_AUTHENTICATED', 'Sign in to continue.');
   const p = must(await supabase.from('profiles').select('*, institutions!profiles_institution_id_fkey(name, pid, region)').eq('id', auth.user.id).maybeSingle()) as any;
-  if (!p) throw new ApiError('NO_PROFILE', 'No portal profile is linked to this account. Ask an AICTE administrator to invite your email.');
+  if (!p || p.needs_registration) throw new ApiError('REGISTRATION_REQUIRED', 'Complete your registration details to continue.');
   if (p.status === 'PENDING_VERIFICATION')
     throw new ApiError('ACCOUNT_PENDING', 'Your account is awaiting approval. Ask an AICTE administrator to invite your email as staff.');
   if (p.status === 'DISABLED') throw new ApiError('ACCOUNT_DISABLED', 'This account has been disabled. Contact the Regulation Bureau IT Cell.');
@@ -434,6 +443,7 @@ export const actions = {
   endorseLien: (fdrId: string, token: string) => rpc('bank_endorse_lien', { p_fdr_id: fdrId, p_token: token }),
   decideFdrRequest: (requestId: string, approve: boolean, note: string) =>
     rpc('decide_fdr_request', { p_request_id: requestId, p_approve: approve, p_note: note }),
+  completeRegistration: (details: StaffRegistration) => rpc('complete_registration', { p: details }),
   inviteStaff: (email: string, role: UserRole, fullName: string, designation: string, bankName: string) =>
     rpc('admin_invite_staff', { p_email: email, p_role: role, p_full_name: fullName, p_designation: designation, p_bank_name: bankName || null }),
   inviteInstitution: (email: string, pid: string) => rpc('admin_invite_user', { p_email: email, p_pid: pid, p_role: 'INSTITUTION' }),

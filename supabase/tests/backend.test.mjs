@@ -70,8 +70,8 @@ console.log('\nAuthentication & roles');
 const st = (await rpc(U.dits, 'select public.get_portal_state() s')).s;
 ok(st.institution.pid === '1-10928371' && st.apps.length === 2 && st.fdrs.length === 3, `DITS state: ${st.apps.length} apps, ${st.fdrs.length} FDRs, ${st.notifs.length} notifications`);
 ok(st.apps.every(a => a.institutionId === st.institution.id), 'state only contains own institution');
-ok(/ACCOUNT_PENDING/.test(await err(U.pending, 'select public.get_portal_state()')), 'unverified registration is refused (ACCOUNT_PENDING)');
-ok((await db.query(`select count(*)::int c from public.registration_requests where user_id = $1`, [U.pending])).rows[0].c === 1, 'sign-up creates a registration request');
+ok(/REGISTRATION_REQUIRED/.test(await err(U.pending, 'select public.get_portal_state()')), 'sign-up with incomplete details is asked for them (REGISTRATION_REQUIRED)');
+ok((await db.query(`select count(*)::int c from public.registration_requests where user_id = $1`, [U.pending])).rows[0].c === 0, 'incomplete sign-up details create no registration');
 ok(/ROLE_MISMATCH/.test(await err(U.rev, 'select public.get_portal_state()')), 'reviewer cannot use the institution portal (ROLE_MISMATCH)');
 await db.exec('set role anon');
 try { await db.query('select public.get_portal_state()'); ok(false, 'anonymous call rejected'); } catch (e) { ok(/permission denied/.test(e.message), 'anonymous (anon key) call rejected'); } finally { await db.exec('reset role'); }
@@ -194,7 +194,7 @@ const g = await mkUser('google.head@gmail.com', { name: 'Google Head', full_name
 const gs = (await rpc(g, 'select public.get_portal_state() s')).s;
 ok(gs.institution.pid === '1-10928371' && gs.me.name === 'Google Head', 'invited Google account is active on first sign-in, with its Google name');
 const late = await mkUser('late.google@gmail.com', { name: 'Late User' });
-ok(/ACCOUNT_PENDING/.test(await err(late, 'select public.get_portal_state()')), 'uninvited Google account lands as pending');
+ok(/REGISTRATION_REQUIRED/.test(await err(late, 'select public.get_portal_state()')), 'uninvited Google account is asked for its registration details');
 await rpc(null, `select public.admin_invite_user('late.google@gmail.com', '1-14829104')`);
 ok((await rpc(late, 'select public.get_portal_state() s')).s.institution.pid === '1-14829104', 'inviting an existing account activates it');
 ok(!!(await err(U.dits, `select public.admin_invite_user('x@gmail.com', '1-10928371')`)), 'institution users cannot invite');
@@ -203,12 +203,35 @@ ok((await as(U.rev, 'select count(*)::int c from public.user_invites')).rows[0].
 ok((await as(U.adm, 'select count(*)::int c from public.user_invites')).rows[0].c >= 1, 'admins can read the invite list');
 ok(/NOT_FOUND/.test(await err(null, `select public.admin_invite_user('y@gmail.com', '9-99999999')`)), 'unknown PID rejected');
 
+console.log('\nSelf-registration (no approval step)');
+const selfInst = await mkUser('head@newtech.edu.in', { registration: { role: 'INSTITUTION', name: 'New Tech Institute', state: 'Karnataka', district: 'Mysuru', type: 'Government', head: 'Dr. Self Head', mobile: '9876543210' } });
+const ss = (await rpc(selfInst, 'select public.get_portal_state() s')).s;
+ok(ss.institution.name === 'New Tech Institute' && ss.institution.region === 'South-Western' && /^1-2/.test(ss.institution.pid), `sign-up with details is active at once (new institution ${ss.institution.pid})`);
+ok((await db.query(`select status from public.registration_requests where user_id = $1`, [selfInst])).rows[0].status === 'ACTIVATED', 'its registration is recorded as activated');
+const gNew = await mkUser('fresh.google@gmail.com', { name: 'Fresh Google' });
+ok(/REGISTRATION_REQUIRED/.test(await err(gNew, 'select public.get_portal_state()')), 'first Google sign-in asks for details');
+ok(/VALIDATION/.test(await err(gNew, `select public.complete_registration('{"role":"INSTITUTION","name":"X College","state":"Delhi","district":"Delhi","head":"Dr. Claim","pid":"1-10928371"}')`)), 'cannot claim a PID that another account already uses');
+ok(/bank name/.test(await err(gNew, `select public.complete_registration('{"role":"BANK_OFFICIAL","fullName":"Shri Bank"}')`)), 'bank official registration needs a bank');
+await rpc(gNew, `select public.complete_registration('{"role":"INSTITUTION","name":"Fresh College","state":"Uttar Pradesh","district":"Kanpur","head":"Dr. Fresh","mobile":"+91 98765 43210"}')`);
+const fs2 = (await rpc(gNew, 'select public.get_portal_state() s')).s;
+ok(fs2.institution.name === 'Fresh College' && fs2.institution.region === 'North-Central' && fs2.me.name === 'Dr. Fresh', 'Google account is active after completing its details');
+ok(/ALREADY_REGISTERED/.test(await err(gNew, `select public.complete_registration('{"role":"ADMIN","fullName":"Now An Admin"}')`)), 'a registered account cannot re-register (e.g. to change role)');
+const gStaff = await mkUser('officer.google@gmail.com', { name: 'Officer G' });
+await rpc(gStaff, `select public.complete_registration('{"role":"REVIEWER","fullName":"Dr. Officer Google","designation":"Assistant Director"}')`);
+const sp = (await db.query('select role, status, designation from public.profiles where id = $1', [gStaff])).rows[0];
+ok(sp.role === 'REVIEWER' && sp.status === 'ACTIVE' && sp.designation === 'Assistant Director', 'officer registers through Google and is active');
+ok((await as(gStaff, 'select count(*)::int c from public.applications')).rows[0].c > 0, 'self-registered officer can read applications');
+const selfBank = await mkUser('bob@bankofbaroda.in', { registration: { role: 'BANK_OFFICIAL', fullName: 'Shri Bob', bankName: 'Bank of Baroda' } });
+const sb = (await db.query('select status, bank_name from public.profiles where id = $1', [selfBank])).rows[0];
+ok(sb.status === 'ACTIVE' && sb.bank_name === 'Bank of Baroda', 'bank official registers with a password sign-up and is active');
+ok(!!(await err(gNew, `select public._register_profile($1, 'x@y.z', '{"role":"ADMIN","fullName":"Sneaky Admin"}')`, [U.dits])), 'internal _register_profile cannot be called by users');
+
 console.log('\nStaff web portal');
 const bankFdrs = (await as(U.bank, 'select bank_name from public.fdrs')).rows;
 ok(bankFdrs.length > 0 && bankFdrs.every(r => r.bank_name === 'State Bank of India'), `bank official sees only own-bank FDRs (${bankFdrs.length})`);
 ok((await as(U.bank, 'select count(*)::int c from public.applications')).rows[0].c === 0, 'bank official cannot read applications');
 ok((await as(U.bank, 'select count(*)::int c from public.institutions')).rows[0].c > 0, 'bank official sees institutions behind its FDRs');
-ok((await as(U.rev, 'select count(*)::int c from public.registration_requests')).rows[0].c >= 1, 'reviewer can see pending registrations');
+ok((await as(U.rev, 'select count(*)::int c from public.registration_requests')).rows[0].c >= 1, 'reviewer can see registrations');
 ok((await as(U.dits, 'select count(*)::int c from public.registration_requests')).rows[0].c === 0, 'institution cannot see registrations');
 const warn = (await db.query(`select id from public.findings where severity = 'WARNING' limit 1`)).rows[0].id;
 ok(/FORBIDDEN/.test(await err(U.dits, `select public.review_override_finding($1, 'Institution tries to clear this', 'APH 1.1')`, [warn])), 'institution cannot override a finding');
@@ -228,9 +251,8 @@ ok(/FORBIDDEN/.test(await err(U.adm, `select public.admin_set_user_status($1, 'D
 await rpc(U.adm, `select public.admin_set_user_status($1, 'DISABLED')`, [pnb]);
 ok((await as(pnb, 'select count(*)::int c from public.fdrs')).rows[0].c === 0, 'disabled bank official loses access');
 ok(/institution/.test(await err(U.adm, `select public.admin_set_user_status($1, 'ACTIVE')`, [U.pending])), 'unlinked institution account cannot be activated');
-const regNo = (await db.query('select request_no from public.registration_requests where user_id = $1', [U.pending])).rows[0].request_no;
-await rpc(U.adm, `select public.admin_reject_registration($1, 'Not an AICTE-recognised institution')`, [regNo]);
-ok((await db.query('select status from public.registration_requests where request_no = $1', [regNo])).rows[0].status === 'REJECTED', 'admin can reject a registration');
+await rpc(U.adm, `select public.admin_set_user_status($1, 'DISABLED')`, [selfInst]);
+ok(/ACCOUNT_DISABLED/.test(await err(selfInst, 'select public.get_portal_state()')), 'admin can still disable a self-registered account');
 
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);
