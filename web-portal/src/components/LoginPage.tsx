@@ -37,6 +37,16 @@ const GoogleIcon = () => (
   </svg>
 );
 
+// Shared evaluator accounts on the live server (created by hand in Supabase, see README "Demo accounts").
+const DEMO_PASSWORD = 'Sih@2026Demo';
+const DEMO_ACCOUNTS = {
+  officer: [
+    { label: 'Scrutiny Officer', email: 'demo.officer@example.com', icon: ShieldCheck },
+    { label: 'Bank Official (SBI)', email: 'demo.bank@example.com', icon: Landmark }
+  ],
+  admin: [{ label: 'Administrator', email: 'demo.admin@example.com', icon: Crown }]
+};
+
 export const LoginPage: React.FC = () => {
   const { loginWithPassword, loginWithGoogle, sendPasswordReset, authError } = useApp();
 
@@ -56,6 +66,25 @@ export const LoginPage: React.FC = () => {
   const isAdminPortal = portal.id === 'admin';
   const other = isAdminPortal ? PORTALS.officer : PORTALS.admin;
 
+  const signIn = async (address: string, secret: string) => {
+    setFieldErrors({});
+    setIsLoading(true);
+    setErrorMessage(null);
+    try {
+      await loginWithPassword(address, secret);
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Authentication failed. Please verify your credentials.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDemo = (address: string) => {
+    setEmail(address);
+    setPassword(DEMO_PASSWORD);
+    signIn(address, DEMO_PASSWORD);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const errors: { email?: string; password?: string } = {};
@@ -65,16 +94,7 @@ export const LoginPage: React.FC = () => {
       setFieldErrors(errors);
       return;
     }
-    setFieldErrors({});
-    setIsLoading(true);
-    setErrorMessage(null);
-    try {
-      await loginWithPassword(email, password);
-    } catch (err: any) {
-      setErrorMessage(err.message || 'Authentication failed. Please verify your credentials.');
-    } finally {
-      setIsLoading(false);
-    }
+    await signIn(email, password);
   };
 
   const handleGoogle = async () => {
@@ -297,6 +317,29 @@ export const LoginPage: React.FC = () => {
                     </button>
                   </div>
                 </form>
+
+                <div className="mt-5 p-3.5 rounded-xl border border-dashed border-indigo-200 bg-indigo-50/50">
+                  <p className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-900">Demo accounts for evaluators</p>
+                  <p className="text-[11px] text-slate-500 mt-0.5">
+                    One click signs in. Password for all: <span className="font-mono font-semibold text-slate-700">{DEMO_PASSWORD}</span>
+                  </p>
+                  <div className="mt-2.5 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {DEMO_ACCOUNTS[isAdminPortal ? 'admin' : 'officer'].map(d => (
+                      <button
+                        key={d.email}
+                        type="button"
+                        onClick={() => handleDemo(d.email)}
+                        disabled={isLoading || isGoogleLoading}
+                        className="py-2 px-3 bg-white border border-indigo-200 hover:border-indigo-400 hover:shadow-md rounded-lg text-left transition-all cursor-pointer disabled:opacity-60"
+                      >
+                        <span className="flex items-center gap-1.5 text-xs font-bold text-[#0a2540]">
+                          <d.icon className="w-3.5 h-3.5 text-indigo-600" /> {d.label}
+                        </span>
+                        <span className="block text-[10px] font-mono text-slate-500 truncate">{d.email}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
 
               <div className="pt-4 mt-6 border-t border-slate-100 text-[10px] text-slate-400 text-center">

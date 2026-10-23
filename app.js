@@ -157,6 +157,10 @@ const BANKS = [
   ['HDFC Bank Ltd', 'HDFC', 'HDFC'], ['Bank of Baroda', 'BARB', 'BOB'], ['ICICI Bank Ltd', 'ICIC', 'ICICI'],
   ['Axis Bank Ltd', 'UTIB', 'AXIS'], ['Union Bank of India', 'UBIN', 'UBI'],
 ];
+// Shared evaluator account on the live server (created by hand in Supabase, see README "Demo accounts").
+const DEMO_LOGIN = { label: 'Institution · DITS Delhi', email: 'demo.institution@example.com', password: 'Sih@2026Demo' };
+const isDemoAccount = email => /^demo\.[a-z]+@example\.com$/i.test(email || '');
+const SAMPLE_REG = { name: 'Rajdhani Institute of Engineering & Technology', pid: '', state: 'Delhi', district: 'South West Delhi', type: 'Unaided - Private', head: 'Dr. Anita Verma', mobile: '9876543210', agree: true };
 const STATES = ['Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka', 'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal', 'Andaman and Nicobar Islands', 'Chandigarh', 'Dadra and Nagar Haveli and Daman and Diu', 'Delhi', 'Jammu and Kashmir', 'Ladakh', 'Lakshadweep', 'Puducherry'];
 const INST_TYPES = ['Unaided - Private', 'Govt. Aided', 'Government', 'Autonomous Institute', 'Autonomous - Private', 'Deemed to be University', 'Private University'];
 const REGIONS = ['Northern', 'Southern', 'Western', 'Eastern', 'South-Western', 'North-Western', 'Central', 'South-Eastern', 'North-Eastern'];
@@ -881,7 +885,10 @@ function loginForm() {
   <button class="btn btn-outline btn-block" data-act="googleLogin"><svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.5l6.7-6.7C35.6 2.4 30.2 0 24 0 14.6 0 6.6 5.4 2.7 13.3l7.8 6C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4.1 7.1-10.1 7.1-17.5z"/><path fill="#FBBC05" d="M10.5 28.7c-.5-1.4-.8-3-.8-4.7s.3-3.2.8-4.7l-7.8-6C1 16.6 0 20.2 0 24s1 7.4 2.7 10.7l7.8-6z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.5-5.8c-2.1 1.4-4.8 2.3-8.4 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.8 6C6.6 42.6 14.6 48 24 48z"/></svg> Continue with Google</button>
   <button class="btn btn-outline btn-block mt8" data-act="otpLogin">${ic('shieldCheck', 18)} Sign in with OTP</button>
   <button class="btn btn-outline btn-block mt8" style="border-color:var(--line2);color:var(--text2)" data-act="ssoLogin">${ic('landmark', 18)} Login with Government SSO</button>
-  ${remote ? '' : `<div class="card mt16" style="padding:12px"><div class="xs b muted" style="text-transform:uppercase;letter-spacing:.5px">Quick Fill Test Credentials</div>
+  ${remote ? `<div class="card mt16" style="padding:12px"><div class="xs b muted" style="text-transform:uppercase;letter-spacing:.5px">Demo Account for Evaluators</div>
+    <div class="xs muted mt4">${esc(DEMO_LOGIN.email)} · <span class="mono">${esc(DEMO_LOGIN.password)}</span></div>
+    <button class="btn btn-outline btn-block btn-xs mt8" data-act="demoLogin">${ic('user', 14)} Login as ${esc(DEMO_LOGIN.label)}</button></div>`
+  : `<div class="card mt16" style="padding:12px"><div class="xs b muted" style="text-transform:uppercase;letter-spacing:.5px">Quick Fill Test Credentials</div>
     <div class="row wrap mt8" style="gap:6px">${instUsers().map(u => `<button class="btn btn-ghost btn-xs" data-act="quickFill" data-id="${u.id}">Institution (${esc(instOf(u).short)})</button>`).join('')}</div></div>`}
   <div class="banner info mt16">${ic('info', 18)}<div class="xs">This portal is for technical institutions. AICTE officials, scrutiny reviewers and bank officials sign in on the AICTE Admin Portal.</div></div>
   <p class="center mt16 small">New Institution? <button class="link" data-act="loginTab" data-v="register">Register Now</button></p>`;
@@ -889,6 +896,7 @@ function loginForm() {
 function registerForm() {
   const r = UI.reg || {};
   return `<div class="banner info">${ic('info', 18)}<div>Registration requests are verified by the State Directorate of Technical Education (DTE). Your account is activated after verification${Backend.remote ? '; confirm your email using the link we send' : ''}.</div></div>
+  <button type="button" class="btn btn-ghost btn-block btn-xs mt12" data-act="regSample">${ic('file', 14)} Fill sample institution details</button>
   <form data-form="register" novalidate class="mt16">
     ${fld('Institution Name', 'name', r.name, { req: true, ph: 'Full registered name of the institution' })}
     ${fld('Permanent Institute ID / Application ID', 'pid', r.pid, { ph: 'If already allotted, e.g. 1-12345678' })}
@@ -1797,6 +1805,8 @@ const ACTIONS = {
   retryBoot: () => location.reload(),
   loginTab: el => { UI.loginTab = el.dataset.v; UI.loginErr = null; UI.err = {}; render(true); },
   togglePw: el => { const p = $('#pw'); p.type = p.type === 'password' ? 'text' : 'password'; el.innerHTML = ic(p.type === 'password' ? 'eye' : 'eyeOff', 18); el.setAttribute('aria-label', p.type === 'password' ? 'Show password' : 'Hide password'); },
+  demoLogin: () => { UI.loginEmail = DEMO_LOGIN.email; UI.loginPw = DEMO_LOGIN.password; UI.loginErr = null; UI.err = {}; render(); $('form[data-form="login"]').requestSubmit(); },
+  regSample: () => { UI.reg = { ...SAMPLE_REG, email: (UI.reg && UI.reg.email) || '' }; UI.err = {}; render(); toast('Sample details filled. Enter your email and a password', 'info'); },
   quickFill: el => { const u = DB.users.find(x => x.id === el.dataset.id); UI.loginEmail = u.email; UI.loginPw = u.demoPassword; UI.loginErr = null; UI.err = {}; render(); },
   forgot: () => {
     if (Backend.remote) {
@@ -2071,6 +2081,7 @@ const ACTIONS = {
   },
   savePassword: async el => {
     const r = readForm($('#pwForm')), e = {};
+    if (isDemoAccount(me().email)) { toast('Password changes are disabled on the shared demo account', 'warn'); return; }
     if (!r.current) e.current = 'Enter your current password';
     if (!PW_RULE.test(r.next)) e.next = 'Use 8+ characters with upper, lower, number and special character';
     else if (r.next === r.current) e.next = 'New password must differ from the current one';

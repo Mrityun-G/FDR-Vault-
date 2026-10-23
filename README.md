@@ -51,6 +51,27 @@ role with `admin_invite_staff` (see *Staff accounts* below).
    ```
    `msg2gmanikandan@gmail.com` is already approved for DITS Delhi (`1-10928371`).
 
+### Demo accounts (for evaluators)
+The login screens show one-click demo buttons. All four accounts share the password `Sih@2026Demo`:
+
+| Account | Signs in at | Role |
+|---|---|---|
+| `demo.institution@example.com` | Institution app | INSTITUTION, DITS Delhi (`1-10928371`) |
+| `demo.officer@example.com` | `/officer` | REVIEWER |
+| `demo.bank@example.com` | `/officer` | BANK_OFFICIAL, State Bank of India |
+| `demo.admin@example.com` | `/admin` | ADMIN |
+
+To create them: in Supabase *Authentication → Users → Add user → Create new user*, add each email with the password
+above and tick *Auto Confirm User*. Then run this in the SQL Editor:
+```sql
+select public.admin_link_user('demo.institution@example.com', '1-10928371');
+update public.profiles set full_name = 'Dr. R. K. Sharma (Demo)', designation = 'Principal' where email = 'demo.institution@example.com';
+select public.admin_invite_staff('demo.officer@example.com', 'REVIEWER', 'Demo Scrutiny Officer', 'Scrutiny Officer');
+select public.admin_invite_staff('demo.bank@example.com', 'BANK_OFFICIAL', 'Demo Bank Official', 'Branch Manager', 'State Bank of India');
+select public.admin_invite_staff('demo.admin@example.com', 'ADMIN', 'Demo Administrator', 'Administrator');
+```
+The institution app blocks password changes on the demo account so one evaluator cannot lock out the rest.
+
 ### Staff accounts (website)
 Staff sign in to the staff portal with Google, or with an email and password. To give someone access, approve their
 email with a role. If they have no account yet, it activates the first time they sign in:
