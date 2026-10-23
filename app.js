@@ -916,7 +916,7 @@ function loginForm() {
 }
 function registerForm() {
   const r = UI.reg || {}, c = UI.completing;
-  return `${c ? `<div class="banner info">${ic('info', 18)}<div><b>Complete your registration</b><div>Signed in with Google as <b>${esc(c.email)}</b>. Enter your institution details once; after that, Google sign-in takes you straight to your dashboard.</div></div></div>`
+  return `${c ? `<div class="banner info">${ic('info', 18)}<div><b>Complete your registration</b><div>Signed in as <b>${esc(c.email)}</b>. Enter your institution details once; after that, signing in takes you straight to your dashboard.</div></div></div>`
     : `<div class="banner info">${ic('info', 18)}<div>Register with your institution details and you can start using the portal right away${Backend.remote ? ' (confirm your email first if we send you a link)' : ''}.</div></div>
   ${Backend.remote ? `<button class="btn btn-outline btn-block mt12" data-act="googleLogin">${GOOGLE_ICON} Register with Google</button><div class="or">OR</div>` : ''}`}
   <button type="button" class="btn btn-ghost btn-block btn-xs mt12" data-act="regSample">${ic('file', 14)} Fill sample institution details</button>

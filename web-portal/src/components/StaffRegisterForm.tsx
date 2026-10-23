@@ -121,7 +121,7 @@ export const StaffRegisterForm: React.FC<Props> = ({ roles, accent, onGoogle, go
           <div>
             <p className="font-bold">Complete your registration</p>
             <p className="text-[11px] mt-0.5 leading-relaxed">
-              Signed in with Google as <b>{pendingRegistration.email}</b>. Enter your details once; after that, Google sign-in takes you straight in.
+              Signed in as <b>{pendingRegistration.email}</b>. Enter your details for this portal once; after that, signing in takes you straight in.
             </p>
           </div>
         </div>

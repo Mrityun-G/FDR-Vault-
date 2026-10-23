@@ -79,24 +79,28 @@ const ratio = (n: number, d: number) => (d > 0 ? (n / d).toFixed(1).replace(/\.0
 
 /* ------------------------------------------------------------------ session / profile */
 
-export async function loadProfile(): Promise<User> {
+/**
+ * Loads the signed-in account as one of `allowed` (the roles of the portal being opened). An account can hold
+ * several roles; one that holds none of them is asked to register for this portal (REGISTRATION_REQUIRED).
+ */
+export async function loadProfile(allowed: UserRole[] = STAFF_ROLES): Promise<User> {
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) throw new ApiError('NOT_AUTHENTICATED', 'Sign in to continue.');
   const p = must(await supabase.from('profiles').select('*, institutions!profiles_institution_id_fkey(name, pid, region)').eq('id', auth.user.id).maybeSingle()) as any;
   if (!p || p.needs_registration) throw new ApiError('REGISTRATION_REQUIRED', 'Complete your registration details to continue.');
-  if (p.status === 'PENDING_VERIFICATION')
-    throw new ApiError('ACCOUNT_PENDING', 'Your account is awaiting approval. Ask an AICTE administrator to invite your email as staff.');
   if (p.status === 'DISABLED') throw new ApiError('ACCOUNT_DISABLED', 'This account has been disabled. Contact the Regulation Bureau IT Cell.');
-  if (p.role === 'INSTITUTION')
-    throw new ApiError('ROLE_MISMATCH', 'This is an institution account. Institutions submit applications and documents in the AICTE Institution mobile app.');
+  if (p.status === 'PENDING_VERIFICATION') throw new ApiError('ACCOUNT_PENDING', 'Your account is awaiting verification.');
+  const roles: UserRole[] = p.roles?.length ? p.roles : [p.role];
+  const role = allowed.find(r => roles.includes(r));
+  if (!role) throw new ApiError('REGISTRATION_REQUIRED', 'Register your details to use this portal.');
   return {
     id: p.id,
     name: p.full_name || p.email,
     email: p.email,
-    role: p.role,
+    role,
     designation: p.designation || '',
     bankName: p.bank_name || undefined,
-    canApproveApplications: p.role === 'ADMIN'
+    canApproveApplications: role === 'ADMIN'
   };
 }
 

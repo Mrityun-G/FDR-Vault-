@@ -48,7 +48,8 @@ const pdf = (name, seed, pages = 2) => {
   await h.type('input[name=email]', '1-10928371'); await h.type('input[name=password]', 'x1234'); await h.click('Login', 'form'); await wait(600);
   ok(await h.has('registered official email'), 'PID login rejected — email required');
   await h.type('input[name=email]', 'reviewer.mehta@aicte-india.org'); await h.type('input[name=password]', 'Rev@2026'); await h.click('Login', 'form');
-  ok(await h.waitText('Sign in on the AICTE staff portal instead'), 'reviewer account refused (server ROLE_MISMATCH)');
+  ok(await h.waitText('Complete your registration'), 'reviewer account is asked to register an institution (no refusal)');
+  await h.click('Use another account'); await wait(400);
   await h.type('input[name=email]', 'principal@dits-delhi.edu.in'); await h.type('input[name=password]', 'wrong-pass'); await h.click('Login', 'form');
   ok(await h.waitText('Invalid User ID or Password'), 'wrong password rejected');
   await h.type('input[name=password]', 'Dits@2026'); await h.click('Login', 'form');

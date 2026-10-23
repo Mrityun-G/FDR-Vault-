@@ -72,7 +72,7 @@ ok(st.institution.pid === '1-10928371' && st.apps.length === 2 && st.fdrs.length
 ok(st.apps.every(a => a.institutionId === st.institution.id), 'state only contains own institution');
 ok(/REGISTRATION_REQUIRED/.test(await err(U.pending, 'select public.get_portal_state()')), 'sign-up with incomplete details is asked for them (REGISTRATION_REQUIRED)');
 ok((await db.query(`select count(*)::int c from public.registration_requests where user_id = $1`, [U.pending])).rows[0].c === 0, 'incomplete sign-up details create no registration');
-ok(/ROLE_MISMATCH/.test(await err(U.rev, 'select public.get_portal_state()')), 'reviewer cannot use the institution portal (ROLE_MISMATCH)');
+ok(/REGISTRATION_REQUIRED/.test(await err(U.rev, 'select public.get_portal_state()')), 'reviewer opening the institution portal is asked to register an institution');
 await db.exec('set role anon');
 try { await db.query('select public.get_portal_state()'); ok(false, 'anonymous call rejected'); } catch (e) { ok(/permission denied/.test(e.message), 'anonymous (anon key) call rejected'); } finally { await db.exec('reset role'); }
 
@@ -215,11 +215,23 @@ ok(/bank name/.test(await err(gNew, `select public.complete_registration('{"role
 await rpc(gNew, `select public.complete_registration('{"role":"INSTITUTION","name":"Fresh College","state":"Uttar Pradesh","district":"Kanpur","head":"Dr. Fresh","mobile":"+91 98765 43210"}')`);
 const fs2 = (await rpc(gNew, 'select public.get_portal_state() s')).s;
 ok(fs2.institution.name === 'Fresh College' && fs2.institution.region === 'North-Central' && fs2.me.name === 'Dr. Fresh', 'Google account is active after completing its details');
-ok(/ALREADY_REGISTERED/.test(await err(gNew, `select public.complete_registration('{"role":"ADMIN","fullName":"Now An Admin"}')`)), 'a registered account cannot re-register (e.g. to change role)');
+ok(/ALREADY_REGISTERED/.test(await err(gNew, `select public.complete_registration('{"role":"INSTITUTION","name":"Second College","state":"Delhi","district":"Delhi","head":"Dr. Fresh"}')`)), 'cannot register the same role twice');
+ok(/FORBIDDEN/.test(await err(gNew, `select public.admin_set_user_status($1, 'DISABLED')`, [U.bce])), 'institution role alone cannot use admin functions');
+await rpc(gNew, `select public.complete_registration('{"role":"ADMIN","fullName":"Ignored Name"}')`);
+const multi = (await db.query('select role, roles, full_name, institution_id is not null as has_inst from public.profiles where id = $1', [gNew])).rows[0];
+ok(multi.roles.join() === 'INSTITUTION,ADMIN' && multi.full_name === 'Dr. Fresh' && multi.has_inst, 'same Google account adds the admin role and keeps its institution and name');
+ok((await rpc(gNew, 'select public.get_portal_state() s')).s.institution.name === 'Fresh College', 'it still uses the institution portal');
+ok((await as(gNew, 'select public.is_admin() a')).rows[0].a === true && (await as(gNew, 'select count(*)::int c from public.user_invites')).rows[0].c >= 0, 'and the admin console');
+ok(!/FORBIDDEN/.test(await err(gNew, `select public.admin_set_user_status($1, 'ACTIVE')`, [U.bce]) || ''), 'admin functions now work for it');
+const auditRole = (await db.query(`select actor_role from public.audit_events where actor_id = $1 and action = 'USER_ACTIVE' order by id desc limit 1`, [gNew])).rows[0];
+ok(auditRole && auditRole.actor_role === 'ADMIN', 'admin actions are audited under the ADMIN role');
 const gStaff = await mkUser('officer.google@gmail.com', { name: 'Officer G' });
 await rpc(gStaff, `select public.complete_registration('{"role":"REVIEWER","fullName":"Dr. Officer Google","designation":"Assistant Director"}')`);
 const sp = (await db.query('select role, status, designation from public.profiles where id = $1', [gStaff])).rows[0];
 ok(sp.role === 'REVIEWER' && sp.status === 'ACTIVE' && sp.designation === 'Assistant Director', 'officer registers through Google and is active');
+await rpc(gStaff, `select public.complete_registration('{"role":"BANK_OFFICIAL","fullName":"Dr. Officer Google","bankName":"Canara Bank"}')`);
+const canara = (await as(gStaff, 'select public.my_bank() b')).rows[0].b;
+ok(canara === 'Canara Bank' && (await as(gStaff, 'select count(*)::int c from public.applications')).rows[0].c > 0, 'officer can also register as a bank official (both portals work)');
 ok((await as(gStaff, 'select count(*)::int c from public.applications')).rows[0].c > 0, 'self-registered officer can read applications');
 const selfBank = await mkUser('bob@bankofbaroda.in', { registration: { role: 'BANK_OFFICIAL', fullName: 'Shri Bob', bankName: 'Bank of Baroda' } });
 const sb = (await db.query('select status, bank_name from public.profiles where id = $1', [selfBank])).rows[0];

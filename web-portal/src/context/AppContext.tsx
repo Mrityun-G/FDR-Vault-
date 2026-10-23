@@ -20,7 +20,7 @@ import {
 } from '../types';
 import { INITIAL_RULES, INITIAL_AUTHORITY_ADAPTERS } from '../data/mockData';
 import { supabase } from '../lib/supabase';
-import { PORTAL, portalForRole, portalUrl } from '../lib/portal';
+import { PORTAL } from '../lib/portal';
 import { actions, buildNotifications, loadApplications, loadAudit, loadFdrs, loadProfile, toApiError, StaffRegistration } from '../services/backend';
 
 const GUEST: User = { id: '', name: 'Guest', email: '', role: 'REVIEWER', designation: '' };
@@ -168,14 +168,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const enterSession = useCallback(async (): Promise<string | null> => {
     entering.current = true;
     try {
-      const user = await loadProfile();
-      // Each portal admits only its own roles; point the person to the right address.
-      if (PORTAL && !PORTAL.roles.includes(user.role)) {
-        const home = portalForRole(user.role);
-        throw toApiError({
-          message: `ROLE_MISMATCH: This ${user.role === 'ADMIN' ? 'administrator' : user.role === 'BANK_OFFICIAL' ? 'bank official' : 'scrutiny officer'} account signs in at the ${home?.name || 'staff portal'}${home ? `: ${portalUrl(home)}` : ''}.`
-        });
-      }
+      // Signed in as this portal's role; an account without it is asked to register for it.
+      const user = await loadProfile(PORTAL?.roles);
       userRef.current = user;
       setCurrentUser(user);
       setIsAuthenticated(true);
