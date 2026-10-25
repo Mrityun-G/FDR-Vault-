@@ -1,5 +1,5 @@
 # AICTE Institution Portal — Mobile App (PWA) + Supabase backend
-
+Government Application
 This is the mobile version of the **Institution (Applicant) portal** of the
 [AICTE Intelligent Regulatory Validation Platform](https://aicte-intelligent-regulatory-validation-platform.ai.studio/).
 It is an installable Progressive Web App with two run modes:
