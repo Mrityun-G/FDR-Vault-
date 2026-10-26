@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const out = path.join(root, 'www');
 const FILES = ['index.html', 'styles.css', 'config.js', 'data.js', 'backend.js', 'api-client.js', 'app.js', 'i18n.js', 'sw.js', 'manifest.webmanifest',
-  'emblem.png', 'fdr-vault-logo.png', 'delhi.webp', 'mumbai.webp', 'icon-192.png', 'icon-512.png'];
+  'emblem.png', 'delhi.webp', 'mumbai.webp', 'icon-192.png', 'icon-512.png'];
 const DIRS = ['members'];
 fs.rmSync(out, { recursive: true, force: true });
 fs.mkdirSync(out);
