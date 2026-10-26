@@ -357,7 +357,7 @@ function sessionEnded(msg) {
 function brandHeader() {
   const n = unread();
   return `<header class="hdr hdr-brand" style="background:#0B3A70;color:#fff;border-bottom:3px solid #D97706;padding:10px 14px">
-    <img class="brand-logo" src="emblem.png" alt="AICTE emblem" style="width:36px;height:36px;background:#fff;border-radius:4px;padding:2px">
+    <img class="brand-logo" src="fdr-vault-logo.png" alt="FDR Vault logo" style="width:auto;height:44px;background:#fff;border-radius:4px;padding:2px;object-fit:contain">
     <div class="brand-t" style="line-height:1.2">
       <b style="font-size:14px;letter-spacing:0.3px">AICTE · अखिल भारतीय तकनीकी शिक्षा परिषद</b>
       <span style="font-size:11px;opacity:0.9">Institution Portal · Security Deposit &amp; Approvals</span>
