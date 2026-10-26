@@ -14,6 +14,7 @@
     "e2e:server": "node tests/e2e-server.mjs",
     "test:e2e:demo": "node tests/e2e/demo.e2e.cjs",
     "test:e2e:onboarding": "node tests/e2e/onboarding.e2e.cjs",
+    "test:e2e:navigation": "node tests/e2e/navigation.e2e.cjs",
     "test:e2e:server": "node tests/e2e/server.e2e.cjs",
     "test:ai": "node supabase/functions/analyze-document/extract.test.ts",
     "build:www": "node scripts/build-www.mjs",

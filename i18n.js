@@ -30,6 +30,8 @@ const I18N = (() => {
     'Weak': 'कमज़ोर', 'Fair': 'ठीक', 'Good': 'अच्छा', 'Strong': 'मज़बूत', 'Today': 'आज', 'Earlier': 'पहले',
     'Account': 'खाता', 'Compliance & Records': 'अनुपालन एवं अभिलेख', 'Eligible for lien release': 'ग्रहणाधिकार मुक्ति हेतु पात्र',
     'Total corpus under irrevocable joint lien': 'अपरिवर्तनीय संयुक्त ग्रहणाधिकार के अधीन कुल कोष',
+    'Leave this screen?': 'यह स्क्रीन छोड़ें?', 'You have changes on this screen that are not saved yet.': 'इस स्क्रीन पर आपके बदलाव अभी सहेजे नहीं गए हैं।',
+    'Save draft & leave': 'ड्राफ़्ट सहेजें और जाएँ', 'Leave without saving': 'बिना सहेजे जाएँ', 'Keep editing': 'संपादन जारी रखें',
     // login / register
     'Institution ID / Registered Email': 'संस्थान आईडी / पंजीकृत ईमेल', 'Registered Email': 'पंजीकृत ईमेल', 'Password': 'पासवर्ड',
     'Remember me': 'मुझे याद रखें', 'Forgot Password?': 'पासवर्ड भूल गए?', 'OR': 'या', 'Sign in with OTP': 'ओटीपी से साइन इन करें',
@@ -193,6 +195,7 @@ const I18N = (() => {
     [/^([\d.]+ (?:Cr|Lakhs)) secured under AICTE joint lien$/, m => `${m[1]} एआईसीटीई संयुक्त ग्रहणाधिकार के अंतर्गत सुरक्षित`],
     [/^(\d+) application\(s\) under review$/, m => `${m[1]} आवेदन समीक्षाधीन`], [/^(\d+) clarification\(s\) required$/, m => `${m[1]} स्पष्टीकरण आवश्यक`],
     [/^(\d+) unread alert\(s\)$/, m => `${m[1]} अपठित सूचनाएँ`], [/^Next maturity: (.+)$/, m => `अगली परिपक्वता: ${m[1]}`],
+    [/^Updated (\d{1,2}:\d{2}\s*(?:am|pm)?)$/i, m => `अद्यतन ${m[1]}`], [/^Could not refresh: (.+)$/, m => `ताज़ा नहीं हो सका: ${m[1]}`],
     [/^Matures (\d.+)$/, m => `परिपक्वता ${m[1]}`], [/^(\d+) point\(s\)$/, m => `${m[1]} बिंदु`],
     [/^([\d.]+ (?:Cr|Lakhs)) · (\d+) active deposit\(s\) · APH Chapter VI Norms$/, m => `${m[1]} · ${m[2]} सक्रिय जमा · एपीएच अध्याय VI मानदंड`],
     [/^Endorsed (.+)$/, m => `पृष्ठांकित ${m[1]}`], [/^(\d+) point\(s\) raised by (.+)\. Respond within 7 working days\.$/, m => `${m[2]} द्वारा ${m[1]} बिंदु उठाए गए। 7 कार्य दिवसों में उत्तर दें।`],

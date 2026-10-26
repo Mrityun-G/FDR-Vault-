@@ -254,18 +254,67 @@ const ON_ENTER = {
   contact: () => { UI.edit = null; },
 };
 function go(name, params = {}, opts = {}) {
-  UI.err = {}; UI.vals = null;
+  UI.err = {}; UI.vals = null; UI.dirty = false;
   if (ON_ENTER[name]) ON_ENTER[name]();
   if (opts.replace) UI.stack[UI.stack.length - 1] = { name, params };
   else { UI.stack.push({ name, params }); history.pushState({ d: UI.stack.length }, ''); }
   render(true);
 }
-function goTab(name) { UI.err = {}; UI.vals = null; UI.stack = [{ name, params: {} }]; render(true); }
-function back() { if (UI.stack.length > 1) history.back(); }
+function goTab(name) { UI.err = {}; UI.vals = null; UI.dirty = false; UI.stack = [{ name, params: {} }]; render(true); }
+
+// Back navigation. Bottom-tab screens are roots (no Back). A secondary screen goes back through the app's own
+// history entries; one opened directly (no in-app history) goes to its parent page instead of leaving the app.
+const ROOTS = ['dashboard', 'apps', 'fdrs', 'alerts', 'profile'];
+const PARENT = { appDetail: 'apps', notice: 'apps', respond: 'apps', apptype: 'dashboard', wizard: 'apps', ai: 'apps', review: 'apps', submitted: 'apps',
+  fdrDetail: 'fdrs', fdrRenew: 'fdrs', fdrRelease: 'fdrs', fdrNew: 'fdrs', compliance: 'profile', instDetails: 'profile', contact: 'profile',
+  password: 'profile', tickets: 'profile', help: 'profile', about: 'profile', activity: 'profile', switchInst: 'profile' };
+// Screens with forms: leaving them with unsaved input asks first.
+const FORM_ROUTES = ['wizard', 'respond', 'fdrNew', 'fdrRenew', 'fdrRelease', 'tickets', 'instDetails', 'contact', 'password'];
+const canGoBack = () => UI.stack.length > 1 || !(ROOTS.includes(currentRoute()) || PUBLIC.includes(currentRoute()));
+// The wizard keeps its input across its steps and screens, so it has its own flag (cleared on save, submit or a new wizard).
+const unsaved = () => currentRoute() === 'wizard' ? !!(UI.w && UI.wChanged) : !!UI.dirty && FORM_ROUTES.includes(currentRoute());
+// Programmatic back (after a successful save, or once the user confirmed leaving): never asks.
+function back() {
+  UI.dirty = false;
+  if (UI.stack.length > 1) {
+    if (history.state && history.state.d === UI.stack.length) history.back();   // our own history entry: popstate pops it
+    else { UI.stack.pop(); UI.err = {}; UI.vals = null; render(true); }
+    return;
+  }
+  const r = currentRoute();
+  if (!ROOTS.includes(r) && !PUBLIC.includes(r)) goTab(PARENT[r] || 'dashboard');
+}
+function confirmLeave() {
+  const wiz = currentRoute() === 'wizard' && UI.w;
+  openSheet('Leave this screen?', `<p class="small">You have changes on this screen that are not saved yet.</p>
+    <div style="display:grid;gap:10px" class="mt16">
+      ${wiz ? `<button class="btn btn-primary btn-block" data-act="leaveSave">${ic('download', 18)} Save draft &amp; leave</button>` : ''}
+      <button class="btn btn-outline btn-block" data-act="leaveYes">Leave without saving</button>
+      <button class="btn btn-ghost btn-block" data-act="closeSheet">Keep editing</button></div>`);
+}
 window.addEventListener('popstate', () => {
   if ($('#sheet').classList.contains('open')) { closeSheet(); history.pushState({}, ''); return; }
-  if (UI.stack.length > 1) { UI.stack.pop(); UI.err = {}; UI.vals = null; render(true); }
+  if (UI.stack.length > 1) {
+    if (unsaved()) { history.pushState({ d: UI.stack.length }, ''); confirmLeave(); return; }   // native Back on a form with changes
+    UI.stack.pop(); UI.err = {}; UI.vals = null; UI.dirty = false; render(true);
+  }
 });
+
+// Page-header Refresh: reloads this institution's data from the server, keeping the screen, filters, scroll and typed values.
+function refreshBtn() {
+  const t = UI.lastSync ? `Last updated ${UI.lastSync.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}` : 'Refresh';
+  return `<button class="icon-btn fv-refresh ${UI.refreshing ? 'spinning' : ''}" data-act="refreshData" aria-label="Refresh" title="${t}" ${UI.refreshing ? 'aria-busy="true"' : ''}>${ic('refresh', 20)}</button>`;
+}
+function setRefreshing(on) {
+  UI.refreshing = on;
+  $$('.fv-refresh').forEach(b => { b.classList.toggle('spinning', on); if (on) b.setAttribute('aria-busy', 'true'); else b.removeAttribute('aria-busy'); });
+}
+// Replays the short entrance on a list or pane whose content changed in place (filters, tabs).
+function swapIn(sel) {
+  const el = $(sel);
+  if (!el || reducedMotion()) return;
+  el.classList.remove('fv-swap'); void el.offsetWidth; el.classList.add('fv-swap');
+}
 
 function render(resetScroll) {
   clearFx();
@@ -323,9 +372,9 @@ function shell(v) {
   let hdr = '';
   if (v.header === 'brand') hdr = brandHeader();
   else if (v.header !== 'none') {
-    const canBack = UI.stack.length > 1 && !v.noBack;
+    const canBack = canGoBack() && !v.noBack;
     hdr = `<header class="hdr ${v.hdrCls || ''}">${canBack ? `<button class="icon-btn" data-act="back" aria-label="Back">${ic('back', 22)}</button>` : ''}
-      <h1>${esc(v.title || '')}${v.sub ? `<div class="sub">${esc(v.sub)}</div>` : ''}</h1>${v.right || ''}</header>`;
+      <h1>${esc(v.title || '')}${v.sub ? `<div class="sub">${esc(v.sub)}</div>` : ''}</h1>${v.refresh ? refreshBtn() : ''}${v.right || ''}</header>`;
   }
   const offline = UI.offline ? `<div class="offline-bar" role="status">${ic('alert', 16)} You're offline${Backend.remote ? ' — changes can\'t be sent until you reconnect' : ''}.</div>` : '';
   return `${offline}${hdr}${v.pre || ''}<main class="content ${v.cls || ''}">${v.body}</main>${v.footer ? `<div class="footer-bar">${v.footer}</div>` : ''}${v.tab ? tabbar(v.tab) : ''}`;
@@ -360,6 +409,7 @@ function brandHeader() {
   return `<header class="hdr hdr-brand">
     <span class="fv-brand-tile"><img src="fdr-vault-logo.png" alt="FDR Vault logo"></span>
     <div class="fv-brand-t"><b translate="no">FDR VAULT</b><span>AICTE · Institution Portal</span></div>
+    ${refreshBtn()}
     <button class="icon-btn" data-tab="alerts" aria-label="Notifications">${ic('bell', 22)}${n ? `<span class="dot-badge">${n}</span>` : ''}</button>
     <button class="icon-btn" data-tab="profile" aria-label="Profile"><span class="avatar">${esc(initials(me().name))}</span></button></header>`;
 }
@@ -720,7 +770,7 @@ async function submitApplication(el) {
   const w = UI.w;
   const res = await busy(el, async () => {
     const r = await Backend.submitApplication(w);
-    UI.w = null;
+    UI.w = null; UI.wChanged = false;
     UI.stack = [{ name: 'dashboard', params: {} }];
     go('submitted', { id: r.applicationId });
     return r;
@@ -1248,7 +1298,7 @@ V.ai = () => {
     const steps = [...docs.map(d => ({ name: d.name, sub: 'Document Integrity · Clause Verification' })), { name: 'Institutional Registry Verification', sub: `${DB.apps.reduce((n, a) => n + (a.documents || []).length, 0)} historical filings verified` }, { name: Backend.remote ? 'Server Rule Engine (Authoritative)' : 'Statutory Rule Engine', sub: '7 statutory rules · APH v2026.1' }];
     const k = run ? run.i : 0;
     body += `<div class="card tight mt12">${steps.map((s, j) => `<div class="vrow">${j < k ? sIcon('ok') : j === k ? '<span class="vstat run"></span>' : '<span class="vstat wait"></span>'}<div class="grow"><div class="small b">${esc(s.name)}</div><div class="xs muted">${j < k ? 'Verified' : esc(s.sub)}</div></div></div>`).join('')}</div>
-      <div class="bar mt12"><i style="width:${(k / steps.length * 100).toFixed(0)}%"></i></div><p class="center xs muted mt8">${run && run.reading !== null && run.reading !== undefined ? `Verifying documents… ${run.reading} of ${docs.filter(d => w.docs[d.type].storagePath).length}` : `Verifying compliance item ${Math.min(k + 1, steps.length)} of ${steps.length}…`}</p>`;
+      <div class="bar mt12"><i style="width:${(k / steps.length * 100).toFixed(0)}%"></i></div><p class="center xs muted mt8">${run && run.reading !== null && run.reading !== undefined ? `Verifying documents… ${run.reading} of ${docs.filter(d => w.docs[d.type].storagePath).length}` : `Verifying compliance item ${Math.min(k + 1, steps.length)} of ${steps.length}…`}<span class="fv-typing" aria-hidden="true"><i></i><i></i><i></i></span></p>`;
     return { title: 'Compliance Verification', body, after: () => { if (!UI.aiRun) startAI(); } };
   }
   const c = res.counts;
@@ -1365,7 +1415,7 @@ V.review = () => {
 V.submitted = ({ id }) => {
   const a = appById(id);
   if (!a) return V.dashboard();
-  const colors = ['#2563EB', '#15803D', '#B45309', '#B91C1C', '#0B3A70'];
+  const colors = ['#0B2F5B', '#F5B82E', '#D6A62E', '#1E7A46', '#082449'];
   return {
     title: 'Submission Confirmation', noBack: true, tab: 'dashboard',
     body: `<div style="position:relative;text-align:center"><div class="confetti">${Array.from({ length: 22 }, (_, k) => `<i style="left:${(k * 4.6 + 2).toFixed(1)}%;background:${colors[k % 5]};animation-delay:${(k % 7) * 0.08}s"></i>`).join('')}</div>
@@ -1385,7 +1435,7 @@ V.submitted = ({ id }) => {
 
 const APP_FILTERS = [['ALL', 'All', null], ['DRAFT', 'Draft', ['DRAFT']], ['SUBMITTED', 'Submitted', ['SUBMITTED']], ['REVIEW', 'Under Review', ['SUBMITTED', 'UNDER_SCRUTINY']], ['CLARIFICATION', 'Clarification', ['DEFICIENCIES_NOTED']], ['APPROVED', 'Approved', ['SCRUTINY_CLEARED', 'APPROVED']]];
 V.apps = () => ({
-  title: 'My Applications', tab: 'apps',
+  title: 'My Applications', tab: 'apps', refresh: true,
   right: `<button class="gold-btn" data-go="apptype" aria-label="New application">${ic('plus', 16)} New</button>`,
   body: `<div class="pills">${APP_FILTERS.map(([k, l]) => `<button class="${UI.appsFilter === k ? 'on' : ''}" data-act="appsPill" data-v="${k}">${l}</button>`).join('')}</div>
     <div class="row mt12"><div class="search grow">${ic('search', 18)}<input class="input" placeholder="Search by Application ID" value="${esc(UI.appsQuery)}" data-live="appsSearch" aria-label="Search applications"></div></div>
@@ -1457,14 +1507,14 @@ V.appDetail = ({ id }) => {
       : `<div class="empty">${ic('users', 40)}<div class="b">Awaiting allocation</div><div class="small">The application is queued for allocation to a Regional Scrutiny Officer.</div></div>`;
   }
   return {
-    title: a.applicationNumber, sub: t.name, tab: 'apps',
+    title: a.applicationNumber, sub: t.name, tab: 'apps', refresh: true,
     body: `<div class="card"><div class="row between"><div class="row"><span class="tile-ico tone-${t.tone}">${ic(t.icon, 20)}</span><div><div class="small b" style="color:var(--navy)">${esc(t.name)}</div><div class="xs muted">AY ${esc(a.academicYear)} · v${a.currentVersion}</div></div></div>${chip(STATUS[a.status])}</div>
         <div class="mt16">${timeline(a)}</div></div>
       ${actionNeeded ? `<div class="banner ${a.status === 'DEFICIENCIES_NOTED' ? 'err' : 'warn'} mt12">${ic('alert', 18)}<div class="grow"><b>${a.status === 'DEFICIENCIES_NOTED' ? 'Action Required — Deficiency Notice' : 'Reviewer Query'}</b><div>${pts.length} point(s) raised by ${esc(rec.reviewerName)}. Respond within 7 working days.</div>
         <div class="row wrap mt8" style="gap:8px"><button class="btn btn-sm btn-primary" data-go="respond" data-id="${a.id}">${ic('send', 16)} Submit Response</button><button class="btn btn-sm btn-outline" data-go="notice" data-id="${a.id}">${ic('file', 16)} View Notice</button></div></div></div>` : ''}
       ${rec && rec.status === 'RESPONSE_SUBMITTED' ? `<div class="banner info mt12">${ic('info', 18)}<div>Compliance response submitted (v${a.currentVersion}). Awaiting re-scrutiny by the Regional Office.</div></div>` : ''}
       <div class="seg mt12" style="font-size:12px"><button class="${tab === 'overview' ? 'on' : ''}" data-act="appTab" data-v="overview">Overview</button><button class="${tab === 'findings' ? 'on' : ''}" data-act="appTab" data-v="findings">Findings</button><button class="${tab === 'docs' ? 'on' : ''}" data-act="appTab" data-v="docs">Docs (${a.documents.length})</button><button class="${tab === 'scrutiny' ? 'on' : ''}" data-act="appTab" data-v="scrutiny">Scrutiny</button></div>
-      <div class="mt12">${pane}</div>`,
+      <div class="mt12" id="apppane">${pane}</div>`,
   };
 };
 function docAcc(d) {
@@ -1541,7 +1591,7 @@ V.fdrs = () => {
   const live = fd.filter(f => fdrStatus(f) !== 'RELEASED'), corpus = live.reduce((s, f) => s + f.amountLakhs, 0);
   const due = fd.filter(f => fdrStatus(f) === 'EXPIRING_SOON' && !f.pendingRequest).length, mat = fd.filter(f => fdrStatus(f) === 'MATURED' && !(f.releaseRequest && f.releaseRequest.status === 'PENDING')).length;
   return {
-    title: 'FDR / Security Deposit', tab: 'fdrs', hdrCls: 'fv-flat',
+    title: 'FDR / Security Deposit', tab: 'fdrs', hdrCls: 'fv-flat', refresh: true,
     right: `<button class="icon-btn" data-go="fdrNew" aria-label="Submit new FDR">${ic('plus', 22)}</button>`,
     pre: `<div class="fv-corpus"><span class="fv-kicker">Total corpus under irrevocable joint lien</span>
         <b>${rupees(corpus * 1e5)}</b><span>${crLabel(corpus)} · ${live.length} active deposit(s) · APH Chapter VI Norms</span></div>`,
@@ -1568,7 +1618,7 @@ V.fdrDetail = ({ id }) => {
   else if (st === 'ACTIVE') actions += `<button class="btn btn-outline btn-block" data-go="fdrRenew" data-id="${f.id}" data-mode="replacement">${ic('swap', 18)} Request Bank Change / Replacement</button>`;
   actions += `<button class="btn btn-ghost btn-block" data-act="fdrAdvice" data-id="${f.id}">${ic('download', 18)} Download FDR Advice</button>`;
   return {
-    title: f.fdrNumber, sub: 'Fixed Deposit Advice & Lien Certificate', tab: 'fdrs',
+    title: f.fdrNumber, sub: 'Fixed Deposit Advice & Lien Certificate', tab: 'fdrs', refresh: true,
     body: `<div class="card"><div class="row between top"><div><div class="xs muted b">FDR CERTIFICATE NUMBER</div><div class="h2 mono" style="font-size:15px">${esc(f.fdrNumber)}</div></div>${chip(FSTATUS[st])}</div>
         <div class="mt12">${kv('Institution', esc(inst().name))}${kv('Permanent Institute ID', esc(inst().pid))}${kv('Principal Deposit Amount', esc(fmtAmount(f.amountLakhs)))}${kv('Deposit Horizon & Maturity', `${esc(f.issueDate)} to ${esc(f.maturityDate)} (${f.tenureYears} Years)`)}
         ${kv('Issuing Bank & Branch', `${esc(f.bankName)} • ${esc(f.branchName)} (IFSC: ${esc(f.ifscCode)})`)}${kv('Linked Application', esc(f.applicationNumber))}</div>
@@ -1650,7 +1700,7 @@ V.compliance = () => {
   const ad = DB.adapters[inst().id] || [];
   const adTone = { CONNECTED: 'blue', VERIFIED: 'green', DISCREPANCY_FOUND: 'red' };
   return {
-    title: 'Compliance & Verification',
+    title: 'Compliance & Verification', refresh: true,
     body: `<div class="card row"><svg class="ring" viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="15.9" fill="none" stroke="#e2e8f0" stroke-width="3.5"/><circle cx="18" cy="18" r="15.9" fill="none" stroke="${pct >= 80 ? '#10b981' : pct >= 50 ? '#f59e0b' : '#f43f5e'}" stroke-width="3.5" stroke-dasharray="${pct} 100" stroke-linecap="round" transform="rotate(-90 18 18)"/><text x="18" y="21" text-anchor="middle" font-size="9" font-weight="800" fill="#0a2540">${pct}%</text></svg>
         <div class="grow"><div class="h3">Statutory Compliance Score</div><div class="xs muted">${passed} of ${evald} evaluated rules passed${app ? ` · Based on ${esc(app.applicationNumber)}` : ''}</div><div class="xs muted">Deterministic rule matrix · APH v2026.1</div></div></div>
       <div class="section-title"><span class="h2">Deterministic Regulatory Rule Matrix</span></div>
@@ -1668,17 +1718,17 @@ V.alerts = () => {
   const list = all.filter(n => f === 'ALL' || (f === 'UNREAD' && !n.isRead) || (f === 'CRITICAL' && n.type === 'CRITICAL'));
   const tone = { CRITICAL: ['red', 'alert'], WARNING: ['amber', 'alert'], SUCCESS: ['green', 'checkCircle'], INFO: ['blue', 'info'] };
   return {
-    title: 'Notifications', tab: 'alerts',
+    title: 'Notifications', tab: 'alerts', refresh: true,
     right: all.some(n => !n.isRead) ? `<button class="ghost-btn" data-act="readAll">Mark all read</button>` : '',
     body: `<div class="pills"><button class="${f === 'ALL' ? 'on' : ''}" data-act="alertsPill" data-v="ALL">All Alerts (${all.length})</button><button class="${f === 'UNREAD' ? 'on' : ''}" data-act="alertsPill" data-v="UNREAD">Unread (${all.filter(n => !n.isRead).length})</button><button class="${f === 'CRITICAL' ? 'on' : ''}" data-act="alertsPill" data-v="CRITICAL">Critical</button></div>
-      ${list.length ? [['Today', list.filter(n => isToday(n.timestamp))], ['Earlier', list.filter(n => !isToday(n.timestamp))]].filter(([, g]) => g.length).map(([h, g]) => `<h2 class="fv-h">${h}</h2>
+      <div id="notelist">${list.length ? [['Today', list.filter(n => isToday(n.timestamp))], ['Earlier', list.filter(n => !isToday(n.timestamp))]].filter(([, g]) => g.length).map(([h, g]) => `<h2 class="fv-h">${h}</h2>
         <div class="fv-notes">${g.map(n => {
           const [t, i] = tone[n.type] || tone.INFO;
           return `<div class="fv-note ${n.isRead ? '' : 'unread'}"><span class="tile-ico tone-${t}">${ic(i, 18)}</span>
             <div class="grow"><div class="fv-t" translate="no">${esc(n.title)}</div><div class="fv-m" translate="no">${esc(n.message)}</div><div class="fv-d">${fmtDT(n.timestamp)}</div>
             <div class="fv-links">${n.link ? `<button class="link" data-act="openNotif" data-id="${n.id}">Inspect ${ic('chev', 14)}</button>` : ''}${n.isRead ? '' : `<button class="link" style="color:var(--muted)" data-act="readNotif" data-id="${n.id}">Mark read</button>`}</div></div>
             ${n.isRead ? '' : '<span class="fv-unread" role="img" aria-label="Unread"></span>'}</div>`;
-        }).join('')}</div>`).join('') : `<div class="empty">${ic('bell', 40)}<div>No notifications matching current filter.</div></div>`}`,
+        }).join('')}</div>`).join('') : `<div class="empty">${ic('bell', 40)}<div>No notifications matching current filter.</div></div>`}</div>`,
   };
 };
 
@@ -1760,7 +1810,7 @@ V.tickets = () => {
   const v = UI.vals || {};
   const refs = [...myApps().filter(a => a.applicationNumber).map(a => a.applicationNumber), ...myFdrs().map(f => f.fdrNumber)];
   return {
-    title: 'Grievance / Tickets',
+    title: 'Grievance / Tickets', refresh: !UI.ticketForm,
     body: UI.ticketForm ? `<form id="ticketForm" novalidate onsubmit="return false"><div class="card">
         ${fld('Category', 'category', v.category || 'FDR / Security Deposit', { opts: ['FDR / Security Deposit', 'Application / Scrutiny', 'Deficiency Notice', 'Technical Issue', 'Login / Credentials', 'Other'] })}
         ${fld('Related Reference', 'ref', v.ref || '', { opts: [['', 'None'], ...refs.map(r => [r, r])] })}
@@ -1810,7 +1860,7 @@ V.about = () => ({
 V.activity = () => {
   const list = myAudit();
   return {
-    title: 'Activity Log', sub: 'Section 10(1) AICTE Act 1987 — immutable record',
+    refresh: true, title: 'Activity Log', sub: 'Section 10(1) AICTE Act 1987 — immutable record',
     body: `<div class="list">${list.length ? list.map(auditRow).join('') : '<div class="empty small">No matching audit ledger entries found.</div>'}</div>`,
   };
 };
@@ -1908,7 +1958,25 @@ function helpSheetBody() {
 function otpError(e) { UI.otp.err = toApiError(e).message; setSheetBody(otpSheetBody()); }
 
 const ACTIONS = {
-  back: () => back(),
+  back: () => { if (unsaved()) confirmLeave(); else back(); },
+  leaveYes: () => { closeSheet(); back(); },
+  leaveSave: async el => {
+    collectWizard();
+    const saved = await busy(el, async () => { await Backend.saveDraft(UI.w); UI.wChanged = false; return true; }, 'Saving…');
+    if (!saved) return;
+    closeSheet(); toast('Draft saved — resume from My Applications'); back();
+  },
+  refreshData: async () => {
+    if (UI.refreshing) return;   // one refresh at a time
+    setRefreshing(true);
+    try {
+      await Promise.all([Backend.refresh(), delay(450)]);   // keep the spin visible long enough to register
+      UI.lastSync = now();
+      render();
+      toast(`Updated ${UI.lastSync.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}`);
+    } catch (e) { toast(`Could not refresh: ${toApiError(e).message}`, 'err'); }
+    finally { setRefreshing(false); }
+  },
   closeSheet: () => closeSheet(),
   print: () => {
     const letter = $('.letter');
@@ -1994,8 +2062,8 @@ const ACTIONS = {
   ssoPick: async el => { closeSheet(); await Backend.ssoAs(el.dataset.id); onSignedIn(); },
   ackNotice: () => { DB.acked[me().id] = true; save(); closeSheet(); },
   appsFilter: el => { UI.appsFilter = el.dataset.v; goTab('apps'); },
-  appsPill: el => { UI.appsFilter = el.dataset.v; render(); },
-  alertsPill: el => { UI.alertsFilter = el.dataset.v; render(); },
+  appsPill: el => { UI.appsFilter = el.dataset.v; render(); swapIn('#applist'); },
+  alertsPill: el => { UI.alertsFilter = el.dataset.v; render(); swapIn('#notelist'); },
   readAll: async el => { await busy(el, async () => { await Backend.markRead(null); render(); toast('All notifications marked as read'); }, 'Updating…'); },
   readNotif: el => { const n = DB.notifs.find(x => x.id === el.dataset.id); n.isRead = true; render(); Backend.markRead([n.id]).catch(handleError); },
   openNotif: el => {
@@ -2013,17 +2081,17 @@ const ACTIONS = {
   startApp: el => {
     const t = el.dataset.type;
     if (t === 'FDR') { go('fdrs'); return; }
-    UI.w = newWizard(t);
+    UI.w = newWizard(t); UI.wChanged = false;
     go('wizard');
   },
   resumeDraft: el => {
     const a = appById(el.dataset.id);
     UI.w = JSON.parse(JSON.stringify(a.draft));
     UI.w.draftId = UI.w.draftId || a.id;
-    UI.w.idemKey = UI.w.idemKey || uuid();
+    UI.w.idemKey = UI.w.idemKey || uuid(); UI.wChanged = false;
     go('wizard');
   },
-  saveDraft: async el => { collectWizard(); await busy(el, async () => { await Backend.saveDraft(UI.w); toast('Draft saved — resume from My Applications'); }, 'Saving…'); },
+  saveDraft: async el => { collectWizard(); await busy(el, async () => { await Backend.saveDraft(UI.w); UI.wChanged = false; toast('Draft saved — resume from My Applications'); }, 'Saving…'); },
   wizBack: () => { collectWizard(); UI.err = {}; UI.w.step--; render(true); },
   wizNext: () => {
     collectWizard();
@@ -2047,7 +2115,7 @@ const ACTIONS = {
   pickFdr: el => { UI.w.fdr.existingId = el.value; render(); },
   sampleDoc: el => { collectWizard(); UI.w.docs[el.dataset.doc] = { ...sampleDoc(el.dataset.doc), uploadedAt: now().toISOString() }; UI.w.ai = null; render(); toast(`Sample attached: ${docMeta(el.dataset.doc).short}`); },
   sampleAll: () => { collectWizard(); DOC_TYPES.filter(d => d.req && !UI.w.docs[d.type]).forEach(d => { UI.w.docs[d.type] = { ...sampleDoc(d.type), uploadedAt: now().toISOString() }; }); UI.w.ai = null; render(); toast('Sample documents attached'); },
-  removeDoc: el => { delete UI.w.docs[el.dataset.doc]; UI.w.ai = null; render(); },
+  removeDoc: el => { delete UI.w.docs[el.dataset.doc]; UI.w.ai = null; UI.wChanged = true; render(); },
   docList: () => {
     const w = UI.w;
     openSheet('Documents Uploaded', DOC_TYPES.filter(d => w.docs[d.type]).map(d => { const x = w.docs[d.type]; return `<div style="padding:10px 0;border-bottom:1px solid var(--line)"><div class="small b">${esc(d.name)}</div><div class="xs muted">${esc(x.fileName)} · ${x.fileSizeKb} KB · ${x.pageCount} pages${x.validTill ? ` · valid till ${esc(x.validTill)}` : ''}</div><div class="mono xs">${esc(x.fileHash)}</div></div>`; }).join(''));
@@ -2093,7 +2161,7 @@ const ACTIONS = {
   },
   ack: el => { const a = appById(el.dataset.id); downloadFile(`${a.applicationNumber}-Acknowledgement.html`, ackHtml(a), 'text/html'); },
   fdrAdvice: el => { const f = fdrById(el.dataset.id); downloadFile(`${f.fdrNumber}-Advice.html`, fdrAdviceHtml(f), 'text/html'); },
-  appTab: el => { UI.appTab = el.dataset.v; render(); },
+  appTab: el => { UI.appTab = el.dataset.v; render(); swapIn('#apppane'); },
   rmAttach: el => { UI.attach[el.dataset.key].splice(+el.dataset.k, 1); render(); },
   submitResponse: async el => {
     UI.vals = null;
@@ -2343,6 +2411,14 @@ document.addEventListener('submit', e => {
   e.preventDefault();
   FORMS[f.dataset.form](f);
 });
+// Unsaved-changes tracking: typing in a form on a form screen (not search boxes) marks it as changed.
+const markDirty = el => {
+  if (!el.closest || !el.closest('#view .content form') || el.matches('[data-live="appsSearch"]')) return;
+  UI.dirty = true;
+  if (el.closest('#wiz')) UI.wChanged = true;
+};
+document.addEventListener('input', e => { markDirty(e.target); });
+document.addEventListener('change', e => { markDirty(e.target); });
 document.addEventListener('input', e => { const el = e.target; if (el.matches('[data-live]') && el.type !== 'date' && el.tagName !== 'SELECT') LIVE[el.dataset.live](el); });
 document.addEventListener('change', async e => {
   const el = e.target;
