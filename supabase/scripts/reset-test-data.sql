@@ -5,11 +5,10 @@
 --            except the ones listed in keep, and every institution no kept account uses.
 --   Keeps:   the 4 demo login accounts (and the demo institution DITS Delhi, now with no
 --            applications or FDRs), the schema, rule_config (v2026.1), the storage bucket and
---            the daily FDR reminder job.
---   Uploaded files (storage.objects) are not touched here; to remove them as well, run
---   delete from storage.objects where bucket_id = 'institution-documents';
--- Run with psql against the database (npm run db:migrate -- --seed --reset-test-data runs it on a NEW
--- database only). One block, so it runs all-or-nothing. It cannot be undone.
+--            the daily FDR reminder cron job.
+--   Uploaded files are not touched here: empty the "institution-documents" bucket in
+--   Dashboard -> Storage (Supabase does not allow deleting storage files from SQL).
+-- Run in Supabase SQL Editor. One block, so it runs all-or-nothing. It cannot be undone.
 -- =====================================================================================
 
 do $$
