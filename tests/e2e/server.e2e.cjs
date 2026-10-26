@@ -1,4 +1,5 @@
-// Supabase-mode integration test: real app + real supabase-js + real migration (PGlite) behind a local stand-in.
+// Server-mode integration test: real app + real API client + real API server + real PostgreSQL (tests/e2e-server.mjs).
+// Run:  npm run e2e:server   (terminal 1)   then   npm run test:e2e:server
 const puppeteer = require('puppeteer-core');
 const fs = require('fs');
 const path = require('path');
@@ -39,12 +40,12 @@ const pdf = (name, seed, pages = 2) => {
     waitText: async (s, ms = 8000) => { const t0 = Date.now(); while (Date.now() - t0 < ms) { if ((await page.evaluate(() => document.body.innerText)).includes(s)) return true; await wait(200); } return false; },
   });
 
-  console.log('Boot & authentication (Supabase mode)');
+  console.log('Boot & authentication (server mode)');
   let page = await newPage(); let h = helpers(page);
   await page.goto(BASE + '/index.html', { waitUntil: 'networkidle0' });
-  ok(await h.waitText('Get Started') || await h.waitText('Next'), 'boots to onboarding via Supabase client');
+  ok(await h.waitText('Get Started') || await h.waitText('Next'), 'boots to onboarding via the API client');
   await h.click('Login', '.splash-actions');
-  ok(!(await h.has('Quick Fill')), 'no demo credentials shown in Supabase mode');
+  ok(!(await h.has('Quick Fill')), 'no demo credentials shown in server mode');
   await h.type('input[name=email]', '1-10928371'); await h.type('input[name=password]', 'x1234'); await h.click('Login', 'form'); await wait(600);
   ok(await h.has('registered official email'), 'PID login rejected — email required');
   await h.type('input[name=email]', 'reviewer.mehta@aicte-india.org'); await h.type('input[name=password]', 'Rev@2026'); await h.click('Login', 'form');
@@ -64,7 +65,7 @@ const pdf = (name, seed, pages = 2) => {
   await h.click('New Application'); await h.click('Extension of Approval'); await h.click('Next'); await h.click('Next');
   ok(await h.has('SBI-FDR-99201-2024'), 'FDR on record listed from server');
   await h.click('Next');
-  ok(!(await h.has('Use sample')), 'sample documents disabled in Supabase mode');
+  ok(!(await h.has('Use sample')), 'sample documents disabled in server mode');
   const types = ['LAND_TITLE', 'BUILDING_NOC', 'FIRE_SAFETY', 'FDR_CORPUS', 'AFFILIATION', 'STATE_NOC', 'FACULTY_CADRE'];
   const deed = pdf('deed.pdf', 'dits-deed-unique-' + Date.now(), 3);
   for (const t of types) {
@@ -80,10 +81,10 @@ const pdf = (name, seed, pages = 2) => {
   await h.click('Validate');
   ok(await h.waitText('verified by the AICTE server', 15000), 'rule findings verified by server');
   if (process.env.AI_DOWN) {
-    ok(await h.has('AI document reading is unavailable'), 'AI service down → clearly labelled on-device preview');
+    ok(await h.has('Automated extraction preview active'), 'AI service down → clearly labelled on-device preview');
     ok(!(await page.$eval('[data-go=review]', b => b.disabled)), 'AI outage does not block continuing to submission');
   } else {
-    ok(await h.has('Documents read by AI (claude-opus-5-5)'), 'documents read by the AI Edge Function');
+    ok(await h.has('Statutory documents processed under AICTE regulatory extraction engine'), 'documents read by the AI server function');
     ok(await h.has('Amount in document (₹8000000) differs from the declared ₹10000000'), 'AI caught the FDR amount that differs from the form');
     ok(await h.has('AI read the institution name consistently'), 'AI institution-name check recorded (advisory)');
   }
@@ -102,11 +103,11 @@ const pdf = (name, seed, pages = 2) => {
   await h.shot('submitted');
 
   console.log('\nPersistence, reviewer query, compliance response');
-  await page.reload({ waitUntil: 'networkidle0' });
+  await page.reload({ waitUntil: 'networkidle2' });   // signed in: the live-update stream stays open, so not networkidle0
   ok(await h.waitText('Institution Portal'), 'session persists across app restart');
   const rev = (await sql(`select id from auth.users where email = 'reviewer.mehta@aicte-india.org'`))[0].id;
   await sql(`select set_config('request.jwt.claim.sub', '${rev}', false); select public.review_start('${appId}'); select public.review_request_clarification('${appId}', array['Upload DFS renewal receipt for Fire NOC'], 'Fire NOC renewal evidence pending'); select set_config('request.jwt.claim.sub', '', false);`);
-  await page.reload({ waitUntil: 'networkidle0' }); await h.waitText('Institution Portal');
+  await page.reload({ waitUntil: 'networkidle2' }); await h.waitText('Institution Portal');
   await page.click('[data-tab=alerts]'); await wait(400);
   ok(await h.has('Scrutiny Deficiency Notice issued'), 'reviewer notice delivered as notification');
   await h.click('Inspect');
@@ -120,7 +121,7 @@ const pdf = (name, seed, pages = 2) => {
   const tUrl = target ? target.url() : '';
   if (target) { const tp = await target.page().catch(() => null); if (tp) await tp.close().catch(() => {}); }
   await page.bringToFront();
-  ok(target && /\/storage\/v1\/object\/sign\//.test(tUrl), `secure signed link opened (${tUrl.split('?')[0].slice(-40) || 'none'})`);
+  ok(target && /\/storage\/signed\//.test(tUrl),`secure signed link opened (${tUrl.split('?')[0].slice(-40) || 'none'})`);
   await h.click('Overview'); await h.click('Submit Response');
   await page.$$eval('#respForm textarea', els => els.forEach(e => { e.value = 'DFS renewal receipt attached for verification.'; }));
   await (await page.$('input[type=file][data-attach=respond]')).uploadFile(pdf('dfs-receipt.pdf', 'dfs-' + Date.now()));
@@ -187,10 +188,14 @@ const pdf = (name, seed, pages = 2) => {
   ok(reg.length === 1 && reg[0].status === 'ACTIVE', `server: ${reg[0] && reg[0].request_no} ACTIVE without approval`);
   await h.click('Done');
   await h.type('input[name=password]', 'Nhit@2026!'); await h.click('Login', 'form');
-  ok(await h.waitText('New Horizon Institute of Technology'), 'registered account signs straight in');
+  ok(await h.waitText('Verify your email address'), 'unconfirmed account cannot sign in yet');
+  const mail = await (await fetch(`${BASE}/__mail?to=principal@nhit.edu.in`)).json();
+  await page.goto(mail[mail.length - 1].text.match(/https?:\S+/)[0], { waitUntil: 'networkidle2' });
+  ok(await h.waitText('New Horizon Institute of Technology'), 'confirmation link signs the new account straight in');
+  ok(!/auth_code/.test(page.url()), 'one-time sign-in code removed from the address bar');
   ok(page.errors.length === 0, `no JS errors ${page.errors.join(' | ')}`);
 
   await browser.close();
-  console.log(failed ? `\n${failed} check(s) failed` : '\nALL SUPABASE-MODE CHECKS PASSED');
+  console.log(failed ? `\n${failed} check(s) failed` : '\nALL SERVER-MODE CHECKS PASSED');
   process.exit(failed ? 1 : 0);
 })().catch(e => { console.error('FAILED:', e.message); process.exit(1); });

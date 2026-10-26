@@ -1,5 +1,5 @@
 /* Backend abstraction for the Institution portal.
-   - Supabase mode (config.js has URL + anon key): auth, RPC workflow functions, private storage, realtime.
+   - Server mode (config.js has API_URL): auth, RPC workflow functions, private storage, live updates via the project API (server/).
    - Demo mode (no keys): the same operations against an on-device store, with the same rules and semantics.
    The UI only calls Backend.*; it never writes server state directly. */
 'use strict';
@@ -9,7 +9,7 @@ class ApiError extends Error {
 }
 
 const CFG = window.AICTE_CONFIG || {};
-const REMOTE = !!(CFG.SUPABASE_URL && CFG.SUPABASE_ANON_KEY);
+const REMOTE = !!CFG.API_URL;
 const BUCKET = CFG.STORAGE_BUCKET || 'institution-documents';
 
 const uuid = () => (crypto.randomUUID ? crypto.randomUUID()
@@ -94,12 +94,12 @@ function declaredFor(w, type) {
 }
 const draftPayload = w => JSON.parse(JSON.stringify({ ...w, ai: null, savedAt: new Date().toISOString() }));
 
-/* ------------------------------------------------------------------ Supabase implementation */
+/* ------------------------------------------------------------------ server (API) implementation */
 const Remote = {
   sb: null, channel: null, refreshTimer: 0,
   async init() {
-    if (!window.supabase) await loadScript(CFG.SUPABASE_JS_URL);
-    this.sb = window.supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_ANON_KEY, {
+    if (!window.AicteApi) await loadScript(CFG.API_CLIENT_URL || 'api-client.js');
+    this.sb = window.AicteApi.createClient(CFG.API_URL, {
       auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storage: rememberStorage, storageKey: 'aicte-irvp-auth' },
     });
     this.sb.auth.onAuthStateChange((event, session) => { if (Backend.onAuthEvent) setTimeout(() => Backend.onAuthEvent(event, session), 0); });
@@ -250,7 +250,7 @@ const Remote = {
   async updateInstitution(r) { await this.rpc('update_institution_profile', { p: r }); await this.refresh(); },
   async updateContact(r) { await this.rpc('update_contact_details', { p: r }); await this.refresh(); },
   async deleteDraft(id) { await this.rpc('delete_draft', { p_id: id }); await this.refresh(); },
-  // Reads each uploaded document with Claude (Edge Function "analyze-document"). Advisory; never blocks submission.
+  // Reads each uploaded document with Claude (server function "analyze-document"). Advisory; never blocks submission.
   async analyzeDocuments(w, onEach) {
     const docs = DOC_TYPES.filter(d => w.docs[d.type] && w.docs[d.type].storagePath);
     const results = {};
@@ -337,7 +337,7 @@ const Local = {
     this.otp = null;
   },
   async ssoAs(userId) { this.startSession(DB.users.find(u => u.id === userId), 'SSO', true); },
-  async google() { throw new ApiError('NOT_CONFIGURED', 'Google sign-in needs the Supabase backend. In demo mode, use the test credentials below.'); },
+  async google() { throw new ApiError('NOT_CONFIGURED', 'Google sign-in needs the AICTE server. In demo mode, use the test credentials below.'); },
   async sendReset() { throw new ApiError('NOT_SUPPORTED', 'Password reset emails are not available in demo mode.'); },
   // Registration activates the account immediately (no DTE / AICTE approval step).
   async register(r) {
@@ -483,7 +483,7 @@ const Local = {
 
 const Backend = Object.assign(Object.create(REMOTE ? Remote : Local), {
   remote: REMOTE,
-  mode: REMOTE ? 'SUPABASE' : 'DEMO',
+  mode: REMOTE ? 'SERVER' : 'DEMO',
   onAuthEvent: null,
   onRemoteChange: null,
 });

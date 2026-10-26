@@ -1,5 +1,5 @@
-// TEST ONLY — serves the app on :8765 with an empty-key config.js, so the demo / onboarding / Hindi
-// browser tests run in on-device demo mode even though config.js points at the live Supabase project.
+// TEST ONLY — serves the app on :8765 with an empty API_URL config.js, so the demo / onboarding / Hindi
+// browser tests run in on-device demo mode even when config.js points at a live API server.
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -9,8 +9,7 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PORT = +(process.env.PORT || 8765);
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.webmanifest': 'application/manifest+json',
   '.png': 'image/png', '.webp': 'image/webp', '.svg': 'image/svg+xml' };
-const DEMO_CONFIG = `window.AICTE_CONFIG = { SUPABASE_URL: '', SUPABASE_ANON_KEY: '', STORAGE_BUCKET: 'institution-documents', SSO_DOMAIN: '',
-  SUPABASE_JS_URL: 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js' };`;
+const DEMO_CONFIG = `window.AICTE_CONFIG = { API_URL: '', STORAGE_BUCKET: 'institution-documents', SSO_DOMAIN: '', API_CLIENT_URL: 'api-client.js' };`;
 
 http.createServer((req, res) => {
   const p = decodeURIComponent(new URL(req.url, 'http://x').pathname);

@@ -1,8 +1,8 @@
 # AICTE Staff Portal (web)
 
 The website for **AICTE scrutiny officers, AICTE administrators and bank officials**. Institutions do not sign in here:
-they submit applications, documents and FDRs in the **mobile app** (the repository root). Both use the same Supabase
-project, so an upload on the phone appears here immediately, and a decision made here shows up in the app.
+they submit applications, documents and FDRs in the **mobile app** (the repository root). Both use the same API server
+and PostgreSQL database (`../server/`), so an upload on the phone appears here immediately, and a decision made here shows up in the app.
 
 | Role | What they do here |
 |---|---|
@@ -29,23 +29,24 @@ console their own domains instead, deploy this folder twice and set `VITE_PORTAL
 
 ```bash
 npm install
-npm run dev            # http://localhost:5180/officer and http://localhost:5180/admin (live Supabase project)
+npm run dev            # http://localhost:5180/officer and http://localhost:5180/admin (API server at http://localhost:8787)
 ```
 
-To point at another project, set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` (for example in `.env.local`).
+To point at another API server, set `VITE_API_URL` (for example in `.env.local`). The API server is started from the
+repository root with `npm run server` (see the root README).
 
 ## Deploy (Vercel)
 
 Import the GitHub repository as a **second** Vercel project and set **Root Directory = `web-portal`**. The settings come from
-[`vercel.json`](vercel.json). Then add the site's address in Supabase under Authentication → URL Configuration → Redirect URLs
-(`https://<your-site>/**`), and in Google Cloud under the OAuth client's Authorized JavaScript origins.
+[`vercel.json`](vercel.json). Set the environment variable `VITE_API_URL` to the API server's address, and add the site's
+address (e.g. `https://<your-site>`) to the API server's `ALLOWED_ORIGINS`.
 
 ## Tests
 
-From the repository root, with the local Supabase stand-in:
+From the repository root, with the integration-test API server (real PostgreSQL):
 
 ```bash
-npm run mock:supabase        # terminal 1
-npm run web:test-server      # terminal 2 (this portal on :3100, pointed at the stand-in)
+npm run e2e:server           # terminal 1
+npm run web:test-server      # terminal 2 (this portal on :3100, pointed at that server)
 npm run test:e2e:staff       # sign-in rules, scrutiny, deficiency notice, override, final approval, FDR request, invites, bank lien
 ```

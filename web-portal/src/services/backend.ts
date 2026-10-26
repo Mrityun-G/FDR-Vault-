@@ -1,10 +1,10 @@
 /**
  * AICTE Intelligent Regulatory Validation Platform (AI-IRVP)
- * Staff portal data layer: reads the shared Supabase database (row-level security decides what each
+ * Staff portal data layer: reads the shared PostgreSQL database through the API server (row-level security decides what each
  * role can see) and performs every change through audited server functions (RPCs).
  */
 
-import { supabase, DOCUMENTS_BUCKET } from '../lib/supabase';
+import { api, DOCUMENTS_BUCKET } from '../lib/api';
 import {
   User,
   UserRole,
@@ -54,7 +54,7 @@ export function toApiError(e: any): ApiError {
 }
 
 async function rpc<T = any>(fn: string, args: Record<string, unknown> = {}): Promise<T> {
-  const { data, error } = await supabase.rpc(fn, args);
+  const { data, error } = await api.rpc(fn, args);
   if (error) throw toApiError(error);
   return data as T;
 }
@@ -84,9 +84,9 @@ const ratio = (n: number, d: number) => (d > 0 ? (n / d).toFixed(1).replace(/\.0
  * several roles; one that holds none of them is asked to register for this portal (REGISTRATION_REQUIRED).
  */
 export async function loadProfile(allowed: UserRole[] = STAFF_ROLES): Promise<User> {
-  const { data: auth } = await supabase.auth.getUser();
+  const { data: auth } = await api.auth.getUser();
   if (!auth.user) throw new ApiError('NOT_AUTHENTICATED', 'Sign in to continue.');
-  const p = must(await supabase.from('profiles').select('*, institutions!profiles_institution_id_fkey(name, pid, region)').eq('id', auth.user.id).maybeSingle()) as any;
+  const p = must(await api.data('me')) as any;
   if (!p || p.needs_registration) throw new ApiError('REGISTRATION_REQUIRED', 'Complete your registration details to continue.');
   if (p.status === 'DISABLED') throw new ApiError('ACCOUNT_DISABLED', 'This account has been disabled. Contact the Regulation Bureau IT Cell.');
   if (p.status === 'PENDING_VERIFICATION') throw new ApiError('ACCOUNT_PENDING', 'Your account is awaiting verification.');
@@ -243,12 +243,8 @@ function mapApplication(a: any): InstitutionApplication {
 }
 
 export async function loadApplications(): Promise<InstitutionApplication[]> {
-  const rows = must(
-    await supabase
-      .from('applications')
-      .select('*, institutions!applications_institution_id_fkey(name, pid, region, state, city, required_fdr_lakhs), application_documents(*), findings(*), scrutiny(*), compliance_responses(*), status_history(*)')
-      .order('last_updated_at', { ascending: false })
-  ) as any[];
+  // Each application with its institution, documents, findings, scrutiny, responses and history (newest first).
+  const rows = must(await api.data('applications')) as any[];
   return rows.map(mapApplication);
 }
 
@@ -321,16 +317,15 @@ function mapFdr(f: any): FdrRecord {
 }
 
 export async function loadFdrs(): Promise<FdrRecord[]> {
-  const rows = must(
-    await supabase.from('fdrs').select('*, institutions!fdrs_institution_id_fkey(name, pid), fdr_requests(*)').order('maturity_date', { ascending: true })
-  ) as any[];
+  // Each FDR with its institution and requests (earliest maturity first).
+  const rows = must(await api.data('fdrs')) as any[];
   return rows.map(mapFdr);
 }
 
 /* ------------------------------------------------------------------ audit trail */
 
 export async function loadAudit(): Promise<AuditEvent[]> {
-  const rows = must(await supabase.from('audit_events').select('*').order('id', { ascending: false }).limit(500)) as any[];
+  const rows = must(await api.data('audit_events')) as any[];   // latest 500
   return rows.map(e => ({
     id: String(e.id),
     correlationId: e.correlation_id,
@@ -351,9 +346,9 @@ export async function loadAudit(): Promise<AuditEvent[]> {
 
 export async function loadDirectory(isAdmin: boolean): Promise<{ users: DirectoryUser[]; registrations: RegistrationRequest[]; invites: UserInvite[] }> {
   const [profiles, regs, invites] = await Promise.all([
-    supabase.from('profiles').select('*, institutions!profiles_institution_id_fkey(name, pid)').order('created_at', { ascending: false }),
-    supabase.from('registration_requests').select('*').order('created_at', { ascending: false }),
-    isAdmin ? supabase.from('user_invites').select('*').order('created_at', { ascending: false }) : Promise.resolve({ data: [], error: null })
+    api.data('profiles'),
+    api.data('registration_requests'),
+    isAdmin ? api.data('user_invites') : Promise.resolve({ data: [], error: null })
   ]);
   return {
     users: (must(profiles) as any[]).map(p => ({
@@ -387,7 +382,7 @@ export async function loadDirectory(isAdmin: boolean): Promise<{ users: Director
 }
 
 export async function loadInstitutionList(): Promise<{ name: string; pid: string }[]> {
-  const rows = must(await supabase.from('institutions').select('name, pid').order('name')) as any[];
+  const rows = must(await api.data('institutions')) as any[];
   return rows.map(r => ({ name: r.name, pid: r.pid }));
 }
 
@@ -456,7 +451,7 @@ export const actions = {
 
   /** Short-lived signed link to an uploaded original (storage policies limit this to AICTE staff). */
   async documentUrl(storagePath: string): Promise<string> {
-    const { data, error } = await supabase.storage.from(DOCUMENTS_BUCKET).createSignedUrl(storagePath, 300);
+    const { data, error } = await api.storage.from(DOCUMENTS_BUCKET).createSignedUrl(storagePath, 300);
     if (error) throw toApiError(error);
     return data.signedUrl;
   }

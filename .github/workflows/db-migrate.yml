@@ -1,0 +1,40 @@
+# Applies new database migrations to the production PostgreSQL whenever schema files change on main.
+# Repository secret needed (GitHub → Settings → Secrets and variables → Actions):
+#   DATABASE_URL – connection string of the production database (external address, with ?sslmode=require if needed)
+# Until it is set the workflow skips the step (with a notice) instead of failing. Migrations never drop or delete data.
+name: Migrate database (PostgreSQL)
+
+on:
+  push:
+    branches: [main]
+    paths: ['supabase/migrations/**', 'server/db/**', 'server/migrate.mjs', '.github/workflows/db-migrate.yml']
+  workflow_dispatch:
+
+concurrency: db-migrate
+
+jobs:
+  migrate:
+    runs-on: ubuntu-24.04
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      DATABASE_SSL: 'true'
+    steps:
+      - name: Check deployment secret
+        id: secrets
+        run: |
+          if [ -n "$DATABASE_URL" ]; then echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice title=Migration skipped::Add DATABASE_URL under Settings → Secrets and variables → Actions to migrate automatically."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@v4
+        if: steps.secrets.outputs.ready == 'true'
+      - uses: actions/setup-node@v4
+        if: steps.secrets.outputs.ready == 'true'
+        with:
+          node-version: 24
+      - if: steps.secrets.outputs.ready == 'true'
+        run: npm ci --omit=dev
+      - name: Apply migrations
+        if: steps.secrets.outputs.ready == 'true'
+        run: node server/migrate.mjs

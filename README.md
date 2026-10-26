@@ -1,4 +1,4 @@
-# AICTE Institution Portal — Mobile App (PWA) + Supabase backend
+# AICTE Institution Portal — Mobile App (PWA) + Node.js / PostgreSQL backend
 Government Application
 This is the mobile version of the **Institution (Applicant) portal** of the
 [AICTE Intelligent Regulatory Validation Platform](https://aicte-intelligent-regulatory-validation-platform.ai.studio/).
@@ -6,14 +6,25 @@ It is an installable Progressive Web App with two run modes:
 
 | Mode | When | Data |
 |---|---|---|
-| **Supabase** | `config.js` has `SUPABASE_URL` and `SUPABASE_ANON_KEY` | Postgres with row-level security, server-side workflow functions, private document storage, realtime updates |
-| **Demo** | The keys are empty (the default) | Kept on the device and seeded from the web prototype. The same screens and rules run locally, so you can evaluate the app without a server |
+| **Server** | `config.js` has `API_URL` (the project's API server in [`server/`](server/)) | PostgreSQL with row-level security, server-side workflow functions, private document storage, live updates |
+| **Demo** | `API_URL` is empty (the default) | Kept on the device and seeded from the web prototype. The same screens and rules run locally, so you can evaluate the app without a server |
 
 ---
 
-## 0. Deployment (live prototype)
+## 0. Architecture & deployment
 
-**Live links**
+| Piece | What | Where |
+|---|---|---|
+| Institution app (mobile / PWA): institutions submit applications, documents and FDRs | Static files, built with `node scripts/build-www.mjs` into `www/` ([`vercel.json`](vercel.json)) | **Vercel** |
+| Staff site: **Officer portal** at `/officer` (scrutiny officers, bank officials) and **Admin console** at `/admin` (administrators) | React + Vite, second project with Root Directory `web-portal` ([web-portal/README.md](web-portal/README.md)) | **Vercel** |
+| **API server** ([`server/`](server/)): auth, workflow functions, document storage, live updates, AI reading, daily reminders | Node.js + Express, connects to PostgreSQL with `pg` | **Render** web service ([`render.yaml`](render.yaml)) or any Node 22.18+ host |
+| **Database** | Standalone PostgreSQL 14+ (17 recommended): schema, row-level security, workflow functions, documents | Render PostgreSQL ([`render.yaml`](render.yaml)) or any PostgreSQL |
+
+Browsers never connect to PostgreSQL. Both front ends talk only to the API server, which holds every secret
+(database password, token signing key, Google client secret, SMTP and Anthropic keys) in environment variables
+([`.env.example`](.env.example)). The front ends contain no keys.
+
+**Live links** (front ends)
 
 | Who | Link | Sign-in |
 |---|---|---|
@@ -21,35 +32,48 @@ It is an installable Progressive Web App with two run modes:
 | Officer portal | https://fdr-vault-sbf7.vercel.app/officer | Scrutiny officers (`REVIEWER`) and bank officials (`BANK_OFFICIAL`) |
 | Admin console | https://fdr-vault-sbf7.vercel.app/admin | Administrators (`ADMIN`) |
 
-All three use the same Google sign-in and the same Supabase project. Each account has exactly one role, and each portal
-admits only its own roles. Staff accounts can be Google accounts or email/password users created in Supabase
-(*Authentication → Users → Add user*, tick *Auto confirm*; the email does not need a real inbox). Give each account its
-role with `admin_invite_staff` (see *Staff accounts* below).
+### Deploy the backend (Render, ≈10 minutes)
+1. Render → **New → Blueprint** → this repository. It creates the `fdr-vault-api` web service and the `fdr-vault-db`
+   PostgreSQL database from [`render.yaml`](render.yaml), and generates `JWT_SECRET`.
+2. In the service's **Environment** tab set `PUBLIC_URL` to the service address (e.g. `https://fdr-vault-api.onrender.com`),
+   and optionally the Google, SMTP and Anthropic values (see below). `ALLOWED_ORIGINS` already lists both Vercel sites and the Android app.
+3. Deploy. On start the service runs `node server/migrate.mjs --seed --reset-test-data`: it applies the schema and, on an
+   **empty** database only, creates the 4 demo accounts and DITS Delhi (with no applications or FDRs). It never deletes data
+   from a database that already has some.
+4. Point the front ends at it and redeploy them on Vercel:
+   - institution app project: environment variable `AICTE_API_URL` = the service address (the build writes it into `config.js`)
+   - staff portal project: `VITE_API_URL` = the service address
+5. Optional: for automatic migrations from GitHub, add the secret `DATABASE_URL` (the database's external connection string) —
+   see [`.github/workflows/db-migrate.yml`](.github/workflows/db-migrate.yml). To change the database, add a **new** file in
+   `supabase/migrations/`; never edit an applied one.
 
-| Piece | Where | Updates automatically when you push to `main` |
-|---|---|---|
-| Institution app (mobile / PWA): institutions submit applications, documents and FDRs | **Vercel**: builds with `node scripts/build-www.mjs` and serves `www/` ([`vercel.json`](vercel.json)) | Yes (Vercel Git integration) |
-| Staff site: **Officer portal** at `/officer` (scrutiny officers, bank officials) and **Admin console** at `/admin` (administrators) | **Vercel**, second project with Root Directory `web-portal` ([web-portal/README.md](web-portal/README.md)) | Yes |
-| Database, auth, storage, functions (backend) | **Supabase** project `csnindvgpfphcstjcsag` (Mumbai) | Yes, for changes under `supabase/` ([GitHub Action](.github/workflows/supabase-deploy.yml)) |
+### Run the backend locally
+```bash
+cp .env.example .env         # set DATABASE_URL (a local PostgreSQL) and JWT_SECRET; leave ALLOWED_ORIGINS empty for localhost
+npm install
+npm run db:migrate -- --seed --reset-test-data   # schema + the 4 demo accounts (use only --seed for the full sample dataset)
+npm run server               # API on http://localhost:8787
+```
+Then set `API_URL: 'http://localhost:8787'` in [`config.js`](config.js) and run `npm run serve` (the app on :8765), and/or
+`cd web-portal && npm run dev` (staff portal on :5180, uses `http://localhost:8787` by default).
 
-[`config.js`](config.js) already points at the Supabase project, so the deployed app runs in **Supabase mode**. The anon key is public by design; row-level security and the server functions protect the data.
-
-**One-time setup for the backend auto-deploy.** In GitHub → *Settings → Secrets and variables → Actions*, add:
-`SUPABASE_ACCESS_TOKEN` (from supabase.com/dashboard/account/tokens), `SUPABASE_DB_PASSWORD` (Project Settings → Database) and
-`SUPABASE_PROJECT_ID` = `csnindvgpfphcstjcsag`. To change the database, add a **new** file in `supabase/migrations/`; never edit an applied one.
+The database role in `DATABASE_URL` must own the database and be allowed to create roles once: the first migration creates the
+`anon`, `authenticated` and `service_role` roles that row-level security uses, and the `pgcrypto` extension.
 
 ### Google sign-in
-1. In [Google Cloud Console](https://console.cloud.google.com/apis/credentials), go to *Create credentials → OAuth client ID → Web application*.
-   - **Authorized JavaScript origins:** your Vercel URL (and `http://localhost:8765` for local testing)
-   - **Authorized redirect URI:** `https://csnindvgpfphcstjcsag.supabase.co/auth/v1/callback`
-   - Set up the OAuth consent screen (External). While it is in *Testing*, add the Google accounts that should sign in as test users.
-2. In Supabase, go to *Authentication → Sign In / Providers → Google*. Turn it on and paste the Client ID and Client Secret.
-3. In Supabase, go to *Authentication → URL Configuration*. Set **Site URL** to the Vercel URL, and add the Vercel URL and `http://localhost:8765` to **Redirect URLs**.
-4. Approve who may sign in. Any Google account can sign in, but it stays *pending verification* until approved. To approve an account, run this in the SQL Editor:
-   ```sql
-   select public.admin_invite_user('someone@gmail.com', '1-10928371');   -- institution PID; activates now or on first sign-in
-   ```
-   `msg2gmanikandan@gmail.com` is already approved for DITS Delhi (`1-10928371`).
+1. In [Google Cloud Console](https://console.cloud.google.com/apis/credentials), open the OAuth client (*Web application*).
+   - **Authorized redirect URI:** `<PUBLIC_URL>/auth/callback`, e.g. `https://fdr-vault-api.onrender.com/auth/callback`
+     (and `http://localhost:8787/auth/callback` for local testing)
+   - While the OAuth consent screen is in *Testing*, add the Google accounts that should sign in as test users.
+2. Set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` on the API server.
+
+A first Google sign-in asks for the registration details once (institution, or staff details on the staff portal); one Google
+account can be used on every portal. A Google account whose email already has an account signs in to that account.
+
+### Email (confirmation links, sign-in codes, password reset)
+Set `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` and `MAIL_FROM` (e.g. Gmail with an app password). Then new
+accounts confirm their email before signing in. Without SMTP, emails are written to the server log instead and new accounts
+are confirmed at sign-up.
 
 ### Demo accounts (for evaluators)
 The login screens show one-click demo buttons. All four accounts share the password `Sih@2026Demo`:
@@ -61,72 +85,34 @@ The login screens show one-click demo buttons. All four accounts share the passw
 | `sih_demo.bank@example.com` | `/officer` | BANK_OFFICIAL, State Bank of India |
 | `sih_demo.admin@example.com` | `/admin` | ADMIN |
 
-To create them: in Supabase *Authentication → Users → Add user → Create new user*, add each email with the password
-above and tick *Auto Confirm User*. Then run this in the SQL Editor:
-```sql
-select public.admin_link_user('sih_demo.institution@example.com', '1-10928371');
-update public.profiles set full_name = 'Dr. R. K. Sharma (Demo)', designation = 'Principal' where email = 'sih_demo.institution@example.com';
-select public.admin_invite_staff('sih_demo.officer@example.com', 'REVIEWER', 'Demo Scrutiny Officer', 'Scrutiny Officer');
-select public.admin_invite_staff('sih_demo.bank@example.com', 'BANK_OFFICIAL', 'Demo Bank Official', 'Branch Manager', 'State Bank of India');
-select public.admin_invite_staff('sih_demo.admin@example.com', 'ADMIN', 'Demo Administrator', 'Administrator');
-```
+`npm run db:migrate -- --seed` creates them on an empty database (the Render start command does this automatically).
 The institution app blocks password changes on the demo account so one evaluator cannot lock out the rest.
 
 ### Staff accounts (website)
-Staff sign in to the staff portal with Google, or with an email and password. To give someone access, approve their
-email with a role. If they have no account yet, it activates the first time they sign in:
+Staff sign in to the staff portal with Google, or register with an email and password. To give someone a staff role,
+approve their email (with `psql` against the database). If they have no account yet, it activates the first time they sign in:
 ```sql
+select set_config('aicte.service', 'on', false);   -- run as the server, not as a signed-in user
 select public.admin_invite_staff('officer@gmail.com', 'ADMIN', 'Full Name', 'Administrator');                 -- or 'REVIEWER'
 select public.admin_invite_staff('bank.officer@gmail.com', 'BANK_OFFICIAL', 'Full Name', 'Branch Manager', 'State Bank of India');
 ```
-After that, an administrator can invite more people from **User Management** on the website. A password account
-for someone without Google can be created in Supabase under *Authentication → Users → Add user* (tick *Auto confirm*).
+After that, an administrator can invite more people from **User Management** on the website.
 
 Google refuses OAuth inside app WebViews, so in the **Android app** the Google button asks the user to sign in with email and password or an OTP instead. Google sign-in works on the web and installed-PWA versions.
 
-## 1. Connect Supabase (≈10 minutes)
+### AI document reading (optional)
+The API server's `analyze-document` function reads each uploaded document with Claude (`claude-opus-5-5`) and
+cross-checks it against the form: FDR number, amount, dates, bank, lien holder, institution name and faculty counts.
+Set `ANTHROPIC_API_KEY` on the server to turn it on. The result is **advisory**; the statutory rules still run in PostgreSQL.
+Server-side refusal fallback is enabled (`fallbacks: "default"`). Without a key the app says so and shows the on-device
+preview instead; submission is never blocked.
 
-> Already done for the deployed prototype (schema, demo data, storage bucket, daily FDR reminders). The `analyze-document`
-> function deploys through the GitHub Action once its secrets are set (step 7 covers the API key).
-> These steps are for setting up a fresh project.
-
-1. Create a project at [supabase.com](https://supabase.com) (region: Mumbai `ap-south-1`).
-2. **Create the schema.** Open SQL Editor → New query, paste
-   [`supabase/migrations/20261022000000_institution_portal.sql`](supabase/migrations/20261022000000_institution_portal.sql) and click **Run**.
-   This creates the tables, row-level security, workflow functions, the private `institution-documents` storage
-   bucket and its policies, the realtime publication, and (if `pg_cron` is enabled) the daily FDR expiry-reminder job.
-   With the Supabase CLI, `supabase db push` does the same.
-3. **(Optional) Load the demo data:** run [`supabase/seed.sql`](supabase/seed.sql) in the SQL Editor. It contains the three
-   prototype institutions, their applications, FDRs and notifications.
-4. **Create users:** go to Authentication → Users → *Add user* (email + password, tick *Auto confirm*). Then link each user
-   to an institution in the SQL Editor:
-   ```sql
-   select public.admin_link_user('principal@dits-delhi.edu.in', '1-10928371');                -- institution user
-   select public.admin_link_user('reviewer.mehta@aicte-india.org', null, 'REVIEWER');          -- staff (admin portal / SQL)
-   select public.admin_link_user('admin.verma@aicte-india.org',  null, 'ADMIN');
-   ```
-   Institutions that self-register in the app are created as `PENDING_VERIFICATION`. Activate them the same way,
-   using `admin_link_user(email, pid)`.
-5. **Auth settings:** go to Authentication → URL Configuration and set *Site URL* to where you host the app (for local testing,
-   `http://localhost:8765`). For **Sign in with OTP**, edit the *Magic Link* email template so it includes `{{ .Token }}`.
-   For **Government SSO**, configure SAML SSO and put its domain in `SSO_DOMAIN`.
-6. **Add the keys:** go to Project Settings → API and copy the *Project URL* and the **anon public** key into [`config.js`](config.js):
-   ```js
-   SUPABASE_URL: 'https://xxxx.supabase.co',
-   SUPABASE_ANON_KEY: 'eyJhbGciOi...',
-   ```
-   Never put the `service_role` key in the app.
-7. **(Optional) Turn on AI document reading.** It runs as a Supabase Edge Function that reads each uploaded document with
-   Claude (`claude-opus-5-5`) and cross-checks it against the form: FDR number, amount, dates, bank, lien holder,
-   institution name and faculty counts. You need an Anthropic API key:
-   ```bash
-   supabase functions deploy analyze-document
-   supabase secrets set ANTHROPIC_API_KEY=sk-ant-...
-   ```
-   The result is **advisory**; the statutory rules still run in Postgres. Server-side refusal fallback is enabled
-   (`fallbacks: "default"`). If the function isn't deployed or has no key, the app says so and shows the on-device
-   preview instead; submission is never blocked.
-8. Reload the app. The demo badge disappears, and sign-in, data, uploads and notifications now come from Supabase.
+### Moving from the previous Supabase project
+The schema files in `supabase/migrations/` are unchanged and run as-is on standalone PostgreSQL, between
+[`server/db/000_platform.sql`](server/db/000_platform.sql) (roles, `auth.users` + `auth.uid()`, document storage tables) and
+[`server/db/900_postgres_compat.sql`](server/db/900_postgres_compat.sql) (server-job recognition and change notifications).
+The `supabase/` folder name is kept for history only; nothing in it needs Supabase. Government SSO (SAML through Supabase) is
+not available on the standalone server and stays hidden behind `SSO_DOMAIN: ''`, as it was before.
 
 ## 2. Run the app
 
@@ -144,6 +130,8 @@ apps") or drag it onto an emulator. To rebuild after changing the web files or `
 npm run android:apk        # copies the web app into www/, syncs Capacitor, runs Gradle
 # output: android/app/build/outputs/apk/debug/app-debug.apk
 ```
+Set `AICTE_API_URL` (or `API_URL` in `config.js`) before building so the APK talks to your API server; the server's
+`ALLOWED_ORIGINS` must include `https://localhost` (the Android app's origin).
 On Android, downloads (acknowledgement, FDR advice, CSV reports, deficiency notice) are saved and opened in the
 system share sheet, and documents open in the system viewer. For the Play Store, create a release build signed with
 your own keystore (Android Studio → Build → Generate Signed Bundle).
@@ -162,12 +150,16 @@ Demo-mode logins: `principal@dits-delhi.edu.in / Dits@2026`, `director@bce-banga
 
 - **The server is authoritative.** Clients never write tables. Every change goes through a `SECURITY DEFINER` function that
   checks the caller's identity, role, institution and the allowed status transition, then writes an audit event.
+- **The database decides permissions.** The API server runs each request in its own transaction as the PostgreSQL role
+  `authenticated` with the caller's user id set (`auth.uid()`), so the schema's grants and row-level security policies apply
+  to every read and write. Only functions granted to signed-in users can be called (read from the database catalog);
+  all values are passed as query parameters.
 - **Isolation between institutions (RLS):** an institution can read only its own rows; a URL or ID for another
   institution returns nothing. Staff-only notes live in a separate table that institutions cannot read.
 - **Status transitions are enforced in SQL.** An institution cannot approve anything. Reviewers can clear or reject an
   application, and only `ADMIN` gives final approval. Decisions require a written rationale.
-- **Documents:** they are stored in a private bucket under `<institution_id>/…`. Upload and read are allowed only in your
-  own folder, with no update or delete (evidence is immutable). Files are viewed through short-lived signed links.
+- **Documents:** they are stored privately in PostgreSQL under `<institution_id>/…`. Upload and read are allowed only in your
+  own folder (storage RLS), with no update or delete (evidence is immutable). Files are viewed through short-lived signed links.
   Each file's SHA-256 is computed on the device, and the server checks it across **all** institutions to detect reused
   documents. The client cannot see other institutions' files, so only the server can do this check.
 - **Validation:** deterministic rules (checklist, certificate expiry, duplicate hash, faculty cadre and SFR, built-up area,
@@ -175,8 +167,10 @@ Demo-mode logins: `principal@dits-delhi.edu.in / Dits@2026`, `director@bce-banga
   If server validation is unavailable, the app blocks submission; it never treats a failed check as a pass.
 - **Idempotent submission:** each application carries an idempotency key, so retrying after a timeout cannot create duplicates.
 - **Audit:** the audit log is append-only and hash-chained per institution (`prev_hash → sha256_hash`), so tampering is detectable.
-- **Sessions:** Supabase Auth tokens refresh automatically. An expired or revoked session returns the user to Login.
-  With *Remember me* off, the session is held in session storage. In Supabase mode, no institution records are stored on the device.
+- **Sessions:** passwords are bcrypt-hashed; access tokens are short-lived (1 h) and refresh automatically with rotating
+  refresh tokens (only their hashes are stored). Logout or a revoked session works immediately and returns the user to Login.
+  Sign-in, OTP and email endpoints are rate-limited; email links and Google sign-in only return to the configured front ends.
+  With *Remember me* off, the session is held in session storage. In server mode, no institution records are stored on the device.
 
 ### Workflow states
 
@@ -189,6 +183,8 @@ AICTE admin approves (`decide_fdr_request`) and, for a new deposit, after the ba
 | Institution app | Staff (admin portal or SQL) |
 |---|---|
 | `get_portal_state`, `submit_application` (dry-run validation or submit), `save_draft`, `delete_draft`, `submit_compliance_response`, `submit_fdr`, `request_fdr_renewal`, `request_lien_release`, `mark_notifications_read`, `raise_ticket`, `update_institution_profile`, `update_contact_details`, `log_client_event` | `review_start`, `review_request_clarification`, `review_record_decision`, `bank_endorse_lien`, `decide_fdr_request`, `admin_link_user`, `generate_expiry_reminders` |
+
+They are called through the API server at `POST /rpc/<name>`; the daily FDR expiry reminders run on the server at 01:30 UTC.
 
 ---
 
@@ -228,8 +224,8 @@ AICTE admin approves (`decide_fdr_request`) and, for a new deposit, after the ba
 ### Simulated, by design (as in the web prototype)
 - Aadhaar e-Sign and DSC token signing, until an eSign Service Provider (ESP) is integrated
 - the issuing-authority checks (DTE, University, Fire, NBA, bank CBS)
-- AI document summaries in **demo mode**, and in Supabase mode until the `analyze-document` function is deployed with an
-  API key. After that, documents are read by Claude.
+- AI document summaries in **demo mode**, and in server mode until `ANTHROPIC_API_KEY` is set on the API server.
+  After that, documents are read by Claude.
 
 These are clearly labelled in the app. AICTE Admin Portal screens are outside this app; its server functions are included.
 
@@ -238,17 +234,19 @@ These are clearly labelled in the app. AICTE Admin Portal screens are outside th
 ## 5. Tests
 
 ```bash
-npm install                  # dev tools only: PGlite, supabase-js, puppeteer-core (uses your installed Edge)
-npm run test:db              # 78 checks — all migrations + seed in embedded Postgres under RLS (incl. Google sign-in, staff portal roles)
+npm install                  # includes dev tools: PGlite, embedded-postgres (a real PostgreSQL 17 for tests), puppeteer-core (uses your installed Edge)
+npm run test:db              # 96 checks — all migrations + seed in embedded Postgres under RLS (incl. Google sign-in, staff portal roles)
+npm run test:server          # 51 checks — real PostgreSQL + the API over HTTP: auth (password, confirmation, OTP, reset, refresh, logout, Google),
+                             #   RPC permissions, RLS, storage, live updates, AI function, scheduled job
 npm run test:ai              # 17 checks — AI document reader with a fake Claude client (no cost)
-npm run serve:demo           # (terminal 1) serves the app in demo mode (empty keys) for the browser tests, then:
+npm run serve:demo           # (terminal 1) serves the app in demo mode (empty API_URL) for the browser tests, then:
 npm run test:e2e:demo        # full institution walkthrough in demo mode
 npm run test:e2e:onboarding  # layout at 320–430 px widths, slideshow motion, skip/next, legal links, fallbacks
-npm run mock:supabase        # (terminal 2) local Supabase stand-in running the real SQL — TEST ONLY
-npm run test:e2e:supabase    # app + supabase-js against that stand-in: auth, RLS, uploads, AI reading, validation, idempotency, workflow, expiry
-npm run web:test-server      # (terminal 3) staff portal on :3100 against the stand-in, then:
+npm run e2e:server           # (terminal 2) real PostgreSQL + the real API server + the app on :8790 — TEST ONLY
+npm run test:e2e:server      # app against that server: auth, RLS, uploads, AI reading, validation, idempotency, workflow, expiry
+npm run web:test-server      # (terminal 3) staff portal on :3100 against that server, then (on a fresh e2e:server):
 npm run test:e2e:staff       # staff portal: sign-in rules, scrutiny, deficiency notice, override, final approval, FDR request, invites, bank lien
-node tests/e2e/hindi.e2e.cjs # Hindi coverage report + layout   (AI_DOWN=1 on the mock and the supabase test checks the AI-outage fallback)
+node tests/e2e/hindi.e2e.cjs # Hindi coverage report + layout   (AI_DOWN=1 on e2e:server and the server test checks the AI-outage fallback)
 ```
 Set `EDGE_PATH` if Microsoft Edge is installed elsewhere, and `BLOCK_WEBFONTS=1` if Google Fonts is unreachable from your network (the browser tests then skip web fonts). Screenshots are written to `tests/output/`.
 
@@ -257,16 +255,19 @@ Set `EDGE_PATH` if Microsoft Edge is installed elsewhere, and `BLOCK_WEBFONTS=1`
 | Path | Contents |
 |---|---|
 | `index.html`, `styles.css` | App shell and mobile design system |
-| `config.js` | **Your Supabase URL and anon key go here** |
-| `backend.js` | Backend layer: Supabase (auth, RPC, storage, realtime) or the on-device demo store |
+| `config.js` | **The API server address (`API_URL`) goes here** (or set `AICTE_API_URL` at build time) |
+| `backend.js` | Backend layer: the API server (auth, RPC, storage, live updates) or the on-device demo store |
+| `api-client.js` | Browser client for the API server (shared with the staff portal as `web-portal/src/lib/api-client.js`; `npm run sync:api-client`) |
 | `app.js` | Screens, router, rule engine (client preview), forms and flows |
 | `data.js` | Demo dataset (from the web prototype) |
 | `i18n.js` | English / हिन्दी interface |
-| `supabase/functions/analyze-document/` | Edge Function: Claude document reading + cross-checks (`extract.ts` holds the logic and its unit test) |
+| `server/` | API server: `index.mjs` (start), `app.mjs`, `auth.mjs`, `api.mjs`, `db.mjs`, `migrate.mjs`, `db/*.sql` (platform layer) |
+| `.env.example`, `render.yaml` | Server configuration template and Render deployment |
+| `supabase/functions/analyze-document/extract.ts` | Claude document reading + cross-checks, used by the API server (with its unit test) |
 | `android/`, `capacitor.config.json`, `scripts/build-www.mjs`, `dist/` | Android app project and the built APK |
-| `supabase/migrations/…sql` | Schema, RLS, functions, storage policies |
+| `supabase/migrations/…sql` | Schema, RLS, functions, storage policies (unchanged; run by `server/migrate.mjs`) |
 | `supabase/seed.sql` | Demo data, generated by `npm run seed:generate` |
-| `supabase/tests/`, `tests/` | Database and browser test suites, plus the local Supabase stand-in |
+| `supabase/tests/`, `tests/` | Database, API server and browser test suites, plus the integration-test server |
 | `sw.js`, `manifest.webmanifest`, icons, `delhi.webp`, `mumbai.webp`, `emblem.png` | PWA and assets |
 
 The Android app is built with Capacitor 6 (`android/`). See *Android app (APK)* above.

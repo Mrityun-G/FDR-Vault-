@@ -5,6 +5,7 @@ dist/
 www/
 .env
 .env.*
+!.env.example
 supabase/.temp/
 .vercel/
 

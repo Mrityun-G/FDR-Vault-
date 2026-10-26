@@ -1,7 +1,7 @@
 /**
  * AICTE Intelligent Regulatory Validation Platform (AI-IRVP)
  * Live command dashboard for AICTE officers and administrators.
- * Every figure, list and button is driven by the shared Supabase data and updates in realtime.
+ * Every figure, list and button is driven by the shared PostgreSQL data (via the API server) and updates live.
  */
 
 import React, { useMemo, useState } from 'react';

@@ -2,34 +2,47 @@
   "name": "aicte-institution-mobile",
   "version": "1.1.0",
   "private": true,
-  "description": "AICTE Intelligent Regulatory Validation Platform — Institution (Applicant) mobile portal (PWA) with Supabase backend",
+  "description": "AICTE Intelligent Regulatory Validation Platform — Institution (Applicant) mobile portal (PWA) with a Node.js + PostgreSQL backend",
   "scripts": {
     "serve": "python -m http.server 8765",
     "serve:demo": "node tests/serve-demo.mjs",
+    "server": "node server/index.mjs",
+    "db:migrate": "node server/migrate.mjs",
     "seed:generate": "node supabase/scripts/generate-seed.mjs",
     "test:db": "node supabase/tests/backend.test.mjs",
-    "mock:supabase": "node tests/mock-supabase.mjs",
+    "test:server": "node tests/server/api.test.mjs",
+    "e2e:server": "node tests/e2e-server.mjs",
     "test:e2e:demo": "node tests/e2e/demo.e2e.cjs",
     "test:e2e:onboarding": "node tests/e2e/onboarding.e2e.cjs",
-    "test:e2e:supabase": "node tests/e2e/supabase.e2e.cjs",
+    "test:e2e:server": "node tests/e2e/server.e2e.cjs",
     "test:ai": "node supabase/functions/analyze-document/extract.test.ts",
     "build:www": "node scripts/build-www.mjs",
     "android:sync": "node scripts/build-www.mjs && npx cap sync android",
     "android:apk": "npm run android:sync && cd android && gradlew.bat assembleDebug",
     "web:test-server": "node tests/web-test-server.mjs",
+    "sync:api-client": "node -e \"require('fs').copyFileSync('api-client.js', 'web-portal/src/lib/api-client.js')\"",
     "test:e2e:staff": "node tests/e2e/staff-portal.e2e.cjs"
   },
   "devDependencies": {
     "@capacitor/cli": "^6.2.2",
     "@electric-sql/pglite": "0.2.17",
-    "@supabase/supabase-js": "2.45.4",
+    "embedded-postgres": "17.10.0-beta.17",
     "puppeteer-core": "23.11.1"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "1.1.0",
     "@capacitor/android": "^6.2.2",
     "@capacitor/core": "^6.2.2",
     "@capacitor/filesystem": "^6.0.4",
-    "@capacitor/share": "^6.0.4"
+    "@capacitor/share": "^6.0.4",
+    "cors": "2.8.5",
+    "express": "5.2.1",
+    "helmet": "8.2.0",
+    "nodemailer": "10.0.16",
+    "pg": "8.23.0"
   },
-  "type": "module"
+  "type": "module",
+  "engines": {
+    "node": ">=22.18"
+  }
 }
