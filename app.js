@@ -8,7 +8,10 @@ const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': 
 const DAY = 864e5;
 const now = () => new Date();
 const delay = ms => new Promise(r => setTimeout(r, ms));
-const daysUntil = d => Math.ceil((new Date(d) - now()) / DAY);
+// Whole calendar days from today (local time). A plain date ("2026-10-27") is that local day, not midnight UTC —
+// otherwise in India today's date counts as "in the future" until 05:30.
+const localDay = d => { const x = typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d) ? new Date(`${d}T00:00:00`) : new Date(d); x.setHours(0, 0, 0, 0); return x; };
+const daysUntil = d => Math.round((localDay(d) - localDay(now())) / DAY);
 const fmtDate = d => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
 const fmtDT = d => d ? new Date(d).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
 const isToday = d => !!d && new Date(d).toDateString() === now().toDateString();
@@ -393,8 +396,17 @@ async function busy(el, fn, label) {
 function handleError(e) {
   const err = toApiError(e);
   if (err.code === 'SESSION_EXPIRED' || err.code === 'NOT_AUTHENTICATED') { sessionEnded(err.message); return; }
-  if (err.fields) { UI.err = { ...UI.err, ...err.fields }; render(); }
-  toast(err.message, err.code === 'OFFLINE' || err.code === 'NETWORK' ? 'warn' : 'err');
+  if (err.fields) {
+    // The server names wizard fields ("fdr.issueDate"); on stand-alone forms (Submit New FDR) the same field is "issueDate".
+    const f = {};
+    for (const [k, v] of Object.entries(err.fields)) {
+      const plain = k.replace(/^fdr\./, '');
+      f[!$(`[name="${k}"]`) && $(`[name="${plain}"]`) ? plain : k] = v;
+    }
+    UI.err = { ...UI.err, ...f }; render();
+  }
+  // Say what is wrong, not only that something is: the field may be scrolled out of view.
+  toast(err.fields ? `${err.message} ${Object.values(err.fields).join(' · ')}` : err.message, err.code === 'OFFLINE' || err.code === 'NETWORK' ? 'warn' : 'err');
 }
 function sessionEnded(msg) {
   if (Backend.remote) DB = remoteSkeleton();

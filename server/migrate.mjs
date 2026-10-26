@@ -1,5 +1,5 @@
 // Applies the schema in order and records each file, so every file runs once. Never drops or deletes anything.
-//   server/db/000_platform.sql  ->  supabase/migrations/*.sql (unchanged)  ->  server/db/900_postgres_compat.sql
+//   server/db/000_platform.sql  ->  supabase/migrations/*.sql (unchanged)  ->  server/db/900_postgres_compat.sql  ->  910_india_time.sql
 // Usage: npm run db:migrate            (add --seed to load supabase/seed.sql + the demo accounts on an empty database;
 //                                       add --reset-test-data too to then empty it like the live project: demo logins + empty DITS Delhi)
 import fs from 'node:fs';
@@ -14,6 +14,7 @@ export function migrationFiles() {
     path.join(ROOT, 'server', 'db', '000_platform.sql'),
     ...fs.readdirSync(dir).filter(f => f.endsWith('.sql')).sort().map(f => path.join(dir, f)),
     path.join(ROOT, 'server', 'db', '900_postgres_compat.sql'),
+    path.join(ROOT, 'server', 'db', '910_india_time.sql'),
   ];
 }
 

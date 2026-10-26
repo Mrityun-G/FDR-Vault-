@@ -173,6 +173,8 @@ try {
   const ai = await call('POST', '/functions/analyze-document', { token: inst.access_token, body: { storagePath: path, docType: 'FDR_CORPUS', mimeType: 'application/pdf', declared: { fdrNumber: 'SBI-FDR-77001-2026', amountInr: 10000000 } } });
   ok(ai.status === 200 && ai.body.analysis && Array.isArray(ai.body.mismatches), `document analysed (status ${ai.body.status})`);
   ok((await call('POST', '/functions/analyze-document', { token: inst.access_token, body: { storagePath: `${other}/x/y.pdf`, docType: 'FDR_CORPUS', mimeType: 'application/pdf' } })).status === 403, "cannot analyse another institution's document");
+  const tz = (await pool.query('show timezone')).rows[0].TimeZone;
+  ok(tz === 'Asia/Kolkata', `database dates follow India Standard Time (${tz})`);
   const n = (await asService(c => c.query('select public.generate_expiry_reminders() n'))).rows[0].n;
   ok(Number.isInteger(n), `daily FDR reminder job runs as a server job (${n} reminder(s))`);
 } catch (e) {

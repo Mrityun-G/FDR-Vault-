@@ -140,6 +140,20 @@ const pdf = (name, seed, pages = 2) => {
   await h.click('PNB-FDR-30115-2016'); await h.click('Initiate Release Request');
   await page.click('input[name=certify]'); await h.click('Submit Discharge Application');
   ok(await h.waitText('Release Pending Bureau Approval'), 'lien release pending Bureau approval');
+  // Submit New FDR with a number another institution already registered: the server's reason is shown on the field.
+  const otherFdr = (await sql(`select fdr_number n from public.fdrs where institution_id <> (select id from public.institutions where pid='1-10928371') limit 1`))[0].n;
+  await page.evaluate(() => go('fdrNew')); await wait(400);
+  await h.type('input[name=fdrNumber]', otherFdr); await h.type('input[name=branchName]', 'Car Street'); await h.type('input[name=ifscCode]', 'SBIN0001234');
+  await h.type('input[name=amountRs]', '10000000');
+  await page.$eval('input[name=issueDate]', el => { el.value = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }); });
+  await page.$eval('input[name=maturityDate]', el => { const d = new Date(Date.now() + 3660 * 86400000); el.value = d.toISOString().slice(0, 10); });
+  await (await page.$('input[type=file][data-attach=fdrNew]')).uploadFile(pdf('fdr-advice.pdf', 'fdr-' + Date.now()));
+  await h.waitText('1 file(s) attached');
+  await h.click('Submit FDR', '.footer-bar');
+  ok(await h.waitText('This FDR number is already registered'), 'server reason is shown in the message');
+  ok(await page.evaluate(() => { const i = document.querySelector('input[name=fdrNumber]'); return i.classList.contains('err') && /already registered/.test(i.closest('.field').innerText); }), 'the FDR number field is highlighted with the reason');
+  ok(await page.evaluate(() => document.querySelector('input[name=branchName]').value === 'Car Street'), 'typed values are kept after the server rejects the form');
+  await page.evaluate(() => { UI.dirty = false; back(); }); await wait(300);
   await page.click('[data-tab=alerts]'); await wait(300);
   await h.click('Mark all read'); await wait(800);
   ok(await h.has('Unread (0)'), 'notifications marked read on server');
