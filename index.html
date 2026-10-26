@@ -15,7 +15,7 @@
   <link rel="apple-touch-icon" href="icon-192.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;800&family=Libre+Baskerville:wght@700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -23,21 +23,36 @@
     <div id="view"></div>
     <div id="sheet"></div>
     <div id="toast"></div>
-    <div id="launch" aria-hidden="true">
-      <img class="launch-logo" src="fdr-vault-logo.png" alt="">
-      <div class="launch-from"><span>from</span><b translate="no"><img src="emblem.png" alt="">AICTE</b></div>
+    <div id="launch" aria-hidden="true" translate="no">
+      <svg class="ln-swoosh ln-top" viewBox="0 0 390 150" preserveAspectRatio="none" aria-hidden="true"><path d="M0 0H262C190 26 104 66 0 122Z" fill="#0A2347"></path><path d="M0 122C104 66 190 26 262 0H300C206 30 112 76 0 138Z" fill="#C9A13B"></path><path d="M0 138C112 76 206 30 300 0H322C220 34 118 86 0 150Z" fill="#E6EBF2"></path></svg>
+      <div class="ln-bg"></div>
+      <div class="ln-center">
+        <div class="ln-logo"><img src="fdr-vault-mark.png" alt=""></div>
+        <h1 class="ln-title"><span>F</span><span>D</span><span>R</span><span class="sp"> </span><span>V</span><span>A</span><span>U</span><span>L</span><span>T</span></h1>
+        <i class="ln-rule"></i>
+        <p class="ln-tag"><span>Secure</span><b>•</b><span>Transparent</span><b>•</b><span>Compliant</span></p>
+      </div>
+      <div class="ln-from">
+        <span class="ln-from-w">from</span>
+        <b><img src="emblem.png" alt="">AICTE</b>
+        <span class="ln-name">All India Council for Technical Education</span>
+        <span class="ln-min">Ministry of Education, Government of India</span>
+      </div>
+      <svg class="ln-swoosh ln-bottom" viewBox="0 0 390 150" preserveAspectRatio="none" aria-hidden="true"><path d="M390 150H128C200 124 286 84 390 28Z" fill="#0A2347"></path><path d="M390 28C286 84 200 124 128 150H90C184 120 278 74 390 12Z" fill="#C9A13B"></path><path d="M390 12C278 74 184 120 90 150H68C170 116 272 64 390 0Z" fill="#E6EBF2"></path></svg>
     </div>
   </div>
   <script>
-    // Launch screen (FDR Vault, from AICTE): shown briefly on every app start, then fades into the app.
+    // Launch screen (FDR Vault, from AICTE): animated on every app start, then fades into the app.
     // Skipped in automated browsers (navigator.webdriver) so the UI tests can interact at once.
-    if (navigator.webdriver) document.getElementById('launch').remove();
-    else setTimeout(function () {
+    (function () {
       var l = document.getElementById('launch');
-      if (!l) return;
-      l.classList.add('done');
-      setTimeout(function () { l.remove(); }, 450);
-    }, 1400);
+      if (navigator.webdriver) { l.remove(); return; }
+      var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+      setTimeout(function () {
+        l.classList.add('done');
+        setTimeout(function () { l.remove(); }, 500);
+      }, reduce ? 1400 : 3000);
+    })();
   </script>
   <script src="config.js"></script>
   <script src="data.js"></script>

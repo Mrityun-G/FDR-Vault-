@@ -76,7 +76,7 @@ app.get('/__expire', async (req, res) => { await pool.query('update auth.session
 app.get('/__mail', (req, res) => res.json(outbox.filter(m => !req.query.to || m.to === req.query.to)));
 app.get('/config.js', (req, res) => res.type('text/javascript').send(`window.AICTE_CONFIG = { API_URL: '${BASE}', STORAGE_BUCKET: 'institution-documents', SSO_DOMAIN: '', API_CLIENT_URL: 'api-client.js' };`));
 app.get('/sw.js', (req, res) => res.status(404).end());
-for (const f of ['index.html', 'styles.css', 'data.js', 'backend.js', 'api-client.js', 'app.js', 'i18n.js', 'manifest.webmanifest', 'emblem.png', 'fdr-vault-logo.png', 'delhi.webp', 'mumbai.webp', 'icon-192.png', 'icon-512.png'])
+for (const f of ['index.html', 'styles.css', 'data.js', 'backend.js', 'api-client.js', 'app.js', 'i18n.js', 'manifest.webmanifest', 'emblem.png', 'fdr-vault-logo.png', 'fdr-vault-mark.png', 'delhi.webp', 'mumbai.webp', 'icon-192.png', 'icon-512.png'])
   app.get(`/${f}`, (req, res) => res.sendFile(path.join(APP, f)));
 app.get('/', (req, res) => res.sendFile(path.join(APP, 'index.html')));
 app.use('/members', express.static(path.join(APP, 'members')));
