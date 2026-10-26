@@ -1,5 +1,0 @@
-# Supabase CLI project settings (used by `supabase link`, `db push` and `functions deploy`).
-project_id = "aicte-institution-portal"
-
-[functions.analyze-document]
-verify_jwt = true

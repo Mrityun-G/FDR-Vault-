@@ -4,7 +4,7 @@
   "installCommand": "echo \"No dependencies needed for the static build\"",
   "buildCommand": "node scripts/build-www.mjs",
   "outputDirectory": "www",
-  "ignoreCommand": "git diff HEAD^ HEAD --quiet -- . \":(exclude)web-portal\" \":(exclude)supabase\" \":(exclude)tests\" \":(exclude)android\"",
+  "ignoreCommand": "git diff HEAD^ HEAD --quiet -- . \":(exclude)web-portal\" \":(exclude)supabase\" \":(exclude)tests\" \":(exclude)android\" \":(exclude)server\"",
   "headers": [
     {
       "source": "/(sw.js|config.js|index.html)",

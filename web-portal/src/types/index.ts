@@ -111,7 +111,7 @@ export interface DocumentEvidence {
   forensics: ForensicsData;
   geminiAnalysis?: GeminiAnalysis;
   sourceTextPreview?: string;
-  /** Path of the original file in the private Supabase Storage bucket (opened through a short-lived signed link). */
+  /** Path of the original file in the private document storage (opened through a short-lived signed link). */
   storagePath?: string;
   mimeType?: string;
   validTill?: string;

@@ -6,7 +6,7 @@
 
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { INSTITUTION_APP_URL } from '../lib/supabase';
+import { INSTITUTION_APP_URL } from '../lib/api';
 import { PORTAL, PORTALS, portalUrl } from '../lib/portal';
 import { AicteLogo } from './AicteLogo';
 import { StaffRegisterForm } from './StaffRegisterForm';
@@ -38,7 +38,7 @@ const GoogleIcon = () => (
   </svg>
 );
 
-// Shared evaluator accounts on the live server (created by hand in Supabase, see README "Demo accounts").
+// Shared evaluator accounts on the live server (created by npm run db:migrate -- --seed, see README "Demo accounts").
 const DEMO_PASSWORD = 'Sih@2026Demo';
 const DEMO_ACCOUNTS = {
   officer: [

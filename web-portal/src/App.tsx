@@ -7,12 +7,12 @@ import React, { useEffect, useState } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import { LoginPage } from './components/LoginPage';
 import { AppShell } from './components/common/AppShell';
-import { supabase } from './lib/supabase';
+import { api } from './lib/api';
 import { toApiError } from './services/backend';
 import { PORTAL } from './lib/portal';
 import { PortalChooser } from './components/PortalChooser';
 
-/** Shown after following a password-reset email: Supabase signs the user in with a recovery session. */
+/** Shown after following a password-reset email: the API signs the user in with a recovery session. */
 const PasswordRecoveryModal: React.FC = () => {
   const [open, setOpen] = useState(false);
   const [password, setPassword] = useState('');
@@ -20,7 +20,7 @@ const PasswordRecoveryModal: React.FC = () => {
   const [state, setState] = useState<{ busy?: boolean; done?: boolean; error?: string }>({});
 
   useEffect(() => {
-    const { data } = supabase.auth.onAuthStateChange(event => {
+    const { data } = api.auth.onAuthStateChange(event => {
       if (event === 'PASSWORD_RECOVERY') setOpen(true);
     });
     return () => data.subscription.unsubscribe();
@@ -33,7 +33,7 @@ const PasswordRecoveryModal: React.FC = () => {
     if (password.length < 8) return setState({ error: 'Use at least 8 characters.' });
     if (password !== confirm) return setState({ error: 'The two passwords do not match.' });
     setState({ busy: true });
-    const { error } = await supabase.auth.updateUser({ password });
+    const { error } = await api.auth.updateUser({ password });
     setState(error ? { error: toApiError(error).message } : { done: true });
   };
 

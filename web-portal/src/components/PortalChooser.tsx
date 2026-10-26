@@ -8,7 +8,7 @@ import { motion } from 'motion/react';
 import { AicteLogo } from './AicteLogo';
 import { RotatingText, rise, stagger } from './fx';
 import { PORTALS, portalUrl } from '../lib/portal';
-import { INSTITUTION_APP_URL } from '../lib/supabase';
+import { INSTITUTION_APP_URL } from '../lib/api';
 import { ShieldCheck, Crown, Smartphone, ArrowRight } from 'lucide-react';
 
 const cards = [

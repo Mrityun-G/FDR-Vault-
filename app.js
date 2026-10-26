@@ -157,7 +157,7 @@ const BANKS = [
   ['HDFC Bank Ltd', 'HDFC', 'HDFC'], ['Bank of Baroda', 'BARB', 'BOB'], ['ICICI Bank Ltd', 'ICIC', 'ICICI'],
   ['Axis Bank Ltd', 'UTIB', 'AXIS'], ['Union Bank of India', 'UBIN', 'UBI'],
 ];
-// Shared evaluator account on the live server (created by hand in Supabase, see README "Demo accounts").
+// Shared evaluator account on the live server (created by npm run db:migrate -- --seed, see README "Demo accounts").
 const DEMO_LOGIN = { label: 'Institution · DITS Delhi', email: 'sih_demo.institution@example.com', password: 'Sih@2026Demo' };
 const isDemoAccount = email => /^sih_demo\.[a-z]+@example\.com$/i.test(email || '');
 const SAMPLE_REG = { name: 'Rajdhani Institute of Engineering & Technology', pid: '', state: 'Delhi', district: 'South West Delhi', type: 'Unaided - Private', head: 'Dr. Anita Verma', mobile: '9876543210', agree: true };
@@ -175,7 +175,7 @@ function freshDB() {
 }
 const PREFS = 'aicte-irvp-prefs-v1';
 function loadPrefs() { try { return JSON.parse(localStorage.getItem(PREFS)) || {}; } catch (e) { return {}; } }
-// Supabase mode: server data lives in memory only; just per-device preferences are stored on the device.
+// Server mode: server data lives in memory only; just per-device preferences are stored on the device.
 function remoteSkeleton() {
   const p = loadPrefs();
   return { v: 1, users: [], institutions: [], apps: [], fdrs: [], notifs: [], audit: [], adapters: {}, tickets: [], registrations: [], session: null, acked: p.acked || {}, prefs: p.prefs || { push: true, email: true, sms: false }, pwHash: {} };
@@ -1279,7 +1279,7 @@ function startAI() {
   };
   setTimeout(tick, 420);
 }
-// Merges Claude's per-document reading (Supabase mode) into the validation results. Advisory only.
+// Merges Claude's per-document reading (server mode) into the validation results. Advisory only.
 const SEV = { ok: 0, warn: 1, fail: 2 };
 function applyAiReading(w, results) {
   if (!results) { w.ai.aiService = 'device'; return; }
@@ -1782,7 +1782,7 @@ V.about = () => ({
     <div class="banner warn mt16">${ic('alert', 18)}<div><b>PROTOTYPE ONLY:</b> This software system is a functional technical prototype created for evaluation, research, and testing. It does not constitute official regulatory approval or endorsement by the All India Council for Technical Education (AICTE). Real statutory approvals require authorized scrutiny committee decisions in compliance with the prevailing AICTE Approval Process Handbook.</div></div>
     ${DISCLAIMERS.map(([t, d]) => `<div class="card"><div class="small b">${esc(t)}</div><div class="xs mt4" style="color:var(--text2)">${esc(d)}</div></div>`).join('')}
     <p class="legal">Protected system under Section 43 &amp; 66 of Information Technology Act, 2000.<br>© ${now().getFullYear()} All India Council for Technical Education (AICTE), Ministry of Education, Govt. of India.</p>
-    <div class="card mt12 small"><div class="kv"><span>Data source</span><span>${Backend.remote ? 'AICTE server (Supabase)' : 'Demo — on this device'}</span></div><div class="kv"><span>Rule set</span><span>${esc(DB.ruleVersion || 'v2026.1')}</span></div><div class="kv"><span>App version</span><span>1.1.0</span></div></div>
+    <div class="card mt12 small"><div class="kv"><span>Data source</span><span>${Backend.remote ? 'AICTE server (PostgreSQL)' : 'Demo — on this device'}</span></div><div class="kv"><span>Rule set</span><span>${esc(DB.ruleVersion || 'v2026.1')}</span></div><div class="kv"><span>App version</span><span>1.1.0</span></div></div>
     ${Backend.remote ? '' : `<button class="btn btn-danger btn-block mt16" data-act="resetDemo">${ic('refresh', 18)} Reset Demo Data</button>`}`,
 });
 V.activity = () => {

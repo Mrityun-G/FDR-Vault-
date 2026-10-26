@@ -3,7 +3,7 @@
  * Global Application Context & State Management
  *
  * Staff portal (AICTE reviewers, administrators, bank officials). Institutions use the mobile app.
- * Data comes from the shared Supabase database under row-level security; every change goes through
+ * Data comes from the shared PostgreSQL database (via the API server) under row-level security; every change goes through
  * an audited server function, after which the data is reloaded. Realtime keeps open screens current.
  */
 
@@ -19,7 +19,7 @@ import {
   SidebarTab
 } from '../types';
 import { INITIAL_RULES, INITIAL_AUTHORITY_ADAPTERS } from '../data/mockData';
-import { supabase } from '../lib/supabase';
+import { api } from '../lib/api';
 import { PORTAL } from '../lib/portal';
 import { actions, buildNotifications, loadApplications, loadAudit, loadFdrs, loadProfile, toApiError, StaffRegistration } from '../services/backend';
 
@@ -151,7 +151,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch (e) {
       const err = toApiError(e);
       setDataError(err.message);
-      if (err.code === 'SESSION_EXPIRED') await supabase.auth.signOut();
+      if (err.code === 'SESSION_EXPIRED') await api.auth.signOut();
     } finally {
       setLoading(false);
     }
@@ -164,7 +164,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   /* ---------------------------------------------------------------- session */
 
-  /** Loads the staff profile for the current Supabase session. Returns an error message when access is refused. */
+  /** Loads the staff profile for the current session. Returns an error message when access is refused. */
   const enterSession = useCallback(async (): Promise<string | null> => {
     entering.current = true;
     try {
@@ -185,18 +185,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setIsAuthenticated(false);
       if (err.code === 'REGISTRATION_REQUIRED') {
         // Keep the session: the login page asks for the registration details once.
-        const { data } = await supabase.auth.getUser();
+        const { data } = await api.auth.getUser();
         setAuthError(null);
         setPendingRegistration({ email: data.user?.email || '' });
         return null;
       }
-      // Signed in to Supabase, but not as active AICTE staff: show why and sign out.
+      // Signed in, but not as active AICTE staff: show why and sign out.
       const message = err.message;
       setAuthError(message);
       userRef.current = GUEST;
       setCurrentUser(GUEST);
       setIsAuthenticated(false);
-      await supabase.auth.signOut();
+      await api.auth.signOut();
       return message;
     } finally {
       entering.current = false;
@@ -205,11 +205,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   useEffect(() => {
     let cancelled = false;
-    supabase.auth.getSession().then(async ({ data }) => {
+    api.auth.getSession().then(async ({ data }) => {
       if (data.session && !cancelled) await enterSession();
       if (!cancelled) setAuthReady(true);
     });
-    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: sub } = api.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_OUT' || !session) {
         setPendingRegistration(null);
         userRef.current = GUEST;
@@ -235,19 +235,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Live updates: any change an institution makes in the mobile app (or another officer makes here) reloads the data.
   useEffect(() => {
     if (!isAuthenticated) return;
-    const channel = supabase.channel('staff-portal');
+    const channel = api.channel('staff-portal');
     ['applications', 'fdrs', 'fdr_requests', 'scrutiny'].forEach(table =>
       channel.on('postgres_changes', { event: '*', schema: 'public', table }, scheduleRefresh)
     );
     channel.subscribe();
     return () => {
-      void supabase.removeChannel(channel);
+      void api.removeChannel(channel);
     };
   }, [isAuthenticated, scheduleRefresh]);
 
   const loginWithPassword = async (email: string, password: string) => {
     setAuthError(null);
-    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+    const { error } = await api.auth.signInWithPassword({ email: email.trim(), password });
     if (error) throw toApiError(error);
     const refused = await enterSession();
     if (refused) throw toApiError({ message: `FORBIDDEN: ${refused}` });
@@ -255,7 +255,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const loginWithGoogle = async () => {
     setAuthError(null);
-    const { error } = await supabase.auth.signInWithOAuth({
+    const { error } = await api.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: window.location.origin + window.location.pathname, queryParams: { prompt: 'select_account' } }
     });
@@ -264,7 +264,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const register = async (email: string, password: string, details: StaffRegistration) => {
     setAuthError(null);
-    const { data, error } = await supabase.auth.signUp({
+    const { data, error } = await api.auth.signUp({
       email: email.trim(),
       password,
       options: { emailRedirectTo: window.location.origin + window.location.pathname, data: { full_name: details.fullName, registration: details } }
@@ -284,16 +284,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const cancelRegistration = async () => {
     setPendingRegistration(null);
-    await supabase.auth.signOut();
+    await api.auth.signOut();
   };
 
   const sendPasswordReset = async (email: string) => {
-    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: window.location.origin + window.location.pathname });
+    const { error } = await api.auth.resetPasswordForEmail(email.trim(), { redirectTo: window.location.origin + window.location.pathname });
     if (error) throw toApiError(error);
   };
 
   const logout = async () => {
-    await supabase.auth.signOut();
+    await api.auth.signOut();
   };
 
   /* ---------------------------------------------------------------- navigation helpers */

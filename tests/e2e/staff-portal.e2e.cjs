@@ -1,6 +1,6 @@
-// Staff web portal (web-portal/) end-to-end test against the local Supabase stand-in (real SQL, real RLS).
-// Run:  npm run mock:supabase   (terminal 1)
-//       npm run web:test-server (terminal 2)  -> web portal dev server on :3100 pointed at the stand-in
+// Staff web portal (web-portal/) end-to-end test against the real API server and PostgreSQL (real SQL, real RLS).
+// Run:  npm run e2e:server      (terminal 1)
+//       npm run web:test-server (terminal 2)  -> web portal dev server on :3100 pointed at the API server
 //       node tests/e2e/staff-portal.e2e.cjs
 const puppeteer = require('puppeteer-core');
 const fs = require('fs');
@@ -122,7 +122,7 @@ const one = async q => (await sql(q))[0] || {};
     const dits = (await one(`select id from public.profiles where email = 'principal@dits-delhi.edu.in'`)).id;
     const fdr = (await one(`select id from public.fdrs where fdr_number = 'SBI-FDR-41207-2016'`)).id;
     await sql(`select set_config('request.jwt.claim.sub', '${dits}', false); select public.request_fdr_renewal('${fdr}', '{"mode":"extension","maturityDate":"2036-12-29","token":"CBS-SBI-RENEW-41207"}'::jsonb); select set_config('request.jwt.claim.sub', '', false);`);
-    await page.reload({ waitUntil: 'networkidle0' });
+    await page.reload({ waitUntil: 'networkidle2' });   // signed in: the live-update stream stays open, so not networkidle0
     await waitText('Shri R. C. Verma');
     await click('Renewals & Replacements');
     await waitText('Requests awaiting a decision');
