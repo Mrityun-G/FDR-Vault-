@@ -675,8 +675,8 @@ html[lang="hi"] .tile .lbl, html[lang="hi"] .chip { line-height: 1.35; }
 #launch.done { opacity: 0; visibility: hidden; }
 #launch .launch-logo { width: 132px; height: auto; animation: launchIn .6s ease-out both; }
 #launch .launch-from { position: absolute; left: 0; right: 0; bottom: calc(40px + env(safe-area-inset-bottom)); text-align: center; }
-#launch .launch-from span { display: block; font-size: 15px; color: #64748b; margin-bottom: 4px; }
-#launch .launch-from b { display: inline-flex; align-items: center; gap: 7px; font-size: 21px; font-weight: 800; letter-spacing: .5px; color: #0B3A70; }
-#launch .launch-from b img { width: 26px; height: 26px; }
+#launch .launch-from span { display: block; font-size: 18px; color: #64748b; margin-bottom: 6px; }
+#launch .launch-from b { display: inline-flex; align-items: center; gap: 9px; font-size: 34px; line-height: 1; font-weight: 800; letter-spacing: .6px; color: #0B3A70; }
+#launch .launch-from b img { width: 36px; height: 36px; flex: none; }
 @keyframes launchIn { from { opacity: 0; transform: scale(.92); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { #launch, #launch .launch-logo { transition: none; animation: none; } }
