@@ -910,7 +910,7 @@ const LEADERSHIP = [
     ['Sh. Naresh Kumar Grover', 'Director', 'naresh-grover'],
   ]],
 ];
-const APH_URL = 'https://aicte-qa.aicte-india.org/sites/default/files/APH%20Final.pdf';
+const APH_URL = 'https://www.pdffiller.com/s/oBzM6937B9';
 function aicteInfo() {
   const person = ([name, role, img]) => `<figure class="ai-person">
       <div class="ai-photo">${img ? `<img src="members/${img}.webp" alt="${name}" loading="lazy" decoding="async" width="340" height="242" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'${initials(name)}'}))">` : `<span>${initials(name)}</span>`}</div>
