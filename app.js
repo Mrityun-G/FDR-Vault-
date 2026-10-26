@@ -881,9 +881,62 @@ V.login = () => {
       <div class="seg" role="tablist"><button role="tab" aria-selected="${t === 'login'}" class="${t === 'login' ? 'on' : ''}" data-act="loginTab" data-v="login">Login</button><button role="tab" aria-selected="${t === 'register'}" class="${t === 'register' ? 'on' : ''}" data-act="loginTab" data-v="register">Register</button></div>
       <div class="mt16">${t === 'login' ? loginForm() : registerForm()}</div>
       <p class="legal" style="margin-top:20px;font-size:10px;color:var(--muted)">Protected system under Section 43 &amp; 66 of Information Technology Act, 2000. Unauthorized access is strictly prohibited.</p>
-      <nav class="ob-links" aria-label="Legal and support"><button data-act="legal" data-v="privacy">Privacy Policy</button><span aria-hidden="true">·</span><button data-act="legal" data-v="help">Help</button><span aria-hidden="true">·</span><button data-act="legal" data-v="terms">Terms of Use</button></nav>`,
+      <nav class="ob-links" aria-label="Legal and support"><button data-act="legal" data-v="privacy">Privacy Policy</button><span aria-hidden="true">·</span><button data-act="legal" data-v="help">Help</button><span aria-hidden="true">·</span><button data-act="legal" data-v="terms">Terms of Use</button></nav>
+      ${aicteInfo()}`,
   };
 };
+
+// AICTE leadership as published on aicte-india.org/about-us/leadership-team (photos in members/). Edit here when it changes.
+const LEADERSHIP = [
+  ['Chairman Secretariat', [
+    ['Prof. T. G. Sitharam', 'Chairman', 'sitharam'],
+    ['Dr. Abhay Jere', 'Vice Chairman', 'jere'],
+    ['Prof. Rajive Kumar', 'Member Secretary', 'rajive-kumar'],
+  ]],
+  ['Advisers', [
+    ['Dr. Raghab P. Dash', 'Adviser-I', 'raghab-dash'],
+    ['Dr. Buddha Chandrasekhar', 'Chief Coordinating Officer', 'buddha-chandrasekhar'],
+    ['Dr. More Ramulu', 'Adviser-I', ''],
+    ['Dr. N. H. Siddalinga Swamy', 'Adviser-II', 'siddalinga-swamy'],
+  ]],
+  ['Directors', [
+    ['Smt. Gujju Manusree', 'Director', 'manusree'],
+    ['Dr. Amit Dutta', 'Director', 'amit-dutta'],
+    ['Dr. Dinesh Singh', 'Director', 'dinesh-singh'],
+    ['Mrs. Garima Rohela', 'Director', 'garima-rohela'],
+    ['Sh. Kunal Jeet Singh', 'Director', 'kunal-jeet-singh'],
+    ['Dr. Sunil Luthra', 'Director', 'sunil-luthra'],
+    ['Ms. Asmita Dhillon', 'Director', 'asmita-dhillon'],
+    ['Sh. Naresh Kumar Grover', 'Director', 'naresh-grover'],
+  ]],
+];
+const APH_URL = 'https://aicte-qa.aicte-india.org/sites/default/files/APH%20Final.pdf';
+function aicteInfo() {
+  const person = ([name, role, img]) => `<figure class="ai-person">
+      <div class="ai-photo">${img ? `<img src="members/${img}.webp" alt="${name}" loading="lazy" decoding="async" width="340" height="242" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'${initials(name)}'}))">` : `<span>${initials(name)}</span>`}</div>
+      <figcaption><b translate="no">${name}</b><small>${role}</small></figcaption></figure>`;
+  return `<section class="ai-info" aria-labelledby="aiLead">
+    <h3 class="ai-h" id="aiLead">AICTE Leadership</h3>
+    ${LEADERSHIP.map(([group, people], k) => `<h4 class="ai-sub">${group}</h4><div class="ai-grid${k ? '' : ' lead'}">${people.map(person).join('')}</div>`).join('')}
+    <h3 class="ai-h">Approval Process Handbook</h3>
+    <a class="ai-book" href="${APH_URL}" target="_blank" rel="noopener">
+      <img src="members/aph-cover.webp" alt="Cover of the AICTE Approval Process Handbook 2024-25 to 2026-27" width="420" height="594" loading="lazy" decoding="async">
+      <span><b>Approval Process Handbook</b><small>2024-25 to 2026-27</small><small>Norms and procedures for AICTE approval of technical institutions.</small><em>${ic('download', 15)} Open handbook (PDF)</em></span>
+    </a>
+    <h3 class="ai-h">About AICTE</h3>
+    <div class="ai-about">
+      <img src="emblem.png" alt="AICTE logo" width="64" height="64" loading="lazy">
+      <p>The All India Council for Technical Education (AICTE) is the national-level council for technical education under the Department of Higher Education, Ministry of Education, Government of India. Set up in November 1945 as an advisory body, it was given statutory status by the AICTE Act, 1987.</p>
+      <p>AICTE plans and coordinates technical education across India, sets norms and standards, grants approval to institutions and programmes, and promotes quality, research and innovation.</p>
+      <dl>
+        <dt>Motto</dt><dd translate="no">योगः कर्मसु कौशलम् (Yogah Karmasu Kaushalam)</dd>
+        <dt>Headquarters</dt><dd translate="no">Nelson Mandela Marg, Vasant Kunj, New Delhi – 110070</dd>
+        <dt>Website</dt><dd><a href="https://www.aicte-india.org" target="_blank" rel="noopener" translate="no">www.aicte-india.org</a></dd>
+      </dl>
+    </div>
+    <p class="ai-foot">© All India Council for Technical Education · Ministry of Education, Government of India</p>
+  </section>`;
+}
 const GOOGLE_ICON = '<svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.5l6.7-6.7C35.6 2.4 30.2 0 24 0 14.6 0 6.6 5.4 2.7 13.3l7.8 6C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4.1 7.1-10.1 7.1-17.5z"/><path fill="#FBBC05" d="M10.5 28.7c-.5-1.4-.8-3-.8-4.7s.3-3.2.8-4.7l-7.8-6C1 16.6 0 20.2 0 24s1 7.4 2.7 10.7l7.8-6z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.5-5.8c-2.1 1.4-4.8 2.3-8.4 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.8 6C6.6 42.6 14.6 48 24 48z"/></svg>';
 function loginForm() {
   const e = UI.err, remote = Backend.remote;

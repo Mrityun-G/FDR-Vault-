@@ -18,6 +18,10 @@ const I18N = (() => {
     'Track CBS lien endorsement, 10-year maturity, renewals, replacements and lien release from your phone.': 'सीबीएस ग्रहणाधिकार पृष्ठांकन, 10-वर्षीय परिपक्वता, नवीनीकरण, प्रतिस्थापन और ग्रहणाधिकार मुक्ति — अपने फ़ोन से ट्रैक करें।',
     'Skip': 'छोड़ें', 'Next': 'आगे', 'Get Started': 'शुरू करें', 'Login': 'लॉगिन', 'Register': 'पंजीकरण',
     'Privacy Policy': 'गोपनीयता नीति', 'Help': 'सहायता', 'Help & Support': 'सहायता एवं समर्थन', 'Terms of Use': 'उपयोग की शर्तें',
+    'AICTE Leadership': 'एआईसीटीई नेतृत्व', 'Chairman Secretariat': 'अध्यक्ष सचिवालय', 'Advisers': 'सलाहकार', 'Directors': 'निदेशक',
+    'Chairman': 'अध्यक्ष', 'Vice Chairman': 'उपाध्यक्ष', 'Member Secretary': 'सदस्य सचिव', 'Director': 'निदेशक', 'Adviser-I': 'सलाहकार-I', 'Adviser-II': 'सलाहकार-II', 'Chief Coordinating Officer': 'मुख्य समन्वय अधिकारी',
+    'Approval Process Handbook': 'अनुमोदन प्रक्रिया पुस्तिका', 'Open handbook (PDF)': 'पुस्तिका खोलें (PDF)', 'Norms and procedures for AICTE approval of technical institutions.': 'तकनीकी संस्थानों के एआईसीटीई अनुमोदन के मानदंड और प्रक्रियाएँ।',
+    'About AICTE': 'एआईसीटीई के बारे में', 'Motto': 'आदर्श वाक्य', 'Headquarters': 'मुख्यालय', 'Website': 'वेबसाइट',
     'AICTE · New Delhi': 'एआईसीटीई · नई दिल्ली', 'AICTE · Mumbai': 'एआईसीटीई · मुंबई', 'Introduction': 'परिचय',
     'Connecting securely…': 'सुरक्षित रूप से जुड़ रहे हैं…', 'Retry': 'पुनः प्रयास करें',
     // login / register

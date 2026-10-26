@@ -636,3 +636,35 @@ html[lang="hi"] .tile .lbl, html[lang="hi"] .chip { line-height: 1.35; }
   .ticker-track { animation: none; flex-wrap: wrap; width: auto; }
   .ticker-track > [aria-hidden="true"] { display: none; }
 }
+
+/* ---------- AICTE leadership, handbook and about (bottom of the login page) ---------- */
+.ai-info { margin: 28px -4px 0; padding-top: 22px; border-top: 1px solid var(--line); }
+.ai-h { font-size: 16px; font-weight: 800; color: var(--navy); margin: 22px 0 10px; text-align: center; }
+.ai-h:first-child { margin-top: 0; }
+.ai-sub { font-size: 11.5px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; color: var(--saffron); margin: 16px 0 8px; }
+.ai-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.ai-grid.lead { grid-template-columns: 1fr; }
+.ai-grid.lead .ai-person { display: grid; grid-template-columns: 42% 1fr; align-items: center; }
+.ai-grid.lead .ai-person figcaption { text-align: left; }
+.ai-grid.lead .ai-person b { font-size: 14.5px; }
+.ai-person { margin: 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
+.ai-photo { aspect-ratio: 340 / 242; background: var(--soft); display: flex; align-items: center; justify-content: center; }
+.ai-photo img { width: 100%; height: 100%; object-fit: cover; object-position: center 25%; display: block; }
+.ai-photo span { font-size: 26px; font-weight: 800; color: var(--navy); opacity: .55; }
+.ai-person figcaption { padding: 8px 10px 10px; text-align: center; display: flex; flex-direction: column; gap: 2px; }
+.ai-person b { font-size: 13px; color: var(--text); line-height: 1.25; }
+.ai-person small { font-size: 11.5px; color: var(--muted); }
+.ai-book { display: grid; grid-template-columns: 38% 1fr; gap: 14px; align-items: center; padding: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); color: inherit; text-decoration: none; }
+.ai-book img { width: 100%; height: auto; border-radius: 4px; box-shadow: 0 4px 14px rgba(15, 23, 42, .18); transition: transform .2s; }
+.ai-book:hover img, .ai-book:focus-visible img { transform: translateY(-2px) scale(1.02); }
+.ai-book span { display: flex; flex-direction: column; gap: 4px; }
+.ai-book b { font-size: 15px; color: var(--navy); }
+.ai-book small { font-size: 12px; color: var(--muted); line-height: 1.4; }
+.ai-book em { font-style: normal; font-weight: 700; font-size: 13px; color: var(--blue); display: inline-flex; align-items: center; gap: 6px; margin-top: 6px; }
+.ai-about { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; text-align: center; }
+.ai-about p { font-size: 12.5px; color: var(--text2); line-height: 1.55; margin: 8px 0; text-align: left; }
+.ai-about dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; margin: 12px 0 0; text-align: left; font-size: 12.5px; }
+.ai-about dt { font-weight: 700; color: var(--navy); }
+.ai-about dd { margin: 0; color: var(--text2); min-width: 0; overflow-wrap: anywhere; }
+.ai-about a { color: var(--blue); font-weight: 600; }
+.ai-foot { font-size: 11px; color: var(--muted); text-align: center; margin: 16px 0 4px; }
