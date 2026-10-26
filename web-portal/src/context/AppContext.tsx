@@ -203,6 +203,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, [refresh]);
 
+  // "Take me there" buttons in the Evaluator Guide (public/guide.js) open a sidebar tab.
+  useEffect(() => {
+    const onGuide = (e: Event) => setActiveSidebarTab((e as CustomEvent<SidebarTab>).detail);
+    window.addEventListener('aicte-guide:navigate', onGuide);
+    return () => window.removeEventListener('aicte-guide:navigate', onGuide);
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
     supabase.auth.getSession().then(async ({ data }) => {

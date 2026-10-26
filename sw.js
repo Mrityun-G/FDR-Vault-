@@ -1,7 +1,7 @@
 // Offline support for the app shell. Network-first (so updates and config.js changes apply immediately),
 // falling back to the cache when offline. API, auth and storage traffic to Supabase is never cached.
-const CACHE = 'aicte-inst-v11';
-const SHELL = ['./', './index.html', './styles.css', './config.js', './data.js', './backend.js', './i18n.js', './app.js', './manifest.webmanifest',
+const CACHE = 'aicte-inst-v12';
+const SHELL = ['./', './index.html', './styles.css', './config.js', './data.js', './backend.js', './i18n.js', './app.js', './guide.js', './manifest.webmanifest',
   './emblem.png', './delhi.webp', './mumbai.webp', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
