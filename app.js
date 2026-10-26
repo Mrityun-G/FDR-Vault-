@@ -11,6 +11,7 @@ const delay = ms => new Promise(r => setTimeout(r, ms));
 const daysUntil = d => Math.ceil((new Date(d) - now()) / DAY);
 const fmtDate = d => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
 const fmtDT = d => d ? new Date(d).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
+const isToday = d => !!d && new Date(d).toDateString() === now().toDateString();
 const isoDate = d => { const x = new Date(d); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`; };
 const addYears = (d, n, minusDay) => { const x = new Date(d); x.setFullYear(x.getFullYear() + n); if (minusDay) x.setDate(x.getDate() - 1); return isoDate(x); };
 const rupees = n => '₹ ' + Math.round(Number(n) || 0).toLocaleString('en-IN');
@@ -323,7 +324,7 @@ function shell(v) {
   if (v.header === 'brand') hdr = brandHeader();
   else if (v.header !== 'none') {
     const canBack = UI.stack.length > 1 && !v.noBack;
-    hdr = `<header class="hdr">${canBack ? `<button class="icon-btn" data-act="back" aria-label="Back">${ic('back', 22)}</button>` : ''}
+    hdr = `<header class="hdr ${v.hdrCls || ''}">${canBack ? `<button class="icon-btn" data-act="back" aria-label="Back">${ic('back', 22)}</button>` : ''}
       <h1>${esc(v.title || '')}${v.sub ? `<div class="sub">${esc(v.sub)}</div>` : ''}</h1>${v.right || ''}</header>`;
   }
   const offline = UI.offline ? `<div class="offline-bar" role="status">${ic('alert', 16)} You're offline${Backend.remote ? ' — changes can\'t be sent until you reconnect' : ''}.</div>` : '';
@@ -356,14 +357,11 @@ function sessionEnded(msg) {
 }
 function brandHeader() {
   const n = unread();
-  return `<header class="hdr hdr-brand" style="background:#0B3A70;color:#fff;border-bottom:3px solid #D97706;padding:10px 14px">
-    <img class="brand-logo" src="emblem.png" alt="AICTE emblem" style="width:36px;height:36px;background:#fff;border-radius:4px;padding:2px">
-    <div class="brand-t" style="line-height:1.2">
-      <b style="font-size:14px;letter-spacing:0.3px">AICTE · अखिल भारतीय तकनीकी शिक्षा परिषद</b>
-      <span style="font-size:11px;opacity:0.9">Institution Portal · Security Deposit &amp; Approvals</span>
-    </div>
-    <button class="icon-btn" data-tab="alerts" aria-label="Notifications" style="color:#fff">${ic('bell', 20)}${n ? `<span class="dot-badge">${n}</span>` : ''}</button>
-    <button class="icon-btn" data-tab="profile" aria-label="Profile"><span class="avatar" style="width:32px;height:32px;font-size:11px;background:#D97706;border:0">${esc(initials(me().name))}</span></button></header>`;
+  return `<header class="hdr hdr-brand">
+    <span class="fv-brand-tile"><img src="fdr-vault-logo.png" alt="FDR Vault logo"></span>
+    <div class="fv-brand-t"><b translate="no">FDR VAULT</b><span>AICTE · Institution Portal</span></div>
+    <button class="icon-btn" data-tab="alerts" aria-label="Notifications">${ic('bell', 22)}${n ? `<span class="dot-badge">${n}</span>` : ''}</button>
+    <button class="icon-btn" data-tab="profile" aria-label="Profile"><span class="avatar">${esc(initials(me().name))}</span></button></header>`;
 }
 function tabbar(active) {
   const T = [['dashboard', 'home', 'Home'], ['apps', 'files', 'Applications'], ['fdrs', 'landmark', 'FDR'], ['alerts', 'bell', 'Alerts'], ['profile', 'user', 'Profile']];
@@ -865,24 +863,25 @@ V.bootError = ({ message }) => ({
 V.login = () => {
   const t = UI.loginTab, root = UI.stack.length === 1;
   return {
-    title: '', noBack: root,
-    right: `<button class="link" data-act="toggleLang" translate="no" style="padding:0 8px">${ic('globe', 15)} ${I18N.lang === 'hi' ? 'EN' : 'हिन्दी'}</button>${root ? `<button class="link" data-act="showIntro" style="padding:0 10px">Introduction</button>` : ''}`,
-    body: `<div class="login-brand" style="text-align:center;margin:6px 0 20px">
-        <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:8px">
-          <img src="emblem.png" alt="National Emblem of India" style="height:52px;width:auto">
+    header: 'none', cls: 'flush',
+    body: `<section class="fv-hero">
+        <div class="fv-hero-top">
+          <div>${root ? `<span class="fv-aicte"><img src="emblem.png" alt="AICTE emblem"><span translate="no">AICTE</span></span>` : `<button class="icon-btn" data-act="back" aria-label="Back">${ic('back', 22)}</button>`}</div>
+          <div>${root ? `<button class="fv-pill-btn" data-act="showIntro">Introduction</button>` : ''}<button class="fv-pill-btn" data-act="toggleLang" translate="no">${ic('globe', 14)} ${I18N.lang === 'hi' ? 'EN' : 'हिन्दी'}</button></div>
         </div>
-        <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.4px;text-transform:uppercase">अखिल भारतीय तकनीकी शिक्षा परिषद</div>
-        <h2 style="font-size:17px;font-weight:800;color:var(--navy);margin:2px 0 3px">All India Council for Technical Education</h2>
-        <div style="font-size:11px;color:var(--muted);margin-bottom:8px">(Statutory Body under Ministry of Education, Govt. of India)</div>
-        <div style="display:inline-block;padding:3px 10px;background:var(--soft);border:1px solid var(--line2);border-radius:4px;font-size:11.5px;font-weight:700;color:var(--navy)">
-          Institution Portal · Security Deposit (FDR) &amp; Approvals
-        </div>
+        <div class="fv-logo"><img src="fdr-vault-logo.png" alt="FDR Vault logo"></div>
+        <div><h1 translate="no">FDR VAULT</h1><p>Security Deposit &amp; Approvals Portal</p></div>
+      </section>
+      <div class="fv-sheet">
+        <div class="seg" role="tablist"><button role="tab" aria-selected="${t === 'login'}" class="${t === 'login' ? 'on' : ''}" data-act="loginTab" data-v="login">Login</button><button role="tab" aria-selected="${t === 'register'}" class="${t === 'register' ? 'on' : ''}" data-act="loginTab" data-v="register">Register</button></div>
+        <div class="mt16">${t === 'login' ? loginForm() : registerForm()}</div>
       </div>
-      <div class="seg" role="tablist"><button role="tab" aria-selected="${t === 'login'}" class="${t === 'login' ? 'on' : ''}" data-act="loginTab" data-v="login">Login</button><button role="tab" aria-selected="${t === 'register'}" class="${t === 'register' ? 'on' : ''}" data-act="loginTab" data-v="register">Register</button></div>
-      <div class="mt16">${t === 'login' ? loginForm() : registerForm()}</div>
-      <p class="legal" style="margin-top:20px;font-size:10px;color:var(--muted)">Protected system under Section 43 &amp; 66 of Information Technology Act, 2000. Unauthorized access is strictly prohibited.</p>
-      <nav class="ob-links" aria-label="Legal and support"><button data-act="legal" data-v="privacy">Privacy Policy</button><span aria-hidden="true">·</span><button data-act="legal" data-v="help">Help</button><span aria-hidden="true">·</span><button data-act="legal" data-v="terms">Terms of Use</button></nav>
-      ${aicteInfo()}`,
+      <div class="fv-below">
+        ${t === 'login' ? loginExtras() : ''}
+        <p class="legal" style="margin-top:20px;font-size:10.5px;color:var(--muted)">Protected system under Section 43 &amp; 66 of Information Technology Act, 2000. Unauthorized access is strictly prohibited.</p>
+        <nav class="ob-links" aria-label="Legal and support"><button data-act="legal" data-v="privacy">Privacy Policy</button><span aria-hidden="true">·</span><button data-act="legal" data-v="help">Help</button><span aria-hidden="true">·</span><button data-act="legal" data-v="terms">Terms of Use</button></nav>
+        ${aicteInfo()}
+      </div>`,
   };
 };
 
@@ -950,22 +949,28 @@ function loginForm() {
       <button type="button" class="icon-btn trail" data-act="togglePw" aria-label="Show password">${ic('eye', 18)}</button></div>
       ${e.password ? `<div class="ferr">${esc(e.password)}</div>` : ''}</div>
     <div class="row between" style="margin:-2px 0 16px"><label class="check"><input type="checkbox" name="remember" ${UI.remember === false ? '' : 'checked'}> Remember me</label><button type="button" class="link" data-act="forgot">Forgot Password?</button></div>
-    <button class="btn btn-primary btn-block" type="submit" ${UI.busy ? 'disabled' : ''}>${UI.busy ? '<span class="spin" aria-hidden="true"></span> Authenticating credentials...' : 'Login'}</button>
+    <button class="btn btn-primary btn-block" type="submit" ${UI.busy ? 'disabled' : ''}>${UI.busy ? '<span class="spin" aria-hidden="true"></span> Authenticating credentials...' : `${ic('lock', 17)} Login`}</button>
   </form>
   <div class="or">OR</div>
-  <button class="btn btn-outline btn-block" data-act="googleLogin">${GOOGLE_ICON} Continue with Google</button>
-  <button class="btn btn-outline btn-block mt8" data-act="otpLogin">${ic('shieldCheck', 18)} Sign in with OTP</button>
-  <button class="btn btn-outline btn-block mt8" style="border-color:var(--line2);color:var(--text2)" data-act="ssoLogin">${ic('landmark', 18)} Login with Government SSO</button>
-  ${remote ? `<div class="card mt16" style="padding:14px;background:#F8FAFC;border:1px solid #CBD5E1">
-    <div class="xs b muted" style="text-transform:uppercase;letter-spacing:.4px">Institutional Testing / Evaluation Login</div>
+  <div class="fv-row2">
+    <button class="btn btn-outline" data-act="googleLogin" aria-label="Continue with Google">${GOOGLE_ICON} Google</button>
+    <button class="btn btn-outline" data-act="otpLogin" aria-label="Sign in with OTP">${ic('shieldCheck', 18)} Email OTP</button>
+  </div>
+  <button class="btn btn-ghost btn-block mt8" data-act="ssoLogin">${ic('landmark', 18)} Login with Government SSO</button>
+  <p class="center mt12 small">New Institution? <button class="link" data-act="loginTab" data-v="register">Register Now</button></p>`;
+}
+// Below the login card: evaluator demo access and who may sign in here.
+function loginExtras() {
+  const remote = Backend.remote;
+  return `${remote ? `<div class="card" style="padding:14px">
+    <div class="fv-kicker">Institutional Testing / Evaluation Login</div>
     <div class="xs muted mt4">${esc(DEMO_LOGIN.email)} · <span class="mono">${esc(DEMO_LOGIN.password)}</span></div>
-    <button class="btn btn-outline btn-block btn-xs mt8" data-act="demoLogin">${ic('user', 14)} Login as ${esc(DEMO_LOGIN.label)}</button></div>`
-  : `<div class="card mt16" style="padding:14px;background:#F8FAFC;border:1px solid #CBD5E1">
-    <div class="xs b" style="color:var(--navy);text-transform:uppercase;letter-spacing:.5px">Select Institution (Testing &amp; Evaluation Access)</div>
+    <button class="btn btn-outline btn-block btn-sm mt8" data-act="demoLogin">${ic('user', 16)} Login as ${esc(DEMO_LOGIN.label)}</button></div>`
+  : `<div class="card" style="padding:14px">
+    <div class="fv-kicker">Select Institution (Testing &amp; Evaluation Access)</div>
     <div class="xs muted mt4">Tap any authorized institution below to load credentials and test:</div>
-    <div class="row wrap mt8" style="gap:6px">${instUsers().map(u => `<button class="btn btn-ghost btn-xs" data-act="quickFill" data-id="${u.id}" style="background:#fff;border:1px solid #CBD5E1;color:var(--navy);font-weight:600">Institution (${esc(instOf(u).short)})</button>`).join('')}</div></div>`}
-  <div class="banner info mt16">${ic('info', 18)}<div class="xs">This portal is restricted to authorized heads of technical institutions. AICTE scrutiny officers and council officials authenticate via the Administrative Council Portal.</div></div>
-  <p class="center mt16 small">New Institution? <button class="link" data-act="loginTab" data-v="register">Register Now</button></p>`;
+    <div class="row wrap mt8" style="gap:6px">${instUsers().map(u => `<button class="btn btn-ghost btn-xs" data-act="quickFill" data-id="${u.id}" style="background:#fff;border:1px solid var(--line2);color:var(--navy);font-weight:600">Institution (${esc(instOf(u).short)})</button>`).join('')}</div></div>`}
+  <div class="banner info mt12">${ic('info', 18)}<div class="xs">This portal is restricted to authorized heads of technical institutions. AICTE scrutiny officers and council officials authenticate via the Administrative Council Portal.</div></div>`;
 }
 function registerForm() {
   const r = UI.reg || {}, c = UI.completing;
@@ -974,15 +979,20 @@ function registerForm() {
   ${Backend.remote ? `<button class="btn btn-outline btn-block mt12" data-act="googleLogin">${GOOGLE_ICON} Register with Google</button><div class="or">OR</div>` : ''}`}
   <button type="button" class="btn btn-ghost btn-block btn-xs mt12" data-act="regSample">${ic('file', 14)} Fill sample institution details</button>
   <form data-form="register" novalidate class="mt16">
-    ${fld('Institution Name', 'name', r.name, { req: true, ph: 'Full registered name of the institution' })}
-    ${fld('Permanent Institute ID / Application ID', 'pid', r.pid, { ph: 'If already allotted, e.g. 1-12345678' })}
-    <div class="grid2">${fld('State', 'state', r.state || 'Delhi', { req: true, opts: STATES })}${fld('District / City', 'district', r.district, { req: true })}</div>
-    ${fld('Institution Type', 'type', r.type || INST_TYPES[0], { opts: INST_TYPES })}
-    ${fld('Head of Institution', 'head', r.head, { req: true, ph: 'Name of Principal / Director' })}
-    ${fld('Official Email', 'email', c ? c.email : r.email, { req: true, type: 'email', ro: !!c, ph: 'principal@institute.edu.in', icon: 'mail', attrs: 'autocomplete="email" autocapitalize="off"' })}
-    ${fld('Mobile Number', 'mobile', r.mobile, { req: true, type: 'tel', ph: '10-digit mobile', icon: 'phone', attrs: 'autocomplete="tel"' })}
-    ${c ? '' : `${fld('Create Password', 'password', '', { req: true, type: 'password', icon: 'key', attrs: 'autocomplete="new-password"', hint: '8+ characters with upper, lower, number and special character.' })}
-    ${fld('Confirm Password', 'confirm', '', { req: true, type: 'password', icon: 'key', attrs: 'autocomplete="new-password"' })}`}
+    <div class="fv-group"><div class="fv-group-h">Institution Details</div>
+      ${fld('Institution Name', 'name', r.name, { req: true, ph: 'Full registered name of the institution' })}
+      ${fld('Permanent Institute ID / Application ID', 'pid', r.pid, { ph: 'If already allotted, e.g. 1-12345678' })}
+      <div class="grid2">${fld('State', 'state', r.state || 'Delhi', { req: true, opts: STATES })}${fld('District / City', 'district', r.district, { req: true })}</div>
+      ${fld('Institution Type', 'type', r.type || INST_TYPES[0], { opts: INST_TYPES })}
+    </div>
+    <div class="fv-group"><div class="fv-group-h">Head of Institution &amp; Login</div>
+      ${fld('Head of Institution', 'head', r.head, { req: true, ph: 'Name of Principal / Director' })}
+      ${fld('Official Email', 'email', c ? c.email : r.email, { req: true, type: 'email', ro: !!c, ph: 'principal@institute.edu.in', icon: 'mail', attrs: 'autocomplete="email" autocapitalize="off"' })}
+      ${fld('Mobile Number', 'mobile', r.mobile, { req: true, type: 'tel', ph: '10-digit mobile', icon: 'phone', attrs: 'autocomplete="tel"' })}
+      ${c ? '' : `${fld('Create Password', 'password', '', { req: true, type: 'password', icon: 'key', attrs: 'autocomplete="new-password" data-live="pwStrength"', hint: '8+ characters with upper, lower, number and special character.' })}
+      <div class="fv-strength" id="pwStrength" aria-live="polite"><div><i></i><i></i><i></i><i></i></div><span></span></div>
+      ${fld('Confirm Password', 'confirm', '', { req: true, type: 'password', icon: 'key', attrs: 'autocomplete="new-password"' })}`}
+    </div>
     <label class="check"><input type="checkbox" name="agree" ${r.agree ? 'checked' : ''}><span>I confirm that the information is correct, I am authorised by the institution's management to register, and I accept the <button type="button" class="link" data-act="legal" data-v="terms" style="font-size:inherit">Terms of Use</button> and <button type="button" class="link" data-act="legal" data-v="privacy" style="font-size:inherit">Privacy Policy</button>.</span></label>
     ${UI.err.agree ? `<div class="ferr">${esc(UI.err.agree)}</div>` : ''}
     <button class="btn btn-primary btn-block mt16" type="submit">${c ? 'Complete Registration' : 'Register'}</button>
@@ -1025,7 +1035,7 @@ V.dashboard = () => {
   const corpus = live.reduce((s, f) => s + f.amountLakhs, 0);
   const primary = [...live].sort((a, b) => b.amountLakhs - a.amountLakhs)[0];
   const sc = s => live.filter(f => fdrStatus(f) === s).length;
-  const tile = (lbl, n, icon, tone, filter) => `<button class="tile" data-act="appsFilter" data-v="${filter}"><span class="tile-ico solid-${{ blue: 'blue', amber: 'amber', red: 'red', green: 'green' }[tone]}">${ic(icon, 20)}</span><span><span class="num" data-count="${n}">${n}</span><span class="lbl">${lbl}</span></span></button>`;
+  const tile = (lbl, n, icon, tone, filter) => `<button data-act="appsFilter" data-v="${filter}"><span class="tile-ico tone-${tone}">${ic(icon, 18)}</span><span><b data-count="${n}">${n}</b><small>${lbl}</small></span></button>`;
   const acts = myAudit().slice(0, 4);
   const notifs = myNotifs(), unread = notifs.filter(n => !n.isRead).length;
   const next = live.filter(f => daysUntil(f.maturityDate) > 0).sort((a, b) => a.maturityDate.localeCompare(b.maturityDate))[0];
@@ -1044,46 +1054,33 @@ V.dashboard = () => {
   return {
     header: 'brand', tab: 'dashboard',
     after: () => { countUp($('.content')); },
-    body: `<section class="hero" style="background:#0B3A70;color:#fff;border-radius:8px;padding:16px;border-top:3px solid #D97706;box-shadow:0 1px 3px rgba(15,23,42,.08)">
-        <div class="hero-top">
-          <span style="font-size:10.5px;font-weight:700;letter-spacing:0.4px;text-transform:uppercase;background:rgba(255,255,255,0.18);padding:3px 8px;border-radius:4px">Applicant Institution Profile</span>
-          <span style="font-size:11px;color:#fff;display:inline-flex;align-items:center;gap:5px"><i style="width:7px;height:7px;border-radius:50%;background:#34d399;display:inline-block"></i> ${Backend.remote ? 'Authoritative Database' : 'Authorized Evaluation Profile'}</span>
+    body: `<section class="fv-inst">
+        <div class="fv-inst-h">
+          <span class="fv-kicker">Applicant Institution Profile</span>
+          <b translate="no">${esc(i.name)}</b>
+          <span><span translate="no">PID ${esc(i.pid)} · ${esc(i.region)} · </span><span>${Backend.remote ? 'Authoritative Database' : 'Authorized Evaluation Profile'}</span></span>
         </div>
-        <div class="hero-name" translate="no" style="font-size:16px;font-weight:700;margin-top:8px;line-height:1.3">${esc(i.name)}</div>
-        <div class="hero-meta" style="font-size:11.5px;color:rgba(255,255,255,0.85);margin-top:3px">
-          Permanent Institute ID (PID): <b translate="no" style="color:#fff">${esc(i.pid)}</b> · <span translate="no">${esc(i.region)} Regional Jurisdiction</span>
-        </div>
-        <div class="hero-stats" style="display:grid;grid-template-columns:repeat(3, 1fr);gap:8px;margin-top:14px">
-          <div style="background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.18);border-radius:6px;padding:8px 10px">
-            <b data-count="${corpus}" data-fmt="cr" style="font-size:14px;color:#fff">${crLabel(corpus)}</b>
-            <span style="font-size:9.5px;text-transform:uppercase;color:rgba(255,255,255,0.8);display:block;margin-top:1px">FDR Corpus</span>
-          </div>
-          <div style="background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.18);border-radius:6px;padding:8px 10px">
-            <b data-count="${apps.length}" style="font-size:14px;color:#fff">${apps.length}</b>
-            <span style="font-size:9.5px;text-transform:uppercase;color:rgba(255,255,255,0.8);display:block;margin-top:1px">Filings</span>
-          </div>
-          <div style="background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.18);border-radius:6px;padding:8px 10px">
-            <b data-count="${unread}" style="font-size:14px;color:#fff">${unread}</b>
-            <span style="font-size:9.5px;text-transform:uppercase;color:rgba(255,255,255,0.8);display:block;margin-top:1px">Alerts</span>
-          </div>
+        <div class="fv-stats">
+          <div><b data-count="${corpus}" data-fmt="cr">${crLabel(corpus)}</b><span>FDR Corpus</span></div>
+          <div><b data-count="${apps.length}">${apps.length}</b><span>Filings</span></div>
+          <div><b data-count="${unread}">${unread}</b><span>Alerts</span></div>
         </div>
       </section>
-      <div class="tiles mt12">
+      <div class="fv-status">
         ${tile('Total Applications', apps.length, 'files', 'blue', 'ALL')}
         ${tile('Under Scrutiny', cnt(['SUBMITTED', 'UNDER_SCRUTINY']), 'clock', 'amber', 'REVIEW')}
         ${tile('Clarification Required', cnt(['DEFICIENCIES_NOTED']), 'alert', 'red', 'CLARIFICATION')}
         ${tile('Approved / Cleared', cnt(['SCRUTINY_CLEARED', 'APPROVED']), 'checkCircle', 'green', 'APPROVED')}
       </div>
-      <div class="section-title"><span class="h2">Quick Actions</span></div>
-      <div class="tiles">
-        <button class="qa tone-blue" data-go="apptype"><span class="tile-ico solid-blue">${ic('filePlus', 22)}</span>New Application</button>
-        <button class="qa tone-amber" data-tab="apps"><span class="tile-ico solid-amber">${ic('files', 22)}</span>My Applications</button>
-        <button class="qa tone-green" data-tab="fdrs"><span class="tile-ico solid-green">${ic('rupee', 22)}</span>FDR Details</button>
-        <button class="qa tone-purple" data-go="compliance"><span class="tile-ico solid-purple">${ic('shieldCheck', 22)}</span>Compliance</button>
+      <h2 class="fv-h">Quick Actions</h2>
+      <div class="fv-qa">
+        <button data-go="apptype"><span class="fv-qa-i">${ic('filePlus', 22)}</span>New Application</button>
+        <button data-tab="apps"><span class="fv-qa-i">${ic('files', 22)}</span>My Applications</button>
+        <button data-tab="fdrs"><span class="fv-qa-i">${ic('rupee', 22)}</span>FDR Details</button>
+        <button data-go="compliance"><span class="fv-qa-i">${ic('shieldCheck', 22)}</span>Compliance</button>
       </div>
-      ${alerts.length ? `<div class="card mt12" style="background:var(--red-bg);border-color:var(--red-line)">
-        <div class="row between"><div class="row" style="gap:8px;color:var(--red)">${ic('alert', 18)}<b>Important Alerts</b></div><button class="link" data-tab="alerts">View All ${ic('chev', 14)}</button></div>
-        ${alerts.slice(0, 2).map(a => `<button class="li" style="padding:10px 0 0;border:0;background:none" data-act="openNotif" data-id="${a.id}"><div class="grow" translate="no"><div class="small b">${esc(a.title)}</div><div class="xs muted">${esc(a.message)}</div></div>${ic('chev', 16, 'chev')}</button>`).join('')}</div>` : ''}
+      ${alerts.length ? `<div class="section-title" style="margin-top:18px"><span class="h2">Important Alerts</span><button class="link" data-tab="alerts">View All ${ic('chev', 14)}</button></div>
+        ${alerts.slice(0, 2).map(a => `<button class="fv-alert" data-act="openNotif" data-id="${a.id}">${ic('alert', 20)}<span class="grow" translate="no"><b>${esc(a.title)}</b><small>${esc(a.message)}</small></span>${ic('chev', 18)}</button>`).join('')}` : ''}
       <div class="section-title"><span class="h2">Security Deposit (FDR)</span><button class="link" data-tab="fdrs">View All ${ic('chev', 14)}</button></div>
       <div class="card">
         <div class="row between"><div><div class="xs muted b" style="letter-spacing:.4px">CORPUS UNDER AICTE JOINT LIEN</div><div style="font-size:22px;font-weight:800;color:var(--navy)">${rupees(corpus * 1e5)}</div><div class="xs muted">${crLabel(corpus)} · ${live.length} deposit(s)</div></div><span class="tile-ico tone-green">${ic('shieldCheck', 20)}</span></div>
@@ -1101,6 +1098,17 @@ function fdrMini(f) {
     <div class="xs muted mt4">${esc(f.bankName)} · ${crLabel(f.amountLakhs)} · Matures ${fmtDate(f.maturityDate)}</div>
     <div class="bar mt8"><i style="width:${(pr * 100).toFixed(1)}%"></i></div>
     <div class="row between xs muted mt4"><span>Lock-in ${(pr * f.tenureYears).toFixed(1)} of ${f.tenureYears} yrs</span><span>${d > 0 ? `${d} days to maturity` : 'Matured'}</span></div></div></button>`;
+}
+// One deposit in the FDR list: status, bank and amount, and the 10-year lock-in.
+function fdrCard(f) {
+  const st = fdrStatus(f), pr = lienProgress(f), d = daysUntil(f.maturityDate);
+  const tail = st === 'MATURED' ? (f.releaseRequest ? 'Release Pending Bureau Approval' : 'Eligible for lien release')
+    : st === 'EXPIRING_SOON' ? `${d} days to maturity` : f.isLienConfirmed ? 'CBS Joint Lien Confirmed' : 'Awaiting Bank CBS Endorsement';
+  return `<button class="fv-card" data-go="fdrDetail" data-id="${f.id}">
+    <span class="fv-card-top"><b translate="no">${esc(f.fdrNumber)}</b>${chip(FSTATUS[st], true)}</span>
+    <span class="fv-sub"><span translate="no">${esc(f.bankName)} · ${crLabel(f.amountLakhs)} · </span><span>Matures ${fmtDate(f.maturityDate)}</span></span>
+    <span class="fv-progress ${st === 'EXPIRING_SOON' ? 'due' : st === 'MATURED' || st === 'RELEASED' ? 'done' : ''}"><i style="width:${(pr * 100).toFixed(1)}%"></i></span>
+    <span class="fv-meta"><span>Lock-in ${(pr * f.tenureYears).toFixed(1)} of ${f.tenureYears} yrs</span><span>${tail}</span></span></button>`;
 }
 function auditRow(a) {
   const tone = /LOGIN/.test(a.action) ? 'blue' : /ENDORSE|VERIF|SUBMITTED|CLEARED|ESIGN/.test(a.action) ? 'green' : /DEFIC|COLLISION|FLAG/.test(a.action) ? 'amber' : 'slate';
@@ -1378,7 +1386,7 @@ V.submitted = ({ id }) => {
 const APP_FILTERS = [['ALL', 'All', null], ['DRAFT', 'Draft', ['DRAFT']], ['SUBMITTED', 'Submitted', ['SUBMITTED']], ['REVIEW', 'Under Review', ['SUBMITTED', 'UNDER_SCRUTINY']], ['CLARIFICATION', 'Clarification', ['DEFICIENCIES_NOTED']], ['APPROVED', 'Approved', ['SCRUTINY_CLEARED', 'APPROVED']]];
 V.apps = () => ({
   title: 'My Applications', tab: 'apps',
-  right: `<button class="icon-btn" data-go="apptype" aria-label="New application" style="color:var(--blue2)">${ic('plus', 22)}</button>`,
+  right: `<button class="gold-btn" data-go="apptype" aria-label="New application">${ic('plus', 16)} New</button>`,
   body: `<div class="pills">${APP_FILTERS.map(([k, l]) => `<button class="${UI.appsFilter === k ? 'on' : ''}" data-act="appsPill" data-v="${k}">${l}</button>`).join('')}</div>
     <div class="row mt12"><div class="search grow">${ic('search', 18)}<input class="input" placeholder="Search by Application ID" value="${esc(UI.appsQuery)}" data-live="appsSearch" aria-label="Search applications"></div></div>
     <div id="applist" class="mt12">${appList()}</div>`,
@@ -1388,11 +1396,20 @@ function appList() {
   const list = myApps().filter(a => (!f || f.includes(a.status)) && (!q || (a.applicationNumber || 'draft').toLowerCase().includes(q) || typeOf(a.type).name.toLowerCase().includes(q)));
   if (!list.length) return `<div class="empty">${ic('files', 40)}<div>No applications match this filter.</div></div>`;
   return list.map(a => {
-    const t = typeOf(a.type);
-    return `<button class="app-card" ${a.status === 'DRAFT' ? `data-act="resumeDraft" data-id="${a.id}"` : `data-go="appDetail" data-id="${a.id}"`}><span class="tile-ico tone-${t.tone}">${ic(t.icon, 20)}</span>
-      <div class="grow"><div class="no">${esc(a.applicationNumber || 'Draft — not submitted')}</div><div class="ty">${esc(t.name)}</div><div class="xs muted mt4">${a.status === 'DRAFT' ? `Saved ${fmtDate(a.lastUpdatedAt)} · Step ${a.draft.step} of 4` : `Submitted ${fmtDate(a.submittedAt)}`}</div></div>
-      ${chip(STATUS[a.status], true)}</button>`;
+    const t = typeOf(a.type), rec = a.scrutinyRecommendation;
+    const open = a.status === 'DEFICIENCIES_NOTED' && rec && rec.status !== 'RESPONSE_SUBMITTED' && (rec.deficiencyPoints || []).length;
+    const main = `<button class="fv-card" ${open ? 'style="border:0;padding:0"' : ''}${a.status === 'DRAFT' ? `data-act="resumeDraft" data-id="${a.id}"` : `data-go="appDetail" data-id="${a.id}"`}>
+      <span class="fv-card-top"><b translate="no">${esc(a.applicationNumber || 'Draft — not submitted')}</b>${chip(STATUS[a.status], true)}</span>
+      <span class="fv-sub">${esc(t.name)}</span>
+      ${a.status === 'DRAFT' ? '' : `<span class="fv-steps" aria-hidden="true">${appSteps(a)}</span>`}
+      <span class="fv-meta"><span>${a.status === 'DRAFT' ? `Saved ${fmtDate(a.lastUpdatedAt)} · Step ${a.draft.step} of 4` : `Submitted ${fmtDate(a.submittedAt)}`}</span>${open ? `<span>${rec.deficiencyPoints.length} point(s)</span>` : ''}</span></button>`;
+    return open ? `<div class="fv-card alert">${main}<div class="fv-actions"><button class="btn btn-primary" data-go="respond" data-id="${a.id}">${ic('send', 16)} Submit Response</button><button class="btn btn-outline" data-go="notice" data-id="${a.id}">${ic('file', 16)} View Notice</button></div></div>` : main;
   }).join('');
+}
+// Five-stage progress (Submitted → AI pre-validation → Regional scrutiny → Recommendation → Bureau decision).
+function appSteps(a) {
+  const idx = { SUBMITTED: 2, UNDER_SCRUTINY: 2, DEFICIENCIES_NOTED: 3, SCRUTINY_CLEARED: 4, APPROVED: 5, REJECTED: 5 }[a.status] ?? 0;
+  return [0, 1, 2, 3, 4].map(k => `<i class="${k < idx ? 'done' : k === idx && a.status === 'DEFICIENCIES_NOTED' ? 'warn' : ''}"></i>`).join('');
 }
 
 const TIMELINE = ['Submitted', 'AI Pre-Validation', 'Regional Scrutiny', 'Scrutiny Recommendation', 'Bureau Decision'];
@@ -1524,17 +1541,16 @@ V.fdrs = () => {
   const live = fd.filter(f => fdrStatus(f) !== 'RELEASED'), corpus = live.reduce((s, f) => s + f.amountLakhs, 0);
   const due = fd.filter(f => fdrStatus(f) === 'EXPIRING_SOON' && !f.pendingRequest).length, mat = fd.filter(f => fdrStatus(f) === 'MATURED' && !(f.releaseRequest && f.releaseRequest.status === 'PENDING')).length;
   return {
-    title: 'FDR / Security Deposit', tab: 'fdrs',
-    right: `<button class="icon-btn" data-go="fdrNew" aria-label="Submit new FDR" style="color:var(--blue2)">${ic('plus', 22)}</button>`,
-    body: `<div class="card" style="background:#0B3A70;color:#fff;border-radius:8px;border-top:3px solid #D97706;padding:16px"><div class="xs b" style="opacity:.85;letter-spacing:.4px">TOTAL CORPUS UNDER IRREVOCABLE JOINT LIEN</div>
-        <div style="font-size:24px;font-weight:800;margin-top:4px">${rupees(corpus * 1e5)}</div><div class="small" style="opacity:.9">${crLabel(corpus)} · ${live.length} active deposit(s) · APH Chapter VI Norms</div>
-        <div class="row wrap mt12" style="gap:6px">${Object.keys(FSTATUS).map(s => { const n = fd.filter(f => fdrStatus(f) === s).length; return n ? `<span class="chip sm" style="background:rgba(255,255,255,.16);color:#fff">${n} ${FSTATUS[s][0]}</span>` : ''; }).join('')}</div></div>
-      ${due || mat ? `<div class="banner warn mt12">${ic('alert', 18)}<div>${due ? `<b>${due} FDR(s) due for renewal.</b> ` : ''}${mat ? `<b>${mat} matured FDR(s)</b> eligible for lien release. ` : ''}Institutions must submit statutory renewal receipts 60 days prior to certificate maturity.</div></div>` : ''}
-      <div class="tiles mt12">
-        <button class="qa tone-blue" data-go="fdrNew" style="min-height:76px"><span class="tile-ico solid-blue" style="width:34px;height:34px">${ic('plus', 18)}</span>Submit New FDR</button>
-        <button class="qa tone-amber" data-act="fdrRequestMenu" style="min-height:76px"><span class="tile-ico solid-amber" style="width:34px;height:34px">${ic('swap', 18)}</span>Renew / Replace / Release</button></div>
+    title: 'FDR / Security Deposit', tab: 'fdrs', hdrCls: 'fv-flat',
+    right: `<button class="icon-btn" data-go="fdrNew" aria-label="Submit new FDR">${ic('plus', 22)}</button>`,
+    pre: `<div class="fv-corpus"><span class="fv-kicker">Total corpus under irrevocable joint lien</span>
+        <b>${rupees(corpus * 1e5)}</b><span>${crLabel(corpus)} · ${live.length} active deposit(s) · APH Chapter VI Norms</span></div>`,
+    body: `<div class="fv-row2">
+        <button class="btn btn-primary" data-go="fdrNew">${ic('plus', 16)} Submit New FDR</button>
+        <button class="btn btn-outline" data-act="fdrRequestMenu">${ic('swap', 16)} Renew / Replace / Release</button></div>
+      ${due || mat ? `<div class="banner warn mt12">${ic('clock', 18)}<div>${due ? `<b>${due} FDR(s) due for renewal.</b> ` : ''}${mat ? `<b>${mat} matured FDR(s)</b> eligible for lien release. ` : ''}Institutions must submit statutory renewal receipts 60 days prior to certificate maturity.</div></div>` : ''}
       <div class="section-title"><span class="h2">My Deposits</span><span class="xs muted">${fd.length} record(s)</span></div>
-      ${fd.map(f => `<div class="card">${fdrMini(f)}</div>`).join('') || `<div class="empty">${ic('rupee', 40)}<div>No FDR records.</div></div>`}`,
+      ${fd.map(fdrCard).join('') || `<div class="empty">${ic('rupee', 40)}<div>No FDR records.</div></div>`}`,
   };
 };
 
@@ -1653,14 +1669,16 @@ V.alerts = () => {
   const tone = { CRITICAL: ['red', 'alert'], WARNING: ['amber', 'alert'], SUCCESS: ['green', 'checkCircle'], INFO: ['blue', 'info'] };
   return {
     title: 'Notifications', tab: 'alerts',
-    right: all.some(n => !n.isRead) ? `<button class="link" data-act="readAll" style="padding:0 8px">Mark all read</button>` : '',
+    right: all.some(n => !n.isRead) ? `<button class="ghost-btn" data-act="readAll">Mark all read</button>` : '',
     body: `<div class="pills"><button class="${f === 'ALL' ? 'on' : ''}" data-act="alertsPill" data-v="ALL">All Alerts (${all.length})</button><button class="${f === 'UNREAD' ? 'on' : ''}" data-act="alertsPill" data-v="UNREAD">Unread (${all.filter(n => !n.isRead).length})</button><button class="${f === 'CRITICAL' ? 'on' : ''}" data-act="alertsPill" data-v="CRITICAL">Critical</button></div>
-      <div class="mt12">${list.length ? list.map(n => {
-        const [t, i] = tone[n.type] || tone.INFO;
-        return `<div class="card" style="${n.isRead ? '' : 'border-left:4px solid var(--blue2)'}"><div class="row top"><span class="tile-ico tone-${t}" style="width:36px;height:36px">${ic(i, 18)}</span>
-          <div class="grow"><div class="row between top"><div class="small b" translate="no">${esc(n.title)}</div>${n.isRead ? '' : '<span class="chip blue sm">New</span>'}</div><div class="xs mt4" style="color:var(--text2)" translate="no">${esc(n.message)}</div><div class="xs muted mt4">${fmtDT(n.timestamp)}</div>
-          <div class="row mt8" style="gap:12px">${n.link ? `<button class="link" data-act="openNotif" data-id="${n.id}">Inspect ${ic('chev', 14)}</button>` : ''}${n.isRead ? '' : `<button class="link" style="color:var(--muted)" data-act="readNotif" data-id="${n.id}">Mark read</button>`}</div></div></div></div>`;
-      }).join('') : `<div class="empty">${ic('bell', 40)}<div>No notifications matching current filter.</div></div>`}</div>`,
+      ${list.length ? [['Today', list.filter(n => isToday(n.timestamp))], ['Earlier', list.filter(n => !isToday(n.timestamp))]].filter(([, g]) => g.length).map(([h, g]) => `<h2 class="fv-h">${h}</h2>
+        <div class="fv-notes">${g.map(n => {
+          const [t, i] = tone[n.type] || tone.INFO;
+          return `<div class="fv-note ${n.isRead ? '' : 'unread'}"><span class="tile-ico tone-${t}">${ic(i, 18)}</span>
+            <div class="grow"><div class="fv-t" translate="no">${esc(n.title)}</div><div class="fv-m" translate="no">${esc(n.message)}</div><div class="fv-d">${fmtDT(n.timestamp)}</div>
+            <div class="fv-links">${n.link ? `<button class="link" data-act="openNotif" data-id="${n.id}">Inspect ${ic('chev', 14)}</button>` : ''}${n.isRead ? '' : `<button class="link" style="color:var(--muted)" data-act="readNotif" data-id="${n.id}">Mark read</button>`}</div></div>
+            ${n.isRead ? '' : '<span class="fv-unread" role="img" aria-label="Unread"></span>'}</div>`;
+        }).join('')}</div>`).join('') : `<div class="empty">${ic('bell', 40)}<div>No notifications matching current filter.</div></div>`}`,
   };
 };
 
@@ -1668,17 +1686,21 @@ V.profile = () => {
   const u = me(), i = inst();
   const li = (icon, t, s, attr, extra = '') => `<button class="li" ${attr}><span class="li-ico">${ic(icon, 20)}</span><div class="grow"><div class="li-t">${t}</div>${s ? `<div class="li-s">${s}</div>` : ''}</div>${extra || ic('chev', 18, 'chev')}</button>`;
   return {
-    title: 'Profile & Settings', tab: 'profile',
-    body: `<div class="card row"><span class="inst-ico">${ic('landmark', 28)}</span><div class="grow"><div class="h3">${esc(i.name)}</div><div class="xs muted">PID: ${esc(i.pid)}</div><div class="xs muted">${esc(u.name)} · ${esc(u.designation)}</div></div>
-        <button class="link" data-go="instDetails" style="flex-direction:column">${ic('edit', 18)}Edit</button></div>
-      <div class="list mt12">
+    header: 'none', tab: 'profile',
+    pre: `<div class="fv-profile"><span class="avatar">${esc(initials(u.name))}</span>
+        <div class="grow"><span class="fv-kicker" style="color:#E8D29A;text-transform:none;letter-spacing:.3px">Profile &amp; Settings</span><b translate="no">${esc(u.name)}</b><span class="fv-role" translate="no">${esc(u.designation)}</span><span class="fv-org"><span translate="no">${esc(i.name)}</span> · PID <span translate="no">${esc(i.pid)}</span></span></div>
+        <button class="icon-btn" data-go="instDetails" aria-label="Edit institution details" style="color:#fff">${ic('edit', 20)}</button></div>`,
+    body: `<h2 class="fv-h" style="margin-top:0">Account</h2>
+      <div class="list">
         ${li('building', 'Institution Details', `${esc(i.city)}, ${esc(i.state)}`, 'data-go="instDetails"')}
         ${li('user', 'Contact Person Details', esc(u.email), 'data-go="contact"')}
         ${li('lock', 'Change Password', '', 'data-go="password"')}
-        <button class="li" data-act="toggleLang"><span class="li-ico">${ic('globe', 20)}</span><div class="grow"><div class="li-t">Language</div><div class="li-s" translate="no">${I18N.lang === 'hi' ? 'हिन्दी — tap for English' : 'English — हिन्दी के लिए टैप करें'}</div></div>${ic('swap', 18, 'chev')}</button>
+        <div class="li"><span class="li-ico">${ic('globe', 20)}</span><div class="grow"><div class="li-t">Language</div></div>
+          <div class="fv-lang" translate="no"><button class="${I18N.lang === 'hi' ? '' : 'on'}" ${I18N.lang === 'hi' ? 'data-act="toggleLang"' : ''} aria-pressed="${I18N.lang !== 'hi'}">EN</button><button class="${I18N.lang === 'hi' ? 'on' : ''}" ${I18N.lang === 'hi' ? '' : 'data-act="toggleLang"'} aria-pressed="${I18N.lang === 'hi'}">हिन्दी</button></div></div>
         <div class="li"><span class="li-ico">${ic('bell', 20)}</span><div class="grow"><div class="li-t">Notifications</div><div class="li-s">FDR expiry, scrutiny &amp; deficiency alerts</div></div><label class="toggle"><input type="checkbox" data-pref="push" ${DB.prefs.push ? 'checked' : ''} aria-label="Notifications"><span></span></label></div>
       </div>
-      <div class="list mt12">
+      <h2 class="fv-h">Compliance &amp; Records</h2>
+      <div class="list">
         ${li('shieldCheck', 'Compliance & Verification', 'Rule matrix & authority adapters', 'data-go="compliance"')}
         ${li('activity', 'Activity Log', 'Tamper-evident audit trail', 'data-go="activity"')}
         ${li('message', 'Grievance / Raise a Ticket', `${DB.tickets.filter(t => t.institutionId === i.id).length} ticket(s)`, 'data-go="tickets"')}
@@ -1687,7 +1709,7 @@ V.profile = () => {
         ${li('download', 'Download Reports', 'FDR register, applications, activity (CSV)', 'data-act="reports"')}
         ${Backend.remote ? '' : li('swap', 'Switch Institution (Demo)', 'Explore other applicant personas', 'data-go="switchInst"')}
       </div>
-      <div class="list mt12">${li('logout', 'Logout', '', 'data-act="logout"', '')}</div>
+      <button class="btn btn-danger fv-logout" data-act="logout">${ic('logout', 18)} Logout</button>
       <p class="legal">AICTE Intelligent Regulatory Validation Platform (AI-IRVP) • APH v2026.1 Compliance Engine</p>`,
   };
 };
@@ -2287,6 +2309,14 @@ const LIVE = {
   },
   validTill: el => { UI.w.docs[el.dataset.doc].validTill = el.value; UI.w.ai = null; },
   appsSearch: el => { UI.appsQuery = el.value; $('#applist').innerHTML = appList(); },
+  pwStrength: el => {
+    const v = el.value, box = $('#pwStrength');
+    if (!box) return;
+    const n = !v ? 0 : [v.length >= 8, /[a-z]/.test(v) && /[A-Z]/.test(v), /\d/.test(v), /[^\w\s]/.test(v)].filter(Boolean).length;
+    box.className = `fv-strength ${n <= 1 ? 'weak' : n <= 3 ? 'fair' : ''}`;
+    $$('i', box).forEach((i, k) => i.classList.toggle('on', k < n));
+    $('span', box).textContent = v ? ['Weak', 'Weak', 'Fair', 'Good', 'Strong'][n] : '';
+  },
 };
 
 /* ============================== events ============================== */

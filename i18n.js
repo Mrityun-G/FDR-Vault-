@@ -24,6 +24,12 @@ const I18N = (() => {
     'About AICTE': 'एआईसीटीई के बारे में', 'Motto': 'आदर्श वाक्य', 'Headquarters': 'मुख्यालय', 'Website': 'वेबसाइट',
     'AICTE · New Delhi': 'एआईसीटीई · नई दिल्ली', 'AICTE · Mumbai': 'एआईसीटीई · मुंबई', 'Introduction': 'परिचय',
     'Connecting securely…': 'सुरक्षित रूप से जुड़ रहे हैं…', 'Retry': 'पुनः प्रयास करें',
+    // FDR Vault design (redesigned screens)
+    'Security Deposit & Approvals Portal': 'सुरक्षा जमा एवं अनुमोदन पोर्टल', 'AICTE · Institution Portal': 'एआईसीटीई · संस्थान पोर्टल',
+    'Email OTP': 'ईमेल ओटीपी', 'Google': 'Google', 'Head of Institution & Login': 'संस्थान प्रमुख एवं लॉगिन',
+    'Weak': 'कमज़ोर', 'Fair': 'ठीक', 'Good': 'अच्छा', 'Strong': 'मज़बूत', 'Today': 'आज', 'Earlier': 'पहले',
+    'Account': 'खाता', 'Compliance & Records': 'अनुपालन एवं अभिलेख', 'Eligible for lien release': 'ग्रहणाधिकार मुक्ति हेतु पात्र',
+    'Total corpus under irrevocable joint lien': 'अपरिवर्तनीय संयुक्त ग्रहणाधिकार के अधीन कुल कोष',
     // login / register
     'Institution ID / Registered Email': 'संस्थान आईडी / पंजीकृत ईमेल', 'Registered Email': 'पंजीकृत ईमेल', 'Password': 'पासवर्ड',
     'Remember me': 'मुझे याद रखें', 'Forgot Password?': 'पासवर्ड भूल गए?', 'OR': 'या', 'Sign in with OTP': 'ओटीपी से साइन इन करें',
@@ -187,6 +193,8 @@ const I18N = (() => {
     [/^([\d.]+ (?:Cr|Lakhs)) secured under AICTE joint lien$/, m => `${m[1]} एआईसीटीई संयुक्त ग्रहणाधिकार के अंतर्गत सुरक्षित`],
     [/^(\d+) application\(s\) under review$/, m => `${m[1]} आवेदन समीक्षाधीन`], [/^(\d+) clarification\(s\) required$/, m => `${m[1]} स्पष्टीकरण आवश्यक`],
     [/^(\d+) unread alert\(s\)$/, m => `${m[1]} अपठित सूचनाएँ`], [/^Next maturity: (.+)$/, m => `अगली परिपक्वता: ${m[1]}`],
+    [/^Matures (\d.+)$/, m => `परिपक्वता ${m[1]}`], [/^(\d+) point\(s\)$/, m => `${m[1]} बिंदु`],
+    [/^([\d.]+ (?:Cr|Lakhs)) · (\d+) active deposit\(s\) · APH Chapter VI Norms$/, m => `${m[1]} · ${m[2]} सक्रिय जमा · एपीएच अध्याय VI मानदंड`],
     [/^Endorsed (.+)$/, m => `पृष्ठांकित ${m[1]}`], [/^(\d+) point\(s\) raised by (.+)\. Respond within 7 working days\.$/, m => `${m[2]} द्वारा ${m[1]} बिंदु उठाए गए। 7 कार्य दिवसों में उत्तर दें।`],
   ];
   let lang = (() => { try { return localStorage.getItem(KEY) === 'hi' ? 'hi' : 'en'; } catch (e) { return 'en'; } })();
