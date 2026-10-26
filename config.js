@@ -4,7 +4,7 @@
    On Vercel, set the AICTE_API_URL environment variable instead: the build writes it here.
    No keys or secrets belong in this file — the API server holds them. */
 window.AICTE_CONFIG = {
-  API_URL: '',
+  API_URL: 'https://fdr-vault-api-d2i1.onrender.com',
   STORAGE_BUCKET: 'institution-documents',
   SSO_DOMAIN: '',              // Government SSO is not available on the standalone server; leave empty
   API_CLIENT_URL: 'api-client.js',
