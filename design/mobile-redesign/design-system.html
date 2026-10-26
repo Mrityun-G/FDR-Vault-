@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>FDR Vault – Design system</title>
+</head>
+<body>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;800&amp;family=Noto+Sans+Devanagari:wght@600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.sw{display:flex;flex-direction:column;gap:6px}
+.sw i{display:block;height:56px;border-radius:10px;border:1px solid #DDE3EA}
+.sw b{font-size:12px}
+.sw span{font-size:11px;color:#556274;font-family:ui-monospace,monospace}
+.h{margin:0;font-size:12px;font-weight:700;letter-spacing:1px;color:#7A5C0F}
+.chip{font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:10px;white-space:nowrap}
+</style>
+<div style="width: 560px; height: 844px; box-sizing: border-box; background: #FFFFFF; font-family: 'Public Sans', system-ui, sans-serif; color: #0A2347; padding: 32px; display: flex; flex-direction: column; gap: 22px; border: 1px solid #DDE3EA">
+  <div style="display: flex; align-items: center; gap: 14px; padding-bottom: 18px; border-bottom: 3px solid #C9A13B">
+    <img src="../../fdr-vault-logo.png" alt="FDR Vault logo" style="height: 64px; width: auto">
+    <div style="display: flex; flex-direction: column; gap: 3px">
+      <h1 style="margin: 0; font-size: 22px; font-weight: 800; letter-spacing: 1px">FDR VAULT design system</h1>
+      <span style="font-size: 12.5px; color: #556274">Formal AICTE palette · Public Sans · 12 px card radius · 44 px touch targets</span>
+    </div>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 10px">
+    <h2 class="h">COLOUR</h2>
+    <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px">
+      <div class="sw"><i style="background: #0A2347"></i><b>Navy 900</b><span>#0A2347</span></div>
+      <div class="sw"><i style="background: #12366B"></i><b>Navy 700</b><span>#12366B</span></div>
+      <div class="sw"><i style="background: #C9A13B"></i><b>Gold</b><span>#C9A13B</span></div>
+      <div class="sw"><i style="background: #7A5C0F"></i><b>Gold text</b><span>#7A5C0F</span></div>
+      <div class="sw"><i style="background: #FFFFFF"></i><b>White</b><span>#FFFFFF</span></div>
+      <div class="sw"><i style="background: #F3F5F8"></i><b>Light grey</b><span>#F3F5F8</span></div>
+      <div class="sw"><i style="background: #DDE3EA"></i><b>Line grey</b><span>#DDE3EA</span></div>
+      <div class="sw"><i style="background: #556274"></i><b>Muted text</b><span>#556274</span></div>
+    </div>
+    <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px">
+      <span class="chip" style="background: #E8F3EC; color: #17633A">Success · Lien secured</span>
+      <span class="chip" style="background: #FDF3DD; color: #7A4A00">Warning · Expiring</span>
+      <span class="chip" style="background: #FBEDEC; color: #9F1F14">Critical · Clarification</span>
+      <span class="chip" style="background: #E7EDF6; color: #12366B">Info · Submitted</span>
+    </div>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 8px">
+    <h2 class="h">TYPE · PUBLIC SANS</h2>
+    <div style="display: flex; align-items: baseline; gap: 14px"><span style="width: 92px; font-size: 11px; color: #556274">Display 28/800</span><span style="font-size: 28px; font-weight: 800">₹ 2,50,00,000</span></div>
+    <div style="display: flex; align-items: baseline; gap: 14px"><span style="width: 92px; font-size: 11px; color: #556274">Title 18/700</span><span style="font-size: 18px; font-weight: 700">My applications</span></div>
+    <div style="display: flex; align-items: baseline; gap: 14px"><span style="width: 92px; font-size: 11px; color: #556274">Body 13.5/600</span><span style="font-size: 13.5px; font-weight: 600">Extension of Approval (EoA)</span></div>
+    <div style="display: flex; align-items: baseline; gap: 14px"><span style="width: 92px; font-size: 11px; color: #556274">Caption 11/500</span><span style="font-size: 11px; font-weight: 500; color: #556274">Submitted 14 Oct 2026 · Regional Scrutiny</span></div>
+    <div style="display: flex; align-items: baseline; gap: 14px"><span style="width: 92px; font-size: 11px; color: #556274">Hindi</span><span style="font: 600 15px 'Noto Sans Devanagari', sans-serif">अखिल भारतीय तकनीकी शिक्षा परिषद</span></div>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 10px">
+    <h2 class="h">COMPONENTS</h2>
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+      <button type="button" style="height: 48px; border-radius: 12px; border: 0; background: #0A2347; color: #FFFFFF; font: 700 14px 'Public Sans', sans-serif; box-shadow: inset 0 -3px 0 #C9A13B">Primary action</button>
+      <button type="button" style="height: 48px; border-radius: 12px; border: 1px solid #C9D2DE; background: #FFFFFF; color: #0A2347; font: 700 14px 'Public Sans', sans-serif">Secondary action</button>
+      <div style="display: flex; flex-direction: column; gap: 5px"><label for="ds-in" style="font-size: 12px; font-weight: 600; color: #3D4A5C">Text field</label><input id="ds-in" value="SBI-FDR-99201-2024" style="height: 44px; box-sizing: border-box; border: 1px solid #C9D2DE; border-radius: 11px; padding: 0 12px; font: 500 13.5px 'Public Sans', sans-serif; color: #0A2347"></div>
+      <div style="display: flex; flex-direction: column; gap: 5px"><label for="ds-in2" style="font-size: 12px; font-weight: 600; color: #3D4A5C">Focused field</label><input id="ds-in2" value="principal@institute.edu.in" style="height: 44px; box-sizing: border-box; border: 1.5px solid #0A2347; border-radius: 11px; padding: 0 12px; font: 500 13.5px 'Public Sans', sans-serif; color: #0A2347"></div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 16px; margin-top: 4px">
+      <div style="height: 50px; width: 70px; border-top: 3px solid #C9A13B; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #0A2347; background: #F3F5F8; border-radius: 0 0 10px 10px">Active tab</div>
+      <div style="height: 50px; flex: 1; background: #0A2347; border-bottom: 4px solid #C9A13B; border-radius: 10px; display: flex; align-items: center; padding: 0 14px; color: #FFFFFF; font-size: 14px; font-weight: 700">App bar · navy with gold rule</div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
