@@ -13,6 +13,8 @@
     "test:e2e:onboarding": "node tests/e2e/onboarding.e2e.cjs",
     "test:e2e:supabase": "node tests/e2e/supabase.e2e.cjs",
     "test:ai": "node supabase/functions/analyze-document/extract.test.ts",
+    "test:guide": "node supabase/functions/evaluator-guide/agent.test.ts",
+    "guide:corpus": "node scripts/build-guide-corpus.mjs",
     "build:www": "node scripts/build-www.mjs",
     "android:sync": "node scripts/build-www.mjs && npx cap sync android",
     "android:apk": "npm run android:sync && cd android && gradlew.bat assembleDebug",

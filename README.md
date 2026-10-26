@@ -127,6 +127,16 @@ Google refuses OAuth inside app WebViews, so in the **Android app** the Google b
    (`fallbacks: "default"`). If the function isn't deployed or has no key, the app says so and shows the on-device
    preview instead; submission is never blocked.
 8. Reload the app. The demo badge disappears, and sign-in, data, uploads and notifications now come from Supabase.
+9. **(Optional) Turn on the AI Evaluator Guide.** The **Evaluator Guide** button on every portal is a chat for SIH
+   evaluators. Its `evaluator-guide` Edge Function has Claude (`claude-opus-5-5`) answer questions and look up the real
+   implementation through read-only tools (`list_files`, `search_code`, `read_file`) over a snapshot of the source.
+   It uses the same `ANTHROPIC_API_KEY` secret:
+   ```bash
+   npm run guide:corpus                                          # refresh the source snapshot after code changes
+   supabase functions deploy evaluator-guide --no-verify-jwt     # public: evaluators may not be signed in
+   ```
+   The function rate-limits each caller (20 questions per 10 minutes). Until it is deployed, the guide answers from a
+   built-in knowledge base and says so.
 
 ## 2. Run the app
 

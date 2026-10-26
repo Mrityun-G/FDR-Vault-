@@ -3,3 +3,7 @@ project_id = "aicte-institution-portal"
 
 [functions.analyze-document]
 verify_jwt = true
+
+# Public: SIH evaluators use it before signing in (the function rate-limits callers).
+[functions.evaluator-guide]
+verify_jwt = false

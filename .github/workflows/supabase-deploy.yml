@@ -48,4 +48,6 @@ jobs:
         run: supabase db push --password "$SUPABASE_DB_PASSWORD"
       - name: Deploy Edge Functions
         if: steps.secrets.outputs.ready == 'true'
-        run: supabase functions deploy analyze-document --project-ref "$PROJECT_ID" --use-api
+        run: |
+          supabase functions deploy analyze-document --project-ref "$PROJECT_ID" --use-api
+          supabase functions deploy evaluator-guide --project-ref "$PROJECT_ID" --use-api --no-verify-jwt

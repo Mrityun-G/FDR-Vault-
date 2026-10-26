@@ -1,5 +1,6 @@
 /* Evaluator Guide — a floating help chat that explains the whole AI-IRVP prototype to SIH evaluators.
-   Self-contained (no API key, works offline): a curated knowledge base, keyword matching, a guided demo tour and
+   Questions go to the evaluator-guide Edge Function, where Claude looks up the real implementation in the source.
+   If that service is unreachable, a built-in knowledge base answers instead. Also offers a guided demo tour and
    "Take me there" buttons. Loaded by the institution app (index.html) and the staff portal (web-portal/public/guide.js —
    keep that copy in sync with `node scripts/sync-guide.mjs`). */
 (() => {
@@ -20,6 +21,11 @@
     admin: 'https://fdr-vault-sbf7.vercel.app/admin',
   };
   const PW = 'Sih@2026Demo';
+  // The anon key is public by design (same as config.js); the function rate-limits callers.
+  const CFG = window.AICTE_CONFIG || {};
+  const SUPABASE_URL = CFG.SUPABASE_URL || 'https://csnindvgpfphcstjcsag.supabase.co';
+  const ANON_KEY = CFG.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNzbmluZHZncGZwaGNzdGpjc2FnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2ODY1NzMsImV4cCI6MjEwODI2MjU3M30.QxLJF4SnD6k5gGt6aXYE3LF4Fll2m1T104HcT3DAsW8';
+  const AI_URL = SUPABASE_URL + '/functions/v1/evaluator-guide';
 
   // Each entry: k = keywords (any form), t = title, a = answer (lines; **bold**, `code`), go = where "Take me there" leads,
   // next = follow-up suggestion ids.
@@ -230,7 +236,23 @@
 
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const md = s => esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/`(.+?)`/g, '<code>$1</code>')
-    .replace(/(https:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+    .replace(/(https?:\/\/[^\s<)]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+  // Renders the AI's markdown: paragraphs, bullet / numbered lists and small headings.
+  function mdBlock(text) {
+    let html = '', list = null;
+    const close = () => { if (list) { html += `</${list}>`; list = null; } };
+    for (const raw of text.split('\n')) {
+      const line = raw.trimEnd();
+      let m;
+      if (!line.trim()) { close(); continue; }
+      if ((m = line.match(/^\s*[-*•]\s+(.*)$/))) { if (list !== 'ul') { close(); html += '<ul>'; list = 'ul'; } html += `<li>${md(m[1])}</li>`; }
+      else if ((m = line.match(/^\s*\d+[.)]\s+(.*)$/))) { if (list !== 'ol') { close(); html += '<ol>'; list = 'ol'; } html += `<li>${md(m[1])}</li>`; }
+      else if ((m = line.match(/^#{1,6}\s+(.*)$/))) { close(); html += `<h4>${md(m[1])}</h4>`; }
+      else { close(); html += `<p>${md(line)}</p>`; }
+    }
+    close();
+    return html;
+  }
 
   // ---------- navigation inside the current site ----------
   function canGo(go) {
@@ -269,6 +291,12 @@
   .gd-msg h4{margin:0 0 6px;font-size:14px;color:#0B3A70}
   .gd-msg code{background:#F1F5F9;padding:1px 5px;border-radius:4px;font-size:12.5px}
   .gd-msg a{color:#1D4ED8}
+  .gd-msg ul,.gd-msg ol{margin:4px 0 8px;padding-left:20px}.gd-msg li{margin:2px 0}
+  .gd-src{margin-top:8px;font-size:11.5px;color:#64748B}.gd-src code{font-size:11px}
+  .gd-note{font-size:11.5px;color:#92400E;background:#FFFBEB;border:1px solid #FDE68A;border-radius:8px;padding:4px 8px;margin-bottom:6px}
+  .gd-wait{color:#475569;font-style:italic}.gd-wait i{display:inline-block;animation:gd-blink 1.2s infinite}.gd-wait i:nth-child(2){animation-delay:.2s}.gd-wait i:nth-child(3){animation-delay:.4s}
+  @keyframes gd-blink{0%,80%,100%{opacity:.2}40%{opacity:1}}
+  .gd-form input:disabled,.gd-form button:disabled{opacity:.6}
   .gd-me{align-self:flex-end;background:#0B3A70;color:#fff;border-color:#0B3A70}
   .gd-acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
   .gd-acts button{border:1px solid #CBD5E1;background:#fff;color:#0B3A70;border-radius:999px;padding:6px 11px;font:600 12.5px system-ui,sans-serif;cursor:pointer}
@@ -287,14 +315,15 @@
   fab.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 2-3 4"/><path d="M12 17h.01"/></svg><span>Evaluator Guide</span><i class="gd-pulse"></i>';
   const panel = document.createElement('section');
   panel.className = 'gd-panel'; panel.setAttribute('role', 'dialog'); panel.setAttribute('aria-label', 'Evaluator Guide');
-  panel.innerHTML = `<div class="gd-head"><img src="${logo}" alt=""><div><b>Evaluator Guide</b><small>Ask me anything about this prototype</small></div><button type="button" aria-label="Close guide">×</button></div>
+  panel.innerHTML = `<div class="gd-head"><img src="${logo}" alt=""><div><b>Evaluator Guide</b><small>AI assistant · reads the prototype's code</small></div><button type="button" aria-label="Close guide">×</button></div>
     <div class="gd-log" aria-live="polite"></div>
     <form class="gd-form"><input type="text" placeholder="e.g. How does the AI check documents?" aria-label="Your question" autocomplete="off"><button type="submit">Ask</button></form>`;
   const mount = () => { document.body.appendChild(fab); document.body.appendChild(panel); };
   document.body ? mount() : document.addEventListener('DOMContentLoaded', mount);
 
   const log = panel.querySelector('.gd-log'), input = panel.querySelector('input');
-  let started = false, tourAt = -1;
+  let started = false, tourAt = -1, busy = false;
+  const history = [];   // AI conversation, sent back with each question
 
   function bubble(html, me) {
     const d = document.createElement('div');
@@ -313,7 +342,7 @@
     log.scrollTop = log.scrollHeight;
   }
   function say(lines, title) { return bubble((title ? `<h4>${esc(title)}</h4>` : '') + lines.map(l => `<p>${md(l)}</p>`).join('')); }
-  const chipsFor = ids => ids.map(id => KB.find(e => e.id === id)).filter(Boolean).map(e => [e.t, () => ask(e.t, e)]);
+  const chipsFor = ids => ids.map(id => KB.find(e => e.id === id)).filter(Boolean).map(e => [e.t, () => ask(e.tour ? e.t : `Explain: ${e.t}`, e)]);
 
   function answer(e) {
     if (e.tour) return startTour();
@@ -323,8 +352,59 @@
     actions(d, acts.concat(chipsFor(e.next || [])));
   }
   function ask(text, entry) {
+    if (busy) return;
     bubble(esc(text), true);
-    if (entry) return answer(entry);
+    if (entry && entry.tour) return startTour();
+    askAI(text, entry);
+  }
+  function pageContext() {
+    if (SITE === 'staff') return { site: 'staff', portal: STAFF_PORTAL, signedIn: !document.querySelector('form input[type=password]') };
+    // UI and me are app.js globals.
+    const screen = typeof UI !== 'undefined' && UI.stack && UI.stack.length ? UI.stack[UI.stack.length - 1].name : '';
+    return { site: 'inst', screen, signedIn: !!(typeof me === 'function' && me()) };
+  }
+  function setBusy(on) {
+    busy = on;
+    panel.querySelector('.gd-form input').disabled = on;
+    panel.querySelector('.gd-form button').disabled = on;
+  }
+  async function askAI(text, entry) {
+    setBusy(true);
+    const wait = bubble('<span class="gd-wait">Looking through the prototype’s code<i>.</i><i>.</i><i>.</i></span>');
+    let data = null, problem = '';
+    try {
+      const ctrl = new AbortController(), timer = setTimeout(() => ctrl.abort(), 120000);
+      const res = await fetch(AI_URL, {
+        method: 'POST', signal: ctrl.signal,
+        headers: { 'Content-Type': 'application/json', apikey: ANON_KEY, Authorization: 'Bearer ' + ANON_KEY },
+        body: JSON.stringify({ question: text, history: history.slice(-12), context: pageContext() }),
+      });
+      clearTimeout(timer);
+      const body = await res.json().catch(() => ({}));
+      if (res.ok && body.answer) data = body; else problem = body.message || `The AI service answered ${res.status}.`;
+    } catch (err) {
+      problem = err && err.name === 'AbortError' ? 'The AI took too long to answer.' : 'The AI service could not be reached.';
+    }
+    wait.remove();
+    setBusy(false);
+    const best = match(text)[0];
+    const local = entry || (best && best.s >= 2 ? best.e : null);
+    if (data) {
+      history.push({ role: 'user', text }, { role: 'assistant', text: data.answer });
+      const d = bubble(mdBlock(data.answer));
+      if (data.sources && data.sources.length) {
+        const src = document.createElement('div'); src.className = 'gd-src';
+        src.innerHTML = 'Looked at: ' + data.sources.slice(0, 6).map(s => `<code>${esc(s)}</code>`).join(', ');
+        d.appendChild(src);
+      }
+      const acts = [];
+      if (local && canGo(local.go)) acts.push(['Take me there →', () => doGo(local.go), true]);
+      actions(d, acts.concat(local ? chipsFor(local.next || []) : []));
+      return;
+    }
+    // Offline fallback: the built-in answers.
+    bubble(`<div class="gd-note">${esc(problem)} Showing the built-in answer instead.</div>`);
+    if (local && !local.tour) return answer(local);
     const hits = match(text);
     if (hits.length && hits[0].s >= 2) {
       answer(hits[0].e);
