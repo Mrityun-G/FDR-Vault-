@@ -670,7 +670,7 @@ html[lang="hi"] .tile .lbl, html[lang="hi"] .chip { line-height: 1.35; }
 .ai-foot { font-size: 11px; color: var(--muted); text-align: center; margin: 16px 0 4px; }
 
 /* ---------- launch screen: FDR Vault logo, "from AICTE" ---------- */
-#launch { position: fixed; inset: 0; z-index: 1000; background: #fff; display: flex; align-items: center; justify-content: center;
+#launch { position: absolute; inset: 0; z-index: 1000; border-radius: inherit;   /* fills the app screen (inside the desktop phone frame too) */ background: #fff; display: flex; align-items: center; justify-content: center;
   transition: opacity .4s ease, visibility .4s; }
 #launch.done { opacity: 0; visibility: hidden; }
 #launch .launch-logo { width: 132px; height: auto; animation: launchIn .6s ease-out both; }
