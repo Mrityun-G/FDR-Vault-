@@ -60,9 +60,9 @@ export const AppShell: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#f5f7fc] flex flex-col md:flex-row antialiased text-slate-800 font-sans selection:bg-indigo-100 selection:text-indigo-900">
       {/* Soft colour wash behind every page */}
-      <div className="pointer-events-none fixed inset-0 -z-0 md:pl-64" aria-hidden="true">
-        <div className="absolute -top-40 right-0 w-[38rem] h-[38rem] rounded-full bg-indigo-200/30 blur-3xl animate-float-slow" />
-        <div className="absolute bottom-0 left-1/3 w-[30rem] h-[30rem] rounded-full bg-fuchsia-200/25 blur-3xl animate-float" />
+      <div className="pointer-events-none fixed inset-0 z-0 md:pl-64" aria-hidden="true">
+        <div className="absolute -top-40 right-0 w-152 h-152 rounded-full bg-indigo-200/30 blur-3xl animate-float-slow" />
+        <div className="absolute bottom-0 left-1/3 w-120 h-120 rounded-full bg-fuchsia-200/25 blur-3xl animate-float" />
       </div>
       {/* Fixed Left Sidebar */}
       <AppSidebar isMobileOpen={isMobileOpen} setIsMobileOpen={setIsMobileOpen} />
