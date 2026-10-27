@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>FDR Vault – Login</title>
+</head>
+<body>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;800&amp;family=Noto+Sans+Devanagari:wght@500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#7A5C0F}a:hover{color:#5C4409}
+input::placeholder{color:#7B8696}
+</style>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #F3F5F8; font-family: 'Public Sans', system-ui, sans-serif; color: #0A2347; display: flex; flex-direction: column; overflow: hidden; position: relative">
+
+  <div style="background: #0A2347; padding: 20px 20px 64px; display: flex; flex-direction: column; align-items: center; gap: 12px; border-bottom: 4px solid #C9A13B">
+    <div style="align-self: stretch; display: flex; justify-content: space-between; align-items: center">
+      <div style="display: flex; align-items: center; gap: 8px">
+        <img src="../../emblem.png" alt="AICTE emblem" style="width: 30px; height: 30px; border-radius: 50%; background: #FFFFFF; padding: 2px">
+        <span style="font-size: 11px; font-weight: 700; letter-spacing: 1.2px; color: #E8D29A">AICTE</span>
+      </div>
+      <button type="button" style="height: 32px; padding: 0 12px; border-radius: 16px; border: 1px solid rgba(255,255,255,.35); background: transparent; color: #FFFFFF; font: 600 12px 'Noto Sans Devanagari', 'Public Sans', sans-serif; display: flex; align-items: center; gap: 6px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"></path></svg>
+        हिन्दी
+      </button>
+    </div>
+    <div style="width: 92px; height: 92px; border-radius: 22px; background: #FFFFFF; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 3px #C9A13B">
+      <img src="../../fdr-vault-logo.png" alt="FDR Vault logo" style="height: 80px; width: auto">
+    </div>
+    <div style="text-align: center; display: flex; flex-direction: column; gap: 4px">
+      <h1 style="margin: 0; font-size: 22px; font-weight: 800; letter-spacing: 2px; color: #FFFFFF">FDR VAULT</h1>
+      <p style="margin: 0; font-size: 12.5px; color: #C9D4E5">Security Deposit &amp; Approvals Portal</p>
+    </div>
+  </div>
+
+  <div style="margin: -40px 16px 0; background: #FFFFFF; border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 8px 24px rgba(10,35,71,.12); border: 1px solid #DDE3EA">
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); background: #F3F5F8; border-radius: 12px; padding: 4px; gap: 4px">
+      <a href="login.html" style="height: 40px; border-radius: 9px; background: #0A2347; color: #FFFFFF; font-weight: 700; font-size: 14px; display: flex; align-items: center; justify-content: center; text-decoration: none">Login</a>
+      <a href="registration.html" style="height: 40px; border-radius: 9px; color: #3D4A5C; font-weight: 600; font-size: 14px; display: flex; align-items: center; justify-content: center; text-decoration: none">Register</a>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <label for="email" style="font-size: 12.5px; font-weight: 600; color: #3D4A5C">Registered email</label>
+      <div style="height: 48px; border: 1px solid #C9D2DE; border-radius: 12px; display: flex; align-items: center; gap: 10px; padding: 0 14px; background: #FFFFFF">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#556274" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="m3 7 9 6 9-6"></path></svg>
+        <input id="email" type="email" value="principal@institute.edu.in" style="border: 0; outline: 0; flex: 1; font: 500 14px 'Public Sans', sans-serif; color: #0A2347; background: transparent">
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <label for="pw" style="font-size: 12.5px; font-weight: 600; color: #3D4A5C">Password</label>
+      <div style="height: 48px; border: 1.5px solid #0A2347; border-radius: 12px; display: flex; align-items: center; gap: 10px; padding: 0 6px 0 14px; background: #FFFFFF">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#556274" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>
+        <input id="pw" type="password" value="password123" style="border: 0; outline: 0; flex: 1; font: 500 14px 'Public Sans', sans-serif; color: #0A2347; background: transparent">
+        <button type="button" aria-label="Show password" style="width: 36px; height: 36px; border: 0; background: transparent; display: flex; align-items: center; justify-content: center">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#556274" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+        </button>
+      </div>
+    </div>
+
+    <div style="display: flex; justify-content: space-between; align-items: center">
+      <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #3D4A5C"><input type="checkbox" checked="checked" style="width: 18px; height: 18px; accent-color: #12366B; margin: 0">Remember me</label>
+      <a href="#" style="font-size: 13px; font-weight: 600; text-decoration: none">Forgot password?</a>
+    </div>
+
+    <a href="dashboard.html" style="height: 50px; border-radius: 12px; background: #0A2347; color: #FFFFFF; font-weight: 700; font-size: 15px; display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; box-shadow: inset 0 -3px 0 #C9A13B">Sign in securely</a>
+
+    <div style="display: flex; align-items: center; gap: 10px; color: #7B8696; font-size: 11px; font-weight: 600; letter-spacing: 1px"><span style="flex: 1; height: 1px; background: #DDE3EA"></span>OR<span style="flex: 1; height: 1px; background: #DDE3EA"></span></div>
+
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+      <button type="button" style="height: 46px; border-radius: 12px; border: 1px solid #C9D2DE; background: #FFFFFF; font: 600 13px 'Public Sans', sans-serif; color: #0A2347; display: flex; align-items: center; justify-content: center; gap: 8px">
+        <svg width="16" height="16" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.5l6.7-6.7C35.6 2.4 30.2 0 24 0 14.6 0 6.6 5.4 2.7 13.3l7.8 6C12.4 13.6 17.7 9.5 24 9.5z"></path><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4.1 7.1-10.1 7.1-17.5z"></path><path fill="#FBBC05" d="M10.5 28.7c-.5-1.4-.8-3-.8-4.7s.3-3.2.8-4.7l-7.8-6C1 16.6 0 20.2 0 24s1 7.4 2.7 10.7l7.8-6z"></path><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.5-5.8c-2.1 1.4-4.8 2.3-8.4 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.8 6C6.6 42.6 14.6 48 24 48z"></path></svg>
+        Google
+      </button>
+      <button type="button" style="height: 46px; border-radius: 12px; border: 1px solid #C9D2DE; background: #FFFFFF; font: 600 13px 'Public Sans', sans-serif; color: #0A2347; display: flex; align-items: center; justify-content: center; gap: 8px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#12366B" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"></path><path d="m9 12 2 2 4-4"></path></svg>
+        Email OTP
+      </button>
+    </div>
+  </div>
+
+  <div style="flex: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 6px; padding: 0 24px 20px; text-align: center">
+    <p style="margin: 0; font-size: 11px; color: #556274; line-height: 1.5">Protected system under Sections 43 &amp; 66 of the IT Act, 2000</p>
+    <p style="margin: 0; font-size: 11px; display: flex; gap: 10px"><a href="#" style="text-decoration: none">Privacy</a><span style="color: #9AA5B4">·</span><a href="#" style="text-decoration: none">Help</a><span style="color: #9AA5B4">·</span><a href="#" style="text-decoration: none">Terms</a></p>
+  </div>
+</div>
+</body>
+</html>

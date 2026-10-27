@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>FDR Vault – Institution dashboard</title>
+</head>
+<body>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#7A5C0F}a:hover{color:#5C4409}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:10.5px;font-weight:600;color:#556274;text-decoration:none;position:relative;min-height:56px}
+.tab.on{color:#0A2347}
+.tab.on::before{content:"";position:absolute;top:0;left:28%;right:28%;height:3px;border-radius:0 0 3px 3px;background:#C9A13B}
+</style>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #F3F5F8; font-family: 'Public Sans', system-ui, sans-serif; color: #0A2347; display: flex; flex-direction: column; overflow: hidden">
+
+  <div style="background: #0A2347; border-bottom: 4px solid #C9A13B; padding: 12px 14px; display: flex; align-items: center; gap: 10px">
+    <div style="width: 40px; height: 40px; border-radius: 10px; background: #FFFFFF; display: flex; align-items: center; justify-content: center"><img src="../../fdr-vault-logo.png" alt="FDR Vault logo" style="height: 34px; width: auto"></div>
+    <div style="flex: 1; display: flex; flex-direction: column; gap: 1px">
+      <span style="font-size: 15px; font-weight: 800; letter-spacing: 1.2px; color: #FFFFFF">FDR VAULT</span>
+      <span style="font-size: 11px; color: #C9D4E5">AICTE · Institution Portal</span>
+    </div>
+    <a href="notifications.html" aria-label="Notifications, 3 unread" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: #FFFFFF; position: relative">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg>
+      <span style="position: absolute; top: 6px; right: 6px; min-width: 17px; height: 17px; border-radius: 9px; background: #C9A13B; color: #0A2347; font-size: 10px; font-weight: 800; display: flex; align-items: center; justify-content: center">3</span>
+    </a>
+    <a href="profile.html" aria-label="Profile" style="width: 36px; height: 36px; border-radius: 50%; background: #C9A13B; color: #0A2347; font-size: 13px; font-weight: 800; display: flex; align-items: center; justify-content: center; text-decoration: none">RS</a>
+  </div>
+
+  <div style="flex: 1; padding: 14px 16px; display: flex; flex-direction: column; gap: 14px; overflow: hidden">
+    <div style="background: #FFFFFF; border: 1px solid #DDE3EA; border-radius: 16px; overflow: hidden">
+      <div style="padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; border-bottom: 1px solid #EEF1F5">
+        <span style="font-size: 11px; font-weight: 700; letter-spacing: 1px; color: #7A5C0F">APPLICANT INSTITUTION</span>
+        <span style="font-size: 16px; font-weight: 700; line-height: 1.3">Delhi Institute of Technology &amp; Science</span>
+        <span style="font-size: 12px; color: #556274">PID 1-10928371 · Northern Regional Office</span>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr))">
+        <div style="padding: 12px 14px; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 17px; font-weight: 800">₹1.00 Cr</span><span style="font-size: 11px; color: #556274">FDR corpus</span></div>
+        <div style="padding: 12px 14px; display: flex; flex-direction: column; gap: 2px; border-left: 1px solid #EEF1F5"><span style="font-size: 17px; font-weight: 800">2</span><span style="font-size: 11px; color: #556274">Filings</span></div>
+        <div style="padding: 12px 14px; display: flex; flex-direction: column; gap: 2px; border-left: 1px solid #EEF1F5"><span style="font-size: 17px; font-weight: 800">3</span><span style="font-size: 11px; color: #556274">Unread alerts</span></div>
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+      <a href="applications.html" style="background: #FFFFFF; border: 1px solid #DDE3EA; border-radius: 14px; padding: 12px; display: flex; align-items: center; gap: 10px; text-decoration: none; color: #0A2347">
+        <span style="width: 36px; height: 36px; border-radius: 10px; background: #E7EDF6; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#12366B" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg></span>
+        <span style="display: flex; flex-direction: column"><b style="font-size: 18px">1</b><span style="font-size: 11.5px; color: #556274">Under scrutiny</span></span>
+      </a>
+      <a href="applications.html" style="background: #FFFFFF; border: 1px solid #DDE3EA; border-radius: 14px; padding: 12px; display: flex; align-items: center; gap: 10px; text-decoration: none; color: #0A2347">
+        <span style="width: 36px; height: 36px; border-radius: 10px; background: #FBEDEC; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#B42318" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 3 2 20h20z"></path><path d="M12 10v4M12 17h.01"></path></svg></span>
+        <span style="display: flex; flex-direction: column"><b style="font-size: 18px">1</b><span style="font-size: 11.5px; color: #556274">Clarification due</span></span>
+      </a>
+      <a href="applications.html" style="background: #FFFFFF; border: 1px solid #DDE3EA; border-radius: 14px; padding: 12px; display: flex; align-items: center; gap: 10px; text-decoration: none; color: #0A2347">
+        <span style="width: 36px; height: 36px; border-radius: 10px; background: #E8F3EC; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1E7A46" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="m8 12 3 3 5-6"></path></svg></span>
+        <span style="display: flex; flex-direction: column"><b style="font-size: 18px">0</b><span style="font-size: 11.5px; color: #556274">Approved</span></span>
+      </a>
+      <a href="applications.html" style="background: #FFFFFF; border: 1px solid #DDE3EA; border-radius: 14px; padding: 12px; display: flex; align-items: center; gap: 10px; text-decoration: none; color: #0A2347">
+        <span style="width: 36px; height: 36px; border-radius: 10px; background: #F7F0DE; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7A5C0F" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"></path><path d="M14 3v5h5"></path></svg></span>
+        <span style="display: flex; flex-direction: column"><b style="font-size: 18px">0</b><span style="font-size: 11.5px; color: #556274">Drafts</span></span>
+      </a>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <h2 style="margin: 0; font-size: 13px; font-weight: 700; letter-spacing: .5px; color: #3D4A5C">QUICK ACTIONS</h2>
+      <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px">
+        <a href="applications.html" style="display: flex; flex-direction: column; align-items: center; gap: 6px; text-decoration: none; color: #0A2347; font-size: 11px; font-weight: 600; text-align: center"><span style="width: 52px; height: 52px; border-radius: 14px; background: #0A2347; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></span>New application</a>
+        <a href="applications.html" style="display: flex; flex-direction: column; align-items: center; gap: 6px; text-decoration: none; color: #0A2347; font-size: 11px; font-weight: 600; text-align: center"><span style="width: 52px; height: 52px; border-radius: 14px; background: #FFFFFF; border: 1px solid #DDE3EA; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#12366B" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"></path><path d="M14 3v5h5M9 13h6M9 17h6"></path></svg></span>Track status</a>
+        <a href="fdr.html" style="display: flex; flex-direction: column; align-items: center; gap: 6px; text-decoration: none; color: #0A2347; font-size: 11px; font-weight: 600; text-align: center"><span style="width: 52px; height: 52px; border-radius: 14px; background: #FFFFFF; border: 1px solid #DDE3EA; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#12366B" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 21h18M5 21V10M19 21V10M9 21V10M15 21V10M2 10 12 3l10 7z"></path></svg></span>Submit FDR</a>
+        <a href="profile.html" style="display: flex; flex-direction: column; align-items: center; gap: 6px; text-decoration: none; color: #0A2347; font-size: 11px; font-weight: 600; text-align: center"><span style="width: 52px; height: 52px; border-radius: 14px; background: #FFFFFF; border: 1px solid #DDE3EA; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#12366B" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"></path><path d="m9 12 2 2 4-4"></path></svg></span>Compliance</a>
+      </div>
+    </div>
+
+    <a href="notifications.html" style="background: #FBF5E6; border: 1px solid #E9D49A; border-radius: 14px; padding: 12px 14px; display: flex; align-items: center; gap: 12px; text-decoration: none; color: #0A2347">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7A5C0F" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 3 2 20h20z"></path><path d="M12 10v4M12 17h.01"></path></svg>
+      <span style="flex: 1; display: flex; flex-direction: column; gap: 2px"><b style="font-size: 13px">Deficiency notice on APP-2026-EOA-1082</b><span style="font-size: 11.5px; color: #5E4A14">Respond within 7 working days</span></span>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7A5C0F" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg>
+    </a>
+
+    <a href="fdr.html" style="background: #FFFFFF; border: 1px solid #DDE3EA; border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 8px; text-decoration: none; color: #0A2347">
+      <span style="display: flex; justify-content: space-between; align-items: center"><b style="font-size: 13.5px">SBI-FDR-99201-2024</b><span style="font-size: 11px; font-weight: 700; color: #1E7A46; background: #E8F3EC; padding: 3px 8px; border-radius: 10px">Lien secured</span></span>
+      <span style="font-size: 12px; color: #556274">State Bank of India · ₹1.00 Cr · matures 2034</span>
+      <span style="height: 6px; border-radius: 3px; background: #E7EDF6; overflow: hidden; display: block"><span style="display: block; width: 18%; height: 6px; background: #C9A13B"></span></span>
+      <span style="font-size: 11px; color: #556274">10-year lock-in · 1.8 of 10 years completed</span>
+    </a>
+  </div>
+
+  <nav aria-label="Main" style="background: #FFFFFF; border-top: 1px solid #DDE3EA; display: flex; padding: 0 4px 8px">
+    <a class="tab on" href="dashboard.html" aria-current="page"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg>Home</a>
+    <a class="tab" href="applications.html"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"></path><path d="M14 3v5h5"></path></svg>Applications</a>
+    <a class="tab" href="fdr.html"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 21h18M5 21V10M19 21V10M9 21V10M15 21V10M2 10 12 3l10 7z"></path></svg>FDR</a>
+    <a class="tab" href="notifications.html"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg>Alerts</a>
+    <a class="tab" href="profile.html"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg>Profile</a>
+  </nav>
+</div>
+</body>
+</html>

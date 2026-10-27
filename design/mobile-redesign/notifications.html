@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>FDR Vault – Notifications</title>
+</head>
+<body>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#7A5C0F}a:hover{color:#5C4409}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:10.5px;font-weight:600;color:#556274;text-decoration:none;position:relative;min-height:56px}
+.tab.on{color:#0A2347}
+.tab.on::before{content:"";position:absolute;top:0;left:28%;right:28%;height:3px;border-radius:0 0 3px 3px;background:#C9A13B}
+.pill{height:34px;padding:0 14px;border-radius:17px;border:1px solid #C9D2DE;background:#FFFFFF;font:600 12px 'Public Sans',sans-serif;color:#3D4A5C;white-space:nowrap}
+.pill.on{background:#0A2347;border-color:#0A2347;color:#FFFFFF}
+.n{display:flex;gap:12px;padding:13px 14px;text-decoration:none;color:#0A2347;align-items:flex-start}
+.n + .n{border-top:1px solid #EEF1F5}
+.ico{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;flex:none}
+.t{font-size:13px;line-height:1.35}
+.m{font-size:12px;line-height:1.45;color:#3D4A5C}
+.d{font-size:11px;color:#556274}
+.dot{width:9px;height:9px;border-radius:50%;background:#12366B;flex:none;margin-top:5px}
+</style>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #F3F5F8; font-family: 'Public Sans', system-ui, sans-serif; color: #0A2347; display: flex; flex-direction: column; overflow: hidden">
+
+  <div style="background: #0A2347; border-bottom: 4px solid #C9A13B; padding: 12px 10px 12px 18px; display: flex; align-items: center; gap: 10px">
+    <div style="flex: 1; display: flex; flex-direction: column; gap: 1px">
+      <h1 style="margin: 0; font-size: 18px; font-weight: 700; color: #FFFFFF">Notifications</h1>
+      <span style="font-size: 11.5px; color: #C9D4E5">3 unread</span>
+    </div>
+    <button type="button" style="height: 40px; padding: 0 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,.4); background: transparent; color: #FFFFFF; font: 600 12.5px 'Public Sans', sans-serif">Mark all read</button>
+  </div>
+
+  <div style="flex: 1; padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; overflow: hidden">
+    <div style="display: flex; gap: 8px">
+      <button type="button" class="pill on">All (6)</button>
+      <button type="button" class="pill">Unread (3)</button>
+      <button type="button" class="pill">Critical (1)</button>
+    </div>
+
+    <h2 style="margin: 2px 0 0; font-size: 12px; font-weight: 700; letter-spacing: .8px; color: #556274">TODAY</h2>
+    <div style="background: #FFFFFF; border: 1px solid #DDE3EA; border-radius: 14px; overflow: hidden">
+      <a href="applications.html" class="n">
+        <span class="ico" style="background: #FBEDEC"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#B42318" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 3 2 20h20z"></path><path d="M12 10v4M12 17h.01"></path></svg></span>
+        <span style="flex: 1; display: flex; flex-direction: column; gap: 3px"><b class="t">Scrutiny deficiency notice issued</b><span class="m">APP-2026-EOA-1082: 2 points raised. Respond within 7 working days.</span><span class="d">10:42 AM · Northern Regional Office</span></span>
+        <span class="dot" aria-label="Unread"></span>
+      </a>
+      <a href="fdr.html" class="n">
+        <span class="ico" style="background: #FDF3DD"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#7A4A00" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg></span>
+        <span style="flex: 1; display: flex; flex-direction: column; gap: 3px"><b class="t">FDR renewal due in 63 days</b><span class="m">SBI-FDR-41207-2016 matures on 29 Dec 2026. Submit the renewal receipt.</span><span class="d">01:30 AM · Automated reminder</span></span>
+        <span class="dot" aria-label="Unread"></span>
+      </a>
+      <a href="fdr.html" class="n">
+        <span class="ico" style="background: #E8F3EC"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#1E7A46" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"></path><path d="m9 12 2 2 4-4"></path></svg></span>
+        <span style="flex: 1; display: flex; flex-direction: column; gap: 3px"><b class="t">Joint lien endorsed by the bank</b><span class="m">State Bank of India confirmed the AICTE lien on SBI-FDR-99201-2024.</span><span class="d">09:15 AM · CBS-SBI-44012</span></span>
+        <span class="dot" aria-label="Unread"></span>
+      </a>
+    </div>
+
+    <h2 style="margin: 2px 0 0; font-size: 12px; font-weight: 700; letter-spacing: .8px; color: #556274">EARLIER</h2>
+    <div style="background: #FFFFFF; border: 1px solid #DDE3EA; border-radius: 14px; overflow: hidden">
+      <a href="applications.html" class="n">
+        <span class="ico" style="background: #E7EDF6"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#12366B" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"></path><path d="M14 3v5h5"></path></svg></span>
+        <span style="flex: 1; display: flex; flex-direction: column; gap: 3px"><span class="t" style="font-weight: 600">Application submitted</span><span class="m">APP-2026-INTAKE-4491 is queued for Regional Scrutiny.</span><span class="d">14 Oct 2026</span></span>
+      </a>
+      <a href="profile.html" class="n">
+        <span class="ico" style="background: #F7F0DE"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#7A5C0F" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 21l1.9-5.4A8 8 0 1 1 21 12z"></path></svg></span>
+        <span style="flex: 1; display: flex; flex-direction: column; gap: 3px"><span class="t" style="font-weight: 600">Ticket TKT-2026-4410 updated</span><span class="m">Assigned to the Northern Regional Office helpdesk.</span><span class="d">12 Oct 2026</span></span>
+      </a>
+    </div>
+  </div>
+
+  <nav aria-label="Main" style="background: #FFFFFF; border-top: 1px solid #DDE3EA; display: flex; padding: 0 4px 8px">
+    <a class="tab" href="dashboard.html"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg>Home</a>
+    <a class="tab" href="applications.html"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"></path><path d="M14 3v5h5"></path></svg>Applications</a>
+    <a class="tab" href="fdr.html"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 21h18M5 21V10M19 21V10M9 21V10M15 21V10M2 10 12 3l10 7z"></path></svg>FDR</a>
+    <a class="tab on" href="notifications.html" aria-current="page"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg>Alerts</a>
+    <a class="tab" href="profile.html"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg>Profile</a>
+  </nav>
+</div>
+</body>
+</html>

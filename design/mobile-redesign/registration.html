@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>FDR Vault – Register institution</title>
+</head>
+<body>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#7A5C0F}a:hover{color:#5C4409}
+.f{display:flex;flex-direction:column;gap:5px;min-width:0}
+.f label{font-size:12px;font-weight:600;color:#3D4A5C}
+.f .in{height:41px;box-sizing:border-box;border:1px solid #C9D2DE;border-radius:11px;padding:0 12px;font:500 13.5px 'Public Sans',sans-serif;color:#0A2347;background:#FFFFFF;width:100%;outline:0}
+</style>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #F3F5F8; font-family: 'Public Sans', system-ui, sans-serif; color: #0A2347; display: flex; flex-direction: column; overflow: hidden">
+
+  <div style="background: #0A2347; border-bottom: 4px solid #C9A13B; padding: 14px 12px 14px 8px; display: flex; align-items: center; gap: 8px">
+    <a href="login.html" aria-label="Back to login" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: #FFFFFF">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>
+    </a>
+    <div style="flex: 1; display: flex; flex-direction: column; gap: 2px">
+      <h1 style="margin: 0; font-size: 17px; font-weight: 700; color: #FFFFFF">Register institution</h1>
+      <span style="font-size: 11.5px; color: #C9D4E5">Active immediately — no approval wait</span>
+    </div>
+    <img src="../../emblem.png" alt="AICTE emblem" style="width: 34px; height: 34px; border-radius: 50%; background: #FFFFFF; padding: 2px">
+  </div>
+
+  <div style="flex: 1; padding: 12px 16px; display: flex; flex-direction: column; gap: 9px; overflow: hidden">
+    <button type="button" style="flex: none; height: 44px; border-radius: 12px; border: 1px solid #C9D2DE; background: #FFFFFF; font: 600 13.5px 'Public Sans', sans-serif; color: #0A2347; display: flex; align-items: center; justify-content: center; gap: 10px">
+      <svg width="17" height="17" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.5l6.7-6.7C35.6 2.4 30.2 0 24 0 14.6 0 6.6 5.4 2.7 13.3l7.8 6C12.4 13.6 17.7 9.5 24 9.5z"></path><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4.1 7.1-10.1 7.1-17.5z"></path><path fill="#FBBC05" d="M10.5 28.7c-.5-1.4-.8-3-.8-4.7s.3-3.2.8-4.7l-7.8-6C1 16.6 0 20.2 0 24s1 7.4 2.7 10.7l7.8-6z"></path><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.5-5.8c-2.1 1.4-4.8 2.3-8.4 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.8 6C6.6 42.6 14.6 48 24 48z"></path></svg>
+      Register with Google
+    </button>
+    <div style="display: flex; align-items: center; gap: 10px; color: #7B8696; font-size: 11px; font-weight: 600; letter-spacing: 1px"><span style="flex: 1; height: 1px; background: #DDE3EA"></span>OR WITH EMAIL<span style="flex: 1; height: 1px; background: #DDE3EA"></span></div>
+
+    <div style="background: #FFFFFF; border: 1px solid #DDE3EA; border-radius: 16px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px">
+      <div style="display: flex; align-items: center; gap: 8px">
+        <span style="width: 4px; height: 16px; border-radius: 2px; background: #C9A13B"></span>
+        <h2 style="margin: 0; font-size: 13px; font-weight: 700; letter-spacing: .4px; color: #0A2347">INSTITUTION DETAILS</h2>
+      </div>
+      <div class="f"><label for="iname">Institution name *</label><input id="iname" class="in" value="Rajdhani Institute of Engineering &amp; Technology"></div>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+        <div class="f"><label for="pid">PID (if allotted)</label><input id="pid" class="in" placeholder="1-12345678"></div>
+        <div class="f"><label for="itype">Type</label><select id="itype" class="in"><option>Unaided – Private</option></select></div>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+        <div class="f"><label for="state">State *</label><select id="state" class="in"><option>Delhi</option></select></div>
+        <div class="f"><label for="dist">District *</label><input id="dist" class="in" value="South West Delhi"></div>
+      </div>
+    </div>
+
+    <div style="background: #FFFFFF; border: 1px solid #DDE3EA; border-radius: 16px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px">
+      <div style="display: flex; align-items: center; gap: 8px">
+        <span style="width: 4px; height: 16px; border-radius: 2px; background: #C9A13B"></span>
+        <h2 style="margin: 0; font-size: 13px; font-weight: 700; letter-spacing: .4px; color: #0A2347">HEAD OF INSTITUTION &amp; LOGIN</h2>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+        <div class="f"><label for="head">Name *</label><input id="head" class="in" value="Dr. Anita Verma"></div>
+        <div class="f"><label for="mob">Mobile *</label><input id="mob" class="in" value="+91 98765 43210"></div>
+      </div>
+      <div class="f"><label for="em">Official email *</label><input id="em" class="in" type="email" placeholder="principal@institute.edu.in"></div>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+        <div class="f"><label for="p1">Password *</label><input id="p1" class="in" type="password" value="Strong@2026"></div>
+        <div class="f"><label for="p2">Confirm *</label><input id="p2" class="in" type="password" value="Strong@2026"></div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px">
+        <div style="flex: 1; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px">
+          <span style="height: 5px; border-radius: 3px; background: #1E7A46"></span><span style="height: 5px; border-radius: 3px; background: #1E7A46"></span><span style="height: 5px; border-radius: 3px; background: #1E7A46"></span><span style="height: 5px; border-radius: 3px; background: #DDE3EA"></span>
+        </div>
+        <span style="font-size: 11.5px; font-weight: 600; color: #1E7A46">Strong</span>
+      </div>
+    </div>
+
+    <label style="display: flex; gap: 10px; align-items: flex-start; font-size: 12px; line-height: 1.45; color: #3D4A5C"><input type="checkbox" checked="checked" style="width: 18px; height: 18px; accent-color: #12366B; margin: 1px 0 0; flex: none"><span>I am authorised by the management to register this institution and accept the <a href="#" style="font-weight: 600">Terms of Use</a>.</span></label>
+
+    <a href="dashboard.html" style="flex: none; height: 48px; border-radius: 12px; background: #0A2347; color: #FFFFFF; font-weight: 700; font-size: 15px; display: flex; align-items: center; justify-content: center; text-decoration: none; box-shadow: inset 0 -3px 0 #C9A13B">Create account</a>
+    <p style="margin: 0; text-align: center; font-size: 12.5px; color: #556274">Already registered? <a href="login.html" style="font-weight: 700; text-decoration: none">Sign in</a></p>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>FDR Vault – Security deposits</title>
+</head>
+<body>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#7A5C0F}a:hover{color:#5C4409}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:10.5px;font-weight:600;color:#556274;text-decoration:none;position:relative;min-height:56px}
+.tab.on{color:#0A2347}
+.tab.on::before{content:"";position:absolute;top:0;left:28%;right:28%;height:3px;border-radius:0 0 3px 3px;background:#C9A13B}
+.dep{background:#FFFFFF;border:1px solid #DDE3EA;border-radius:14px;padding:13px 14px;display:flex;flex-direction:column;gap:7px;text-decoration:none;color:#0A2347}
+.chip{font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:10px;white-space:nowrap}
+.bar{height:6px;border-radius:3px;background:#E7EDF6;overflow:hidden;display:block}
+.bar span{display:block;height:6px}
+</style>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #F3F5F8; font-family: 'Public Sans', system-ui, sans-serif; color: #0A2347; display: flex; flex-direction: column; overflow: hidden">
+
+  <div style="background: #0A2347; border-bottom: 4px solid #C9A13B; padding: 12px 18px 16px; display: flex; flex-direction: column; gap: 12px">
+    <div style="display: flex; align-items: center; justify-content: space-between">
+      <h1 style="margin: 0; font-size: 18px; font-weight: 700; color: #FFFFFF">Security deposits (FDR)</h1>
+      <img src="../../emblem.png" alt="AICTE emblem" style="width: 32px; height: 32px; border-radius: 50%; background: #FFFFFF; padding: 2px">
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 3px">
+      <span style="font-size: 11px; font-weight: 700; letter-spacing: 1px; color: #E8D29A">TOTAL CORPUS UNDER AICTE JOINT LIEN</span>
+      <span style="font-size: 28px; font-weight: 800; color: #FFFFFF">₹ 2,50,00,000</span>
+      <span style="font-size: 12px; color: #C9D4E5">₹2.50 Crore · 3 deposits · APH Chapter VI</span>
+    </div>
+  </div>
+
+  <div style="flex: 1; padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; overflow: hidden">
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+      <button type="button" style="height: 48px; border-radius: 12px; border: 0; background: #0A2347; color: #FFFFFF; font: 700 13px 'Public Sans', sans-serif; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: inset 0 -3px 0 #C9A13B">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>Submit new FDR
+      </button>
+      <button type="button" style="height: 48px; border-radius: 12px; border: 1px solid #C9D2DE; background: #FFFFFF; color: #0A2347; font: 700 13px 'Public Sans', sans-serif; display: flex; align-items: center; justify-content: center; gap: 8px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#12366B" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.9-3M4 4v4h4M4 13a8 8 0 0 0 14.9 3M20 20v-4h-4"></path></svg>Renew / release
+      </button>
+    </div>
+
+    <div style="background: #FBF5E6; border: 1px solid #E9D49A; border-radius: 12px; padding: 10px 12px; display: flex; gap: 10px; align-items: flex-start">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7A5C0F" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="flex: none; margin-top: 1px"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>
+      <span style="font-size: 12px; line-height: 1.45; color: #4A3A10"><b>1 deposit due for renewal.</b> Submit the renewal receipt at least 60 days before maturity.</span>
+    </div>
+
+    <h2 style="margin: 2px 0 0; font-size: 13px; font-weight: 700; letter-spacing: .5px; color: #3D4A5C">MY DEPOSITS</h2>
+
+    <a href="#" class="dep">
+      <span style="display: flex; justify-content: space-between; align-items: center"><b style="font-size: 14px">SBI-FDR-41207-2016</b><span class="chip" style="background: #FDF3DD; color: #7A4A00">Expiring soon</span></span>
+      <span style="font-size: 12px; color: #556274">State Bank of India · ₹0.75 Cr · matures 29 Dec 2026</span>
+      <span class="bar"><span style="width: 96%; background: #B7791F"></span></span>
+      <span style="display: flex; justify-content: space-between; font-size: 11px; color: #556274"><span>9.6 of 10 years</span><span style="font-weight: 700; color: #7A4A00">63 days left</span></span>
+    </a>
+
+    <a href="#" class="dep">
+      <span style="display: flex; justify-content: space-between; align-items: center"><b style="font-size: 14px">SBI-FDR-99201-2024</b><span class="chip" style="background: #E8F3EC; color: #17633A">Lien secured</span></span>
+      <span style="font-size: 12px; color: #556274">State Bank of India · ₹1.00 Cr · matures 2034</span>
+      <span class="bar"><span style="width: 18%; background: #C9A13B"></span></span>
+      <span style="display: flex; justify-content: space-between; font-size: 11px; color: #556274"><span>1.8 of 10 years</span><span>CBS token verified</span></span>
+    </a>
+
+    <a href="#" class="dep">
+      <span style="display: flex; justify-content: space-between; align-items: center"><b style="font-size: 14px">PNB-FDR-30115-2016</b><span class="chip" style="background: #EEF1F5; color: #3D4A5C">Matured</span></span>
+      <span style="font-size: 12px; color: #556274">Punjab National Bank · ₹0.75 Cr · matured 2026</span>
+      <span class="bar"><span style="width: 100%; background: #12366B"></span></span>
+      <span style="display: flex; justify-content: space-between; font-size: 11px; color: #556274"><span>10-year lock-in complete</span><span style="font-weight: 700; color: #12366B">Eligible for lien release</span></span>
+    </a>
+  </div>
+
+  <nav aria-label="Main" style="background: #FFFFFF; border-top: 1px solid #DDE3EA; display: flex; padding: 0 4px 8px">
+    <a class="tab" href="dashboard.html"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg>Home</a>
+    <a class="tab" href="applications.html"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"></path><path d="M14 3v5h5"></path></svg>Applications</a>
+    <a class="tab on" href="fdr.html" aria-current="page"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 21h18M5 21V10M19 21V10M9 21V10M15 21V10M2 10 12 3l10 7z"></path></svg>FDR</a>
+    <a class="tab" href="notifications.html"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg>Alerts</a>
+    <a class="tab" href="profile.html"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg>Profile</a>
+  </nav>
+</div>
+</body>
+</html>
