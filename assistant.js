@@ -16,7 +16,7 @@
   const V_TONE = { GREEN: 'green', AMBER: 'amber', RED: 'red' };
   const V_LABEL = { GREEN: 'Checks passed', AMBER: 'Needs review', RED: 'Must be fixed' };
   const SRC_LABEL = { VERIFIED: ['Verified source', 'green'], PORTAL_RULE: ['Portal rule (AICTE clause not verified)', 'blue'], UNVERIFIED: ['Not verified — needs human confirmation', 'amber'], OUTDATED: ['Outdated source — needs review', 'red'] };
-  const F_LABEL = { VERIFIED: ['From portal record', 'green'], EXTRACTED: ['Read from document', 'blue'], USER: ['Entered by you', 'slate'], USER_DIFFERS: ['Differs from document', 'amber'], CONFLICT: ['Conflict', 'red'], MISSING: ['Missing', 'red'] };
+  const F_LABEL = { VERIFIED: ['From portal record', 'green'], EXTRACTED: ['Read from document', 'blue'], USER: ['Entered by you', 'slate'], USER_DIFFERS: ['Differs from document', 'amber'], CONFLICT: ['Conflict', 'red'], MISSING: ['Missing', 'red'], EMPTY: ['Not provided', 'slate'] };
   const STAGES = [['chat', 'Questions'], ['checklist', 'Documents'], ['form', 'Form'], ['review', 'Review']];
   const st = () => UI.asst.s;
   const api = (method, path, body) => Backend.assistant(method, path, body);

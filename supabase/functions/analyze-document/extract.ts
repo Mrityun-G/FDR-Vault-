@@ -188,8 +188,11 @@ export async function analyzeDocument(client: Anthropic, file: { base64: string;
   if (response.stop_reason === "max_tokens") throw new Error("Document analysis was cut off (max_tokens).");
   const text = response.content.find((b) => b.type === "text");
   if (!text || text.type !== "text") throw new Error("No analysis returned.");
-  const extraction = JSON.parse(text.text) as Extraction;
+  return buildResult(JSON.parse(text.text) as Extraction, docType, declared, response.model);
+}
 
+/** Cross-checks an extraction (from Claude or the rule-based PDF reader) and builds the advisory result. */
+export function buildResult(extraction: Extraction, docType: string, declared: Declared, modelUsed: string): AnalysisResult {
   const { fields, mismatches } = crossCheck(extraction, declared);
   const nameMismatch = fields.some((f) => f.label === "Institution Name in Document" && !f.isCoherent);
   const anomalies = [...mismatches, ...extraction.anomalies];
@@ -201,7 +204,7 @@ export async function analyzeDocument(client: Anthropic, file: { base64: string;
   return {
     extraction, fields, mismatches, status,
     analysis: {
-      status: "COMPLETED", modelUsed: response.model, timestamp: new Date().toISOString(), summary: extraction.summary, verifiedAttributes,
+      status: "COMPLETED", modelUsed, timestamp: new Date().toISOString(), summary: extraction.summary, verifiedAttributes,
       detectedAnomalies: anomalies, confidence: extraction.confidence,
       disclaimer: "AI reading of the uploaded document. Advisory only — statutory checks and the Scrutiny Committee decide.",
     },

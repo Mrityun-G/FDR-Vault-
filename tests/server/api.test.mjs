@@ -5,6 +5,7 @@
 import http from 'node:http';
 import crypto from 'node:crypto';
 import { startPostgres } from './embedded-pg.mjs';
+import { makePdf, adviceLines } from './make-pdf.mjs';
 
 const db = await startPostgres(54331);
 const GOOGLE_PORT = 8799, API_PORT = 8798, API = `http://127.0.0.1:${API_PORT}`;
@@ -178,6 +179,11 @@ try {
 
   console.log('\nAI document reading (fake model) & scheduled job');
   ok((await call('POST', '/functions/analyze-document', { token: inst.access_token, body: { storagePath: path, docType: 'FDR_CORPUS', mimeType: 'application/pdf' } })).body.code === 'AI_NOT_CONFIGURED', 'no API key: AI_NOT_CONFIGURED');
+  const rp = `${instId}/${crypto.randomUUID()}/advice.pdf`;
+  await call('POST', `/storage/object/institution-documents/${rp}`, { token: inst.access_token, raw: makePdf([adviceLines({ institution: st.body.institution.name, fdr: 'SBI-FDR-77002-2026' })]), type: 'application/pdf' });
+  const rr = await call('POST', '/functions/analyze-document', { token: inst.access_token, body: { storagePath: rp, docType: 'FDR_CORPUS', mimeType: 'application/pdf', declared: { fdrNumber: 'SBI-FDR-77002-2026', amountInr: 10000000 } } });
+  ok(rr.status === 200 && rr.body.analysis.modelUsed === 'rules (PDF text)' && rr.body.extraction.fdrNumber === 'SBI-FDR-77002-2026' && !rr.body.mismatches.length,
+    `no API key, text PDF: read with rules (${rr.body.status}, ${rr.body.fields && rr.body.fields.length} field(s))`);
   aiOverride.client = { beta: { messages: { create: async () => ({ model: 'claude-opus-5-5', stop_reason: 'end_turn', stop_details: null, content: [{ type: 'text', text: JSON.stringify({
     documentKind: 'FDR_CORPUS', matchesExpectedType: true, legibility: 'clear', institutionNameInDocument: st.body.institution.name, issuingAuthority: 'SBI', referenceNumber: '', issueDate: '2026-01-01',
     validTill: '', amountInr: '10000000', fdrNumber: 'SBI-FDR-77001-2026', bankName: 'State Bank of India', lienHolder: 'Regional Officer, AICTE', maturityDate: '2035-12-31',

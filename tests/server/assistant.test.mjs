@@ -4,6 +4,7 @@
 // Usage: npm run test:assistant
 import crypto from 'node:crypto';
 import { startPostgres } from './embedded-pg.mjs';
+import { makePdf, adviceLines } from './make-pdf.mjs';
 
 const db = await startPostgres(54335);
 const API_PORT = 8794, API = `http://127.0.0.1:${API_PORT}`;
@@ -46,7 +47,7 @@ const extraction = o => ({ documentKind: 'Fixed deposit advice', matchesExpected
 const fake = () => ({ beta: { messages: { create: async () => ({ model: 'claude-opus-5-5', stop_reason: 'end_turn', stop_details: null, content: [{ type: 'text', text: JSON.stringify(reading) }] }) } } });
 
 async function upload(token, inst, name, bytes = `%PDF-1.4 ${name} ${Math.random()}`) {
-  const path = `${inst}/${crypto.randomUUID()}/${name}`, buf = Buffer.from(bytes);
+  const path = `${inst}/${crypto.randomUUID()}/${name}`, buf = Buffer.isBuffer(bytes) ? bytes : Buffer.from(bytes);
   const r = await call('POST', `/storage/object/institution-documents/${path}`, { token, raw: buf, type: 'application/pdf' });
   if (r.status !== 200) throw new Error(`upload ${r.status}`);
   return { fileName: name, fileSizeBytes: buf.length, mimeType: 'application/pdf', fileHash: crypto.createHash('sha256').update(buf).digest('hex'), storagePath: path, pageCount: 1 };
@@ -87,11 +88,20 @@ try {
   ok((await call('POST', `/assistant/sessions/${a.id}/review`, { token: dits, body: { open: true } })).body.code === 'BLOCKED', 'final review refused while requirements are unmet');
   ok((await call('POST', `/assistant/sessions/${a.id}/submit`, { token: dits, body: { confirm: true, declaration: true } })).status === 400, 'submission refused while requirements are unmet');
 
-  console.log('\nNo AI configured: honest fallback');
+  console.log('\nNo AI configured: rule-based reading of the PDF text');
   let f1 = await upload(dits, ditsId, 'fdr-advice.pdf');
   a = (await attach(dits, a.id, 'FDR_ADVICE', f1)).body;
-  ok(item(a, 'FDR_ADVICE').validation.status === 'AMBER' && /not available/.test(item(a, 'FDR_ADVICE').validation.issues[0].message), 'without AI the document is AMBER (manual review), never GREEN');
+  ok(item(a, 'FDR_ADVICE').validation.status === 'AMBER' && /could not be read automatically \(the PDF could not be opened/.test(item(a, 'FDR_ADVICE').validation.issues[0].message), 'damaged PDF: AMBER (manual review) with the reason, never GREEN');
   ok(field(a, 'fdrNumber').status === 'MISSING', 'no values are guessed when the document was not read');
+  const cert = await upload(dits, ditsId, 'Oracle-Certificate.pdf', makePdf([['Oracle Certified Professional', 'This certifies that Mrityunjai has completed the Java SE 17 Developer exam.']]));
+  a = (await attach(dits, a.id, 'FDR_ADVICE', cert)).body;
+  ok(item(a, 'FDR_ADVICE').validation.status === 'RED' && /not a fdr certificate/i.test(item(a, 'FDR_ADVICE').validation.issues.map(i => i.message).join(' ')), 'a certificate uploaded as the FDR advice is RED (wrong document), without AI');
+  const real = await upload(dits, ditsId, 'SBI-advice.pdf', makePdf([adviceLines({ fdr: 'SBI-FDR-55500-2026' })]));
+  a = (await attach(dits, a.id, 'FDR_ADVICE', real)).body;
+  const rv = item(a, 'FDR_ADVICE').validation;
+  ok(rv.status === 'GREEN' && rv.checks.some(c => /rules, no AI/.test(c)), `text PDF advice read without AI: ${rv.status} (${rv.checks[2]})`);
+  ok(field(a, 'fdrNumber').value === 'SBI-FDR-55500-2026' && field(a, 'amountRs').value === '10000000' && field(a, 'maturityDate').value === '2036-10-01'
+    && field(a, 'fdrNumber').source.page === 1 && /FDR No\./.test(field(a, 'fdrNumber').source.line), 'form filled from the PDF text, with page and source line');
 
   aiOverride.client = fake;
   reading = extraction({ fdrNumber: 'SBI-FDR-55501-2026', amountInr: '10000000', issueDate: '2026-10-01', maturityDate: '2036-10-01', lienHolder: 'Regional Officer, Northern Regional Office, AICTE',
