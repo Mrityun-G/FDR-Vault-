@@ -197,7 +197,13 @@ const Remote = {
     await this.setNewPassword(next);
     await this.rpc('log_client_event', { p_action: 'PASSWORD_CHANGED', p_details: 'Account password changed from mobile portal.' });
   },
-  async refresh() { applyServerState(await this.rpc('get_portal_state')); },
+  async refresh() {
+    applyServerState(await this.rpc('get_portal_state'));
+    // Google profile photo of the signed-in account (saved by the server at Google sign-in), shown as the avatar.
+    const { data } = await this.sb.auth.getSession();
+    const pic = data && data.session && data.session.user && (data.session.user.user_metadata || {}).avatar_url;
+    if (DB.users[0]) DB.users[0].avatarUrl = /^https:\/\/[a-z0-9-]+\.googleusercontent\.com\//.test(pic || '') ? pic : '';
+  },
   async upload(file) {
     if (!navigator.onLine) throw new ApiError('OFFLINE', "You're offline. Reconnect to upload.");
     const path = `${inst().id}/${uuid()}/${safeName(file.name)}`;

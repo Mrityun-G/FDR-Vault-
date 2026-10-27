@@ -202,10 +202,20 @@ authRouter.get('/callback', async (req, res) => {
       body: new URLSearchParams({ code: String(req.query.code), client_id: config.google.clientId, client_secret: config.google.clientSecret,
         redirect_uri: `${config.publicUrl}/auth/callback`, grant_type: 'authorization_code' }) });
     const tok = await r.json();
-    if (!r.ok || !tok.id_token) return back('Google sign-in failed');
+    if (!r.ok || !tok.id_token) {
+      // Google's reason goes to the log and the user (never the secret): invalid_client = GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET do not match
+      // the Google Cloud client; redirect_uri_mismatch = PUBLIC_URL/auth/callback is not an authorised redirect URI there.
+      console.error('google token exchange failed', r.status, tok.error || '', tok.error_description || '');
+      return back(tok.error === 'invalid_client' || tok.error === 'unauthorized_client'
+        ? `Google sign-in is not set up correctly on the server (${tok.error}: client ID / secret). Please tell the administrator.`
+        : `Google sign-in failed (${tok.error || `HTTP ${r.status}`}). Please try again.`);
+    }
     // The ID token comes straight from Google's token endpoint over TLS (OIDC Core 3.1.3.7), so its claims are checked, not its signature.
     const id = JSON.parse(Buffer.from(tok.id_token.split('.')[1], 'base64url').toString());
-    if (id.aud !== config.google.clientId || !['accounts.google.com', 'https://accounts.google.com'].includes(id.iss) || id.exp * 1000 < Date.now()) return back('Google sign-in failed');
+    if (id.aud !== config.google.clientId || !['accounts.google.com', 'https://accounts.google.com'].includes(id.iss) || id.exp * 1000 < Date.now()) {
+      console.error('google id token rejected', { audOk: id.aud === config.google.clientId, iss: id.iss, expired: id.exp * 1000 < Date.now() });
+      return back('Google sign-in failed (the Google token could not be verified). Please try again.');
+    }
     if (!id.email || id.email_verified === false || id.email_verified === 'false') return back('Your Google account email is not verified');
     const email = normEmail(id.email);
     let user = (await query(`select u.* from auth.identities i join auth.users u on u.id = i.user_id where i.provider = 'google' and i.provider_id = $1`, [id.sub])).rows[0];
@@ -216,6 +226,9 @@ authRouter.get('/callback', async (req, res) => {
         [email, { full_name: id.name || '', name: id.name || '', avatar_url: id.picture || '', email, provider: 'google' }])).rows[0];
       await query(`insert into auth.identities(provider, provider_id, user_id, email) values ('google', $1, $2, $3) on conflict do nothing`, [id.sub, user.id, email]);
     }
+    // Keep the Google profile photo current; the apps show it as the account picture. Only Google's own image host is accepted.
+    if (/^https:\/\/[a-z0-9-]+\.googleusercontent\.com\//.test(id.picture || ''))
+      await query(`update auth.users set raw_user_meta_data = coalesce(raw_user_meta_data, '{}'::jsonb) || jsonb_build_object('avatar_url', $2::text) where id = $1`, [user.id, id.picture]);
     const code = await newOneTimeToken(user.id, 'auth_code', 5);
     res.redirect(withParams(st.back, { auth_code: code, auth_type: 'signin' }));
   } catch (e) {

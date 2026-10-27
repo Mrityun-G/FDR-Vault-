@@ -15,7 +15,7 @@ export const DOCUMENTS_BUCKET = 'institution-documents';
 export const INSTITUTION_APP_URL = import.meta.env.VITE_INSTITUTION_APP_URL || 'https://fdr-vault.vercel.app';
 
 type Result<T = any> = Promise<{ data: T; error: any }>;
-export type AuthEvent = 'INITIAL_SESSION' | 'SIGNED_IN' | 'SIGNED_OUT' | 'TOKEN_REFRESHED' | 'USER_UPDATED' | 'PASSWORD_RECOVERY';
+export type AuthEvent = 'INITIAL_SESSION' | 'SIGNED_IN' | 'SIGNED_OUT' | 'TOKEN_REFRESHED' | 'USER_UPDATED' | 'PASSWORD_RECOVERY' | 'AUTH_ERROR';
 export interface Session { access_token: string; refresh_token: string; expires_at: number; user: { id: string; email: string } }
 interface Channel { on(type: string, filter: Record<string, unknown>, cb: (payload: unknown) => void): Channel; subscribe(): Channel }
 

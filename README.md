@@ -89,6 +89,13 @@ The login screens show one-click demo buttons. All four accounts share the passw
 `npm run db:migrate -- --seed` creates them on an empty database (the Render start command does this automatically).
 The institution app blocks password changes on the demo account so one evaluator cannot lock out the rest.
 
+`npm run db:demo-data` fills every portal with demo records ([`supabase/scripts/load-demo-data.sql`](supabase/scripts/load-demo-data.sql)):
+7 institutions, 14 applications (every status and type; DITS Delhi has one of each status, including a deficiency notice to
+answer), 15 FDRs (active, expiring, matured, released, and 3 SBI FDRs awaiting the bank's lien endorsement), pending FDR
+renewal/replacement/release requests for the admin, compliance replies, tickets, notifications, staff invites and audit entries.
+It only adds missing rows, so it is safe to run again; against Render, set `DATABASE_URL` to the database's External URL and
+`DATABASE_SSL=true`.
+
 ### Staff accounts (website)
 Staff sign in to the staff portal with Google, or register with an email and password. To give someone a staff role,
 approve their email (with `psql` against the database). If they have no account yet, it activates the first time they sign in:
