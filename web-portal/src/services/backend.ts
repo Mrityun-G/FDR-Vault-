@@ -18,7 +18,9 @@ import {
   DirectoryUser,
   RegistrationRequest,
   UserInvite,
-  RegulatoryNotification
+  RegulatoryNotification,
+  RegulatorySource,
+  DocumentRequirement
 } from '../types';
 
 export const STAFF_ROLES: UserRole[] = ['REVIEWER', 'ADMIN', 'BANK_OFFICIAL'];
@@ -381,6 +383,19 @@ export async function loadDirectory(isAdmin: boolean): Promise<{ users: Director
   };
 }
 
+/** Regulatory sources and document requirements used by the institution app's Regulatory Assistant. */
+export async function loadRegulatoryCatalog(): Promise<{ sources: RegulatorySource[]; requirements: DocumentRequirement[] }> {
+  const c = await rpc<any>('admin_regulatory_catalog');
+  return {
+    sources: (c.sources || []).map((s: any) => ({ id: s.id, title: s.title, issuingAuthority: s.issuing_authority, url: s.url || '', section: s.section || '',
+      effectiveDate: s.effective_date || '', status: s.status, excerpt: s.excerpt || '', notes: s.notes || '', verifiedBy: s.verified_by_name || undefined,
+      verifiedAt: s.verified_at || undefined, updatedAt: s.updated_at })),
+    requirements: (c.requirements || []).map((r: any) => ({ workflow: r.workflow, docKey: r.doc_key, docType: r.doc_type, name: r.name, purpose: r.purpose,
+      requiredFields: r.required_fields || [], applicability: r.applicability, condition: r.condition || '', conditionLabel: r.condition_label || '', sourceId: r.source_id,
+      version: r.version, effectiveFrom: r.effective_from || '', effectiveTo: r.effective_to || '', active: r.active }))
+  };
+}
+
 export async function loadInstitutionList(): Promise<{ name: string; pid: string }[]> {
   const rows = must(await api.data('institutions')) as any[];
   return rows.map(r => ({ name: r.name, pid: r.pid }));
@@ -448,6 +463,8 @@ export const actions = {
   inviteInstitution: (email: string, pid: string) => rpc('admin_invite_user', { p_email: email, p_pid: pid, p_role: 'INSTITUTION' }),
   setUserStatus: (userId: string, status: 'ACTIVE' | 'DISABLED') => rpc('admin_set_user_status', { p_user_id: userId, p_status: status }),
   rejectRegistration: (requestNo: string, reason: string) => rpc('admin_reject_registration', { p_request_no: requestNo, p_reason: reason }),
+  saveRegulatorySource: (src: RegulatorySource) => rpc('admin_save_source', { p: src }),
+  saveDocumentRequirement: (req: DocumentRequirement) => rpc('admin_save_requirement', { p: req }),
 
   /** Short-lived signed link to an uploaded original (storage policies limit this to AICTE staff). */
   async documentUrl(storagePath: string): Promise<string> {

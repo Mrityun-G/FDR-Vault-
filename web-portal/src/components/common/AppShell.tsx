@@ -18,6 +18,7 @@ import { ReportsView } from '../views/ReportsView';
 import { NotificationsView } from '../views/NotificationsView';
 import { AuditTrailView } from '../views/AuditTrailView';
 import { UserManagementView } from '../views/UserManagementView';
+import { RegulatorySourcesView } from '../views/RegulatorySourcesView';
 import { SettingsView } from '../views/SettingsView';
 import { DisclaimerModal } from '../DisclaimerModal';
 
@@ -47,6 +48,8 @@ export const AppShell: React.FC = () => {
         return <AuditTrailView />;
       case 'user_management':
         return <UserManagementView />;
+      case 'regulatory_sources':
+        return <RegulatorySourcesView />;
       case 'settings':
         return <SettingsView />;
       default:

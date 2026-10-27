@@ -250,6 +250,17 @@ const Remote = {
   async updateInstitution(r) { await this.rpc('update_institution_profile', { p: r }); await this.refresh(); },
   async updateContact(r) { await this.rpc('update_contact_details', { p: r }); await this.refresh(); },
   async deleteDraft(id) { await this.rpc('delete_draft', { p_id: id }); await this.refresh(); },
+  // Regulatory Assistant (server/assistant.mjs): guided FDR requests, validated and submitted by the server.
+  async assistant(method, path, body) {
+    if (!navigator.onLine) throw new ApiError('OFFLINE', "You're offline. Reconnect and try again.");
+    const { data, error } = await this.sb.request(method, '/assistant' + path, body);
+    if (error) {
+      if (!error.status) throw new ApiError('NETWORK', 'The server could not be reached. Your data has not been lost — please retry.');
+      if (error.status === 401) throw new ApiError('SESSION_EXPIRED', 'Your session has expired. Please sign in again.');
+      throw new ApiError(error.code || (error.status === 429 ? 'RATE_LIMITED' : 'SERVER'), error.message || 'Request failed', error.details || null);
+    }
+    return data;
+  },
   // Reads each uploaded document with Claude (server function "analyze-document"). Advisory; never blocks submission.
   async analyzeDocuments(w, onEach) {
     const docs = DOC_TYPES.filter(d => w.docs[d.type] && w.docs[d.type].storagePath);
@@ -478,6 +489,8 @@ const Local = {
     logAudit('CONTACT_DETAILS_UPDATED', 'USER', me().id, 'Updated Head of Institution and nodal officer contact details.');
     save();
   },
+  // Regulatory Assistant on this device (assistant.js), with the same rules as the server.
+  async assistant(method, path, body) { return window.LocalAssistant.handle(method, path, body); },
   subscribe() {}, unsubscribe() {},
 };
 

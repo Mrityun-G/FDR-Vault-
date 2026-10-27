@@ -23,7 +23,8 @@ import {
   Settings,
   LogOut,
   ChevronRight,
-  ShieldAlert
+  ShieldAlert,
+  BookCheck
 } from 'lucide-react';
 
 interface Props {
@@ -53,13 +54,14 @@ export const AppSidebar: React.FC<Props> = ({ isMobileOpen, setIsMobileOpen }) =
     { id: 'notifications', label: 'Notifications', icon: Bell, badge: unreadCount },
     { id: 'audit_trail', label: 'Audit Trail', icon: History },
     { id: 'user_management', label: 'User Management', icon: Users },
+    { id: 'regulatory_sources', label: 'Regulatory Sources', icon: BookCheck },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
 
   // Each role sees only the work it is authorised for (the server enforces the same rules).
   const visibleFor: Record<string, SidebarTab[]> = {
     ADMIN: allItems.map(i => i.id),
-    REVIEWER: ['dashboard', 'institutions', 'fdr_records', 'verification_center', 'renewals', 'release_requests', 'reports', 'notifications', 'audit_trail', 'user_management', 'settings'],
+    REVIEWER: ['dashboard', 'institutions', 'fdr_records', 'verification_center', 'renewals', 'release_requests', 'reports', 'notifications', 'audit_trail', 'user_management', 'regulatory_sources', 'settings'],
     BANK_OFFICIAL: ['fdr_records', 'verification_center', 'notifications']
   };
   const menuItems = allItems.filter(i => (visibleFor[currentUser.role] || []).includes(i.id));

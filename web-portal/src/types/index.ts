@@ -350,4 +350,38 @@ export type SidebarTab =
   | 'notifications'
   | 'audit_trail'
   | 'user_management'
+  | 'regulatory_sources'
   | 'settings';
+
+/** Regulatory Assistant catalog (supabase/migrations/20261027000000_regulatory_assistant.sql). */
+export type SourceStatus = 'VERIFIED' | 'PORTAL_RULE' | 'UNVERIFIED' | 'OUTDATED';
+export interface RegulatorySource {
+  id: string;
+  title: string;
+  issuingAuthority: string;
+  url: string;
+  section: string;
+  effectiveDate: string;
+  status: SourceStatus;
+  excerpt: string;
+  notes: string;
+  verifiedBy?: string;
+  verifiedAt?: string;
+  updatedAt?: string;
+}
+export interface DocumentRequirement {
+  workflow: string;
+  docKey: string;
+  docType: string;
+  name: string;
+  purpose: string;
+  requiredFields: string[];
+  applicability: 'MANDATORY' | 'CONDITIONAL';
+  condition: string;
+  conditionLabel: string;
+  sourceId: string;
+  version: string;
+  effectiveFrom: string;
+  effectiveTo: string;
+  active: boolean;
+}

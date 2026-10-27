@@ -199,6 +199,8 @@
     return {
       auth,
       rpc: async (fn, args) => { const r = await call('POST', '/rpc/' + encodeURIComponent(fn), { body: args || {} }); return { data: r.data, error: r.error }; },
+      /** Any other API route, e.g. the Regulatory Assistant (server/assistant.mjs). */
+      request: async (method, path, body) => { const r = await call(method, path, body === undefined ? {} : { body }); return { data: r.data, error: r.error }; },
       /** Staff-portal read views (server/api.mjs VIEWS). */
       data: async view => { const r = await call('GET', '/data/' + encodeURIComponent(view)); return { data: r.data, error: r.error }; },
       storage: {
