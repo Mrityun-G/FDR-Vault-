@@ -91,7 +91,7 @@ export const AppSidebar: React.FC<Props> = ({ isMobileOpen, setIsMobileOpen }) =
         <div className="pointer-events-none absolute bottom-10 -right-24 w-60 h-60 rounded-full bg-fuchsia-500/15 blur-3xl animate-float" aria-hidden="true" />
         <div className="relative">
           {/* Sidebar Branding Header */}
-          <div className="p-4 border-b border-white/10 bg-white/[0.03]">
+          <div className="p-4 border-b border-white/10 bg-white/3">
             <div className="flex items-center gap-3">
               <AicteLogo size={40} className="w-10 h-10 shrink-0" />
               <div>
@@ -152,7 +152,7 @@ export const AppSidebar: React.FC<Props> = ({ isMobileOpen, setIsMobileOpen }) =
         </div>
 
         {/* Footer: User Profile & Role Info */}
-        <div className="relative p-3 border-t border-white/10 bg-white/[0.03] text-xs">
+        <div className="relative p-3 border-t border-white/10 bg-white/3 text-xs">
           <div className="p-2.5 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between">
             <div className="flex items-center gap-2.5 truncate">
               <div

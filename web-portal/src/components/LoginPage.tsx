@@ -129,9 +129,9 @@ export const LoginPage: React.FC = () => {
   return (
     <div className="relative min-h-screen bg-aurora flex flex-col justify-between font-sans overflow-hidden">
       {/* Floating colour light */}
-      <div className="pointer-events-none absolute -top-32 -left-24 w-[28rem] h-[28rem] rounded-full bg-fuchsia-500/35 blur-3xl animate-float" aria-hidden="true" />
-      <div className="pointer-events-none absolute top-1/3 -right-32 w-[32rem] h-[32rem] rounded-full bg-cyan-400/30 blur-3xl animate-float-slow" aria-hidden="true" />
-      <div className="pointer-events-none absolute -bottom-40 left-1/4 w-[26rem] h-[26rem] rounded-full bg-amber-300/20 blur-3xl animate-float" aria-hidden="true" />
+      <div className="pointer-events-none absolute -top-32 -left-24 w-112 h-112 rounded-full bg-fuchsia-500/35 blur-3xl animate-float" aria-hidden="true" />
+      <div className="pointer-events-none absolute top-1/3 -right-32 w-128 h-128 rounded-full bg-cyan-400/30 blur-3xl animate-float-slow" aria-hidden="true" />
+      <div className="pointer-events-none absolute -bottom-40 left-1/4 w-104 h-104 rounded-full bg-amber-300/20 blur-3xl animate-float" aria-hidden="true" />
 
       {/* Top Tricolor Strip */}
       <div className="relative h-1.5 w-full bg-linear-to-r from-[#FF9933] via-white to-[#138808] overflow-hidden">
