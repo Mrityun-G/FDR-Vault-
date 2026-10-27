@@ -112,8 +112,13 @@ Google refuses OAuth inside app WebViews, so in the **Android app** the Google b
 The API server's `analyze-document` function reads each uploaded document with Claude (`claude-opus-5-5`) and
 cross-checks it against the form: FDR number, amount, dates, bank, lien holder, institution name and faculty counts.
 Set `ANTHROPIC_API_KEY` on the server to turn it on. The result is **advisory**; the statutory rules still run in PostgreSQL.
-Server-side refusal fallback is enabled (`fallbacks: "default"`). Without a key the app says so and shows the on-device
-preview instead; submission is never blocked.
+Server-side refusal fallback is enabled (`fallbacks: "default"`).
+
+**Without a key (free):** text PDFs are still read automatically. [`server/read-pdf.mjs`](server/read-pdf.mjs) takes the PDF's
+own text (pdf.js) and finds the FDR number, amount, issue and maturity dates, bank, depositor and lien holder with fixed rules,
+keeping the page and line of each value; the same cross-checks and GREEN / AMBER / RED validation then apply. Scanned PDFs
+(no text layer) and photos cannot be read this way: they are marked for manual review, and need the key to be read.
+Submission is never blocked by reading.
 
 ### AI Regulatory Assistant (institution app)
 Dashboard → **AI Regulatory Assistant** guides an institution through one FDR request: a new FDR, renewal, replacement,
@@ -265,6 +270,7 @@ npm run test:server          # 51 checks — real PostgreSQL + the API over HTTP
                              #   RPC permissions, RLS, storage, live updates, AI function, scheduled job
 npm run test:assistant       # 59 checks — Regulatory Assistant: new FDR end to end, missing / conflicting documents, unverified
                              #   requirements, other institutions, no submission channel, renewal, compliance reply
+npm run test:read-pdf         # 15 checks — free rule-based PDF reading: dates, amounts, evidence, scans / damaged files / wrong documents
 npm run test:ai              # 17 checks — AI document reader with a fake Claude client (no cost)
 npm run serve:demo           # (terminal 1) serves the app in demo mode (empty API_URL) for the browser tests, then:
 npm run test:e2e:demo        # full institution walkthrough in demo mode

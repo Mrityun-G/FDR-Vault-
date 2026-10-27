@@ -12,6 +12,7 @@ import { asUser, asService, query } from './db.mjs';
 import { requireUser } from './auth.mjs';
 import { aiClient } from './api.mjs';
 import { analyzeDocument, MODEL, RefusedError } from '../supabase/functions/analyze-document/extract.ts';
+import { readWithoutAi, RULES_MODEL } from './read-pdf.mjs';
 
 const sandbox = {};
 vm.runInNewContext(fs.readFileSync(path.join(ROOT, 'assistant-rules.js'), 'utf8'), sandbox);
@@ -238,20 +239,26 @@ assistantRouter.post('/assistant/sessions/:id/documents', limit(20, 'docs'), gua
   // Same file checks as every other upload: name, SHA-256, size, type, and stored in this institution's folder.
   const { rows: [chk] } = await query(`select public._valid_file($1::jsonb, $2, public._cfg()) as err`, [JSON.stringify(file), me.inst]);
   if (chk.err) return fail(res, 400, chk.err, { code: 'VALIDATION' });
-  let extraction = null, error = null, message = null;
+  // Reading: Claude when configured; otherwise (or if it fails) the PDF's own text with fixed rules. Scans without AI stay unread.
+  let extraction = null, error = null, message = null, reader = null;
   const ai = aiClient();
-  if (!ai) error = 'AI_NOT_CONFIGURED';
-  else {
+  const { rows: [o] } = await query(`select content from storage.objects where bucket_id = 'institution-documents' and name = $1`, [file.storagePath]);
+  const f = ctx.record.fdr;
+  const declared = { institutionName: ctx.institution.name, pid: ctx.institution.pid, ...(f && s.workflow !== 'REPLACE_FDR' ? { fdrNumber: f.fdrNumber, bankName: f.bankName } : {}) };
+  if (ai) {
     try {
-      const { rows: [o] } = await query(`select content from storage.objects where bucket_id = 'institution-documents' and name = $1`, [file.storagePath]);
-      const f = ctx.record.fdr;
-      const declared = { institutionName: ctx.institution.name, pid: ctx.institution.pid, ...(f && s.workflow !== 'REPLACE_FDR' ? { fdrNumber: f.fdrNumber, bankName: f.bankName } : {}) };
       const client = typeof ai === 'function' ? ai({ content: o.content, docType: item.docType, declared }) : ai;
       extraction = (await analyzeDocument(client, { base64: o.content.toString('base64'), mediaType: file.mimeType }, item.docType, declared)).extraction;
+      reader = MODEL;
     } catch (e) {
       error = e instanceof RefusedError ? 'AI_DECLINED' : 'AI_UNAVAILABLE';
       message = e instanceof RefusedError ? 'the reader declined this document' : 'the reading service did not respond';
     }
+  }
+  if (!extraction) {
+    const r = await readWithoutAi(o.content, file.mimeType, item.docType, declared).catch(() => ({ error: 'UNREADABLE', message: 'the document could not be read' }));
+    if (r.extraction) { extraction = r.extraction; reader = RULES_MODEL; error = null; message = null; }
+    else if (!ai) { error = r.error === 'NO_TEXT' ? 'AI_NOT_CONFIGURED' : r.error; message = r.message; }
   }
   await query(`insert into public.assistant_documents(session_id, institution_id, doc_key, file_name, file_size_bytes, mime_type, file_hash, storage_path, page_count, extraction, extraction_error, extraction_message)
       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
@@ -261,7 +268,7 @@ assistantRouter.post('/assistant/sessions/:id/documents', limit(20, 'docs'), gua
     [s.id, me.inst, docKey, String(file.fileName).slice(0, 200), file.fileSizeBytes, file.mimeType, file.fileHash, file.storagePath, Math.max(1, +file.pageCount || 1),
       extraction ? JSON.stringify(extraction) : null, error, message]);
   await touch(s.id, 'review_opened = false, packaged_at = null', []);
-  await audit(me, 'ASSISTANT_DOCUMENT_UPLOADED', s.id, `${item.name}: ${String(file.fileName).slice(0, 80)} (SHA-256 ${String(file.fileHash).slice(0, 8)}...)${extraction ? `, read by ${MODEL}` : ', not read automatically'}.`);
+  await audit(me, 'ASSISTANT_DOCUMENT_UPLOADED', s.id, `${item.name}: ${String(file.fileName).slice(0, 80)} (SHA-256 ${String(file.fileHash).slice(0, 8)}...)${extraction ? `, read by ${reader}` : ', not read automatically'}.`);
   res.json(await view(me, s.id));
 }));
 

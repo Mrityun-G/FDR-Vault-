@@ -8,7 +8,8 @@ import { config } from './config.mjs';
 import { pool, asUser, asService, query } from './db.mjs';
 import { signPath, verifyPathSig } from './tokens.mjs';
 import { requireUser } from './auth.mjs';
-import { analyzeDocument, DOC_TYPES, MEDIA_TYPES, RefusedError } from '../supabase/functions/analyze-document/extract.ts';
+import { analyzeDocument, buildResult, DOC_TYPES, MEDIA_TYPES, RefusedError } from '../supabase/functions/analyze-document/extract.ts';
+import { readWithoutAi, RULES_MODEL } from './read-pdf.mjs';
 
 export const apiRouter = express.Router();
 const fail = (res, status, message, extra = {}) => res.status(status).json({ message, ...extra });
@@ -135,7 +136,6 @@ export const aiOverride = { client: null };
 export const aiClient = () => aiOverride.client || anthropic;
 
 apiRouter.post('/functions/analyze-document', requireUser, async (req, res) => {
-  if (!aiOverride.client && !anthropic) return fail(res, 503, 'AI service is not configured.', { code: 'AI_NOT_CONFIGURED' });
   const { storagePath = '', docType = '', mimeType = '', declared: d = {} } = req.body || {};
   const { rows: [me] } = await asUser(req.uid, c => c.query('select public.my_institution_id() as id'));
   if (!me || !me.id) return fail(res, 403, 'Only active institution accounts can analyse documents.', { code: 'FORBIDDEN' });
@@ -148,6 +148,15 @@ apiRouter.post('/functions/analyze-document', requireUser, async (req, res) => {
   const { rows: [inst] } = await query('select name, pid from public.institutions where id = $1', [me.id]);
   const declared = { institutionName: inst?.name ?? '', pid: inst?.pid ?? '', fdrNumber: d.fdrNumber, amountInr: d.amountInr, bankName: d.bankName, issueDate: d.issueDate,
     maturityDate: d.maturityDate, validTill: d.validTill, professors: d.professors, associateProfessors: d.associateProfessors, assistantProfessors: d.assistantProfessors };
+  // Without AI, text PDFs are still read: the PDF's text with fixed rules, through the same cross-checks.
+  if (!aiOverride.client && !anthropic) {
+    const r = await readWithoutAi(o.content, mimeType, docType, declared).catch(() => ({}));
+    if (!r.extraction) return fail(res, 503, 'AI service is not configured.', { code: 'AI_NOT_CONFIGURED' });
+    const result = buildResult(r.extraction, docType, declared, RULES_MODEL);
+    await query(`select public._audit(p_inst => $1, p_actor => null, p_actor_name => 'Document Reader (rules)', p_actor_role => 'SYSTEM', p_action => 'DOCUMENT_READ_BY_RULES',
+        p_target_type => 'DOCUMENT', p_target_id => $2, p_details => $3)`, [me.id, storagePath.split('/').pop(), `${docType}: ${result.status.toUpperCase()} (${RULES_MODEL}); ${result.mismatches.length} mismatch(es) with declared values.`]).catch(() => {});
+    return res.json(result);
+  }
   const ai = typeof aiOverride.client === 'function' ? aiOverride.client({ content: o.content, docType, declared }) : aiOverride.client || anthropic;
   try {
     const result = await analyzeDocument(ai, { base64: o.content.toString('base64'), mediaType: mimeType }, docType, declared);

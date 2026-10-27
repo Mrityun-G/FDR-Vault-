@@ -183,13 +183,13 @@
     const x = doc.extraction;
     if (!x) {
       checks.push('Automatic reading');
-      add('AMBER', doc.extractionError === 'AI_NOT_CONFIGURED'
+      add('AMBER', doc.extractionError === 'AI_NOT_CONFIGURED' && !doc.extractionMessage
         ? 'Automatic document reading is not available here, so the contents could not be checked.'
         : `The document could not be read automatically${doc.extractionMessage ? ` (${doc.extractionMessage})` : ''}.`,
       'Enter the values in the form yourself. The bank official or AICTE officer will check the document by hand.');
       return finish(issues, checks);
     }
-    checks.push('Document type', 'Readability');
+    checks.push(x.method === 'rules' ? 'Text read from the PDF (rules, no AI)' : 'Read by AI', 'Document type', 'Readability');
     if (x.matchesExpectedType === false) add('RED', `This looks like “${x.documentKind}”, not a ${req.name.toLowerCase()}.`, `Upload the ${req.name.toLowerCase()}.`);
     if (x.legibility === 'illegible') add('RED', 'The document is not readable.', 'Upload a clearer scan (at least 200 dpi, all pages, no glare).');
     else if (x.legibility === 'partially_legible') add('AMBER', 'Parts of the document are hard to read, so some values may be wrong.', 'Upload a clearer scan if you have one, and check the values in the form.');
@@ -253,8 +253,8 @@
       { key: 'institution', label: 'Institution', prof: 'nameWithPid', readOnly: true },
       { key: 'fdrNumber', label: 'FDR number', ext: 'fdrNumber', required: true },
       { key: 'bankName', label: 'Bank', ans: 'bankName', ext: 'bankName', required: true, kind: 'bank' },
-      { key: 'branchName', label: 'Branch', required: true },
-      { key: 'ifscCode', label: 'IFSC code', required: true },
+      { key: 'branchName', label: 'Branch', ext: 'branchName', required: true },
+      { key: 'ifscCode', label: 'IFSC code', ext: 'ifscCode', required: true },
       { key: 'amountRs', label: 'Amount (₹)', ext: 'amountInr', required: true, kind: 'amount' },
       { key: 'issueDate', label: 'Issue date', ext: 'issueDate', required: true, kind: 'date' },
       { key: 'maturityDate', label: 'Maturity date', ext: 'maturityDate', required: true, kind: 'date' },
@@ -271,8 +271,8 @@
       { key: 'currentFdr', label: 'FDR being replaced', rec: 'fdrNumber', readOnly: true },
       { key: 'fdrNumber', label: 'New FDR number', ext: 'fdrNumber', required: true },
       { key: 'bankName', label: 'Bank', ans: 'bankName', ext: 'bankName', required: true, kind: 'bank' },
-      { key: 'branchName', label: 'Branch', required: true },
-      { key: 'ifscCode', label: 'IFSC code', required: true },
+      { key: 'branchName', label: 'Branch', ext: 'branchName', required: true },
+      { key: 'ifscCode', label: 'IFSC code', ext: 'ifscCode', required: true },
       { key: 'amountRs', label: 'Amount (₹)', ext: 'amountInr', required: true, kind: 'amount' },
       { key: 'maturityDate', label: 'Maturity date', ext: 'maturityDate', required: true, kind: 'date' },
     ],
@@ -315,7 +315,7 @@
         : f.prof && prof[f.prof] ? { value: String(prof[f.prof]), source: { kind: 'profile', label: 'Your institution profile' }, confidence: 1 }
         : f.ans && ans[f.ans] ? { value: String(ans[f.ans]), source: { kind: 'answer', label: 'Your answer' }, confidence: 1 } : null;
       const distinct = [...new Set(cands.map(c => f.kind === 'amount' ? digits(c.value) : norm(c.value)))];
-      const out = { ...f, value: '', source: null, confidence: null, status: 'MISSING', note: null, conflicts: [] };
+      const out = { ...f, value: '', source: null, confidence: null, status: f.required ? 'MISSING' : 'EMPTY', note: null, conflicts: [] };
       if (base && !cands.length) Object.assign(out, base, { status: base.source.kind === 'answer' ? 'USER' : 'VERIFIED' });
       else if (cands.length) {
         Object.assign(out, cands[0], { status: distinct.length > 1 ? 'CONFLICT' : 'EXTRACTED' });
@@ -329,7 +329,7 @@
         Object.assign(out, { value: v, source: { kind: 'user', label: 'Entered by you' }, confidence: null, userCorrected: true,
           status: differs ? 'USER_DIFFERS' : 'USER', note: differs ? `You entered ${v}; the document shows ${docVal}. The reviewer will see both.` : null, conflicts: [] });
       }
-      if (out.status !== 'MISSING') out.problem = fieldProblem(out, ctx);
+      if (out.value) out.problem = fieldProblem(out, ctx);
       if (!out.value && f.required) out.status = 'MISSING';
       return out;
     });
