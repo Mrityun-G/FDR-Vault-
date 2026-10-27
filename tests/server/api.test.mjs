@@ -28,6 +28,7 @@ let GOOGLE_USER = null;
 const google = http.createServer(async (req, res) => {
   const u = new URL(req.url, 'http://x');
   if (u.pathname === '/auth') { res.writeHead(302, { location: `${API}/auth/callback?code=fake-code&state=${encodeURIComponent(u.searchParams.get('state'))}` }); return res.end(); }
+  if (GOOGLE_USER && GOOGLE_USER.tokenError) { res.writeHead(401, { 'content-type': 'application/json' }); return res.end(JSON.stringify({ error: GOOGLE_USER.tokenError, error_description: 'Unauthorized' })); }
   const b64 = o => Buffer.from(JSON.stringify(o)).toString('base64url');
   const id = b64({ iss: 'https://accounts.google.com', aud: 'test-client', exp: Math.floor(Date.now() / 1000) + 300, email_verified: true, ...GOOGLE_USER });
   res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify({ id_token: `${b64({ alg: 'RS256' })}.${id}.sig` }));
@@ -163,6 +164,11 @@ try {
   const cb2 = await call('GET', (await fetch(a2.location, { redirect: 'manual' }).then(r => r.headers.get('location'))).replace(API, ''));
   const gs2 = (await call('POST', '/auth/exchange', { body: { code: new URL(cb2.location).searchParams.get('auth_code') } })).body;
   ok((await call('GET', '/data/me', { token: gs2.access_token })).body.role === 'ADMIN', 'Google account with an existing email links to that account');
+  GOOGLE_USER = { sub: 'g-777', email: 'x@gmail.com', tokenError: 'invalid_client' };
+  const a4 = await call('GET', '/auth/authorize?provider=google&redirect_to=http://localhost:5180/officer');
+  const cb4 = new URL((await call('GET', (await fetch(a4.location, { redirect: 'manual' }).then(r => r.headers.get('location'))).replace(API, ''))).location);
+  ok(cb4.origin === 'http://localhost:5180' && /invalid_client/.test(cb4.searchParams.get('auth_error') || '') && !cb4.searchParams.get('auth_code'),
+    'wrong Google client secret: back to the portal with a reason (auth_error), not a silent return');
 
   console.log('\nAI document reading (fake model) & scheduled job');
   ok((await call('POST', '/functions/analyze-document', { token: inst.access_token, body: { storagePath: path, docType: 'FDR_CORPUS', mimeType: 'application/pdf' } })).body.code === 'AI_NOT_CONFIGURED', 'no API key: AI_NOT_CONFIGURED');

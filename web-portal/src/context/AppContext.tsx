@@ -210,6 +210,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (!cancelled) setAuthReady(true);
     });
     const { data: sub } = api.auth.onAuthStateChange((event, session) => {
+      // Returning from a failed Google sign-in: show why, on the sign-in screen.
+      if (event === 'AUTH_ERROR') { setAuthError((session as unknown as { error?: string } | null)?.error || 'Sign-in did not complete. Please try again.'); return; }
       if (event === 'SIGNED_OUT' || !session) {
         setPendingRegistration(null);
         userRef.current = GUEST;

@@ -16,7 +16,7 @@
     };
     const key = authOpts.storageKey || 'aicte-api-auth';
     const listeners = new Set();
-    let session = null, refreshing = null, refreshTimer = 0;
+    let session = null, refreshing = null, refreshTimer = 0, redirectError = null;
     try { session = JSON.parse(store.getItem(key) || 'null'); } catch (e) { session = null; }
 
     const emit = (event, s) => listeners.forEach(cb => { try { cb(event, s); } catch (e) { setTimeout(() => { throw e; }); } });
@@ -89,11 +89,15 @@
       if (authOpts.detectSessionInUrl === false || typeof location === 'undefined') return;
       const u = new URL(location.href), code = u.searchParams.get('auth_code'), type = u.searchParams.get('auth_type');
       if (!code && !u.searchParams.has('auth_error')) return;
+      const reason = u.searchParams.get('auth_error');
       ['auth_code', 'auth_type', 'auth_error'].forEach(p => u.searchParams.delete(p));
       try { history.replaceState(history.state, '', u.toString()); } catch (e) { /* ignore */ }
-      if (!code) return;
+      // A failed Google sign-in or email link comes back with a reason: report it (AUTH_ERROR) instead of silently showing the login page.
+      // Kept for listeners that subscribe later (e.g. a React app mounting after this runs).
+      const failed = msg => { redirectError = msg; setTimeout(() => emit('AUTH_ERROR', { error: msg }), 0); };
+      if (!code) { failed(reason || 'Sign-in did not complete. Please try again.'); return; }
       const r = await http('POST', '/auth/exchange', { auth: false, body: { code } });
-      if (r.error) return;
+      if (r.error) { failed(r.error.message || 'The sign-in link has expired. Please try again.'); return; }
       setSession(r.data);
       setTimeout(() => { emit('SIGNED_IN', r.data); if (type === 'recovery') emit('PASSWORD_RECOVERY', r.data); }, 0);
     })();
@@ -113,7 +117,11 @@
       },
       onAuthStateChange(cb) {
         listeners.add(cb);
-        ready.then(() => setTimeout(() => listeners.has(cb) && cb('INITIAL_SESSION', session), 0));
+        ready.then(() => setTimeout(() => {
+          if (!listeners.has(cb)) return;
+          cb('INITIAL_SESSION', session);
+          if (redirectError && !session) cb('AUTH_ERROR', { error: redirectError });
+        }, 0));
         return { data: { subscription: { unsubscribe: () => listeners.delete(cb) } } };
       },
       async signInWithPassword(p) {

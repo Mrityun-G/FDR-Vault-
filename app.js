@@ -2485,8 +2485,9 @@ Backend.onRemoteChange = () => {
   if (LIVE_ROUTES.includes(currentRoute()) && !$('#sheet').classList.contains('open') && !UI.pending) render();
   else $$('.tab-badge, .dot-badge').forEach(b => { b.textContent = unread() || ''; });
 };
-Backend.onAuthEvent = event => {
+Backend.onAuthEvent = (event, info) => {
   if (event === 'PASSWORD_RECOVERY') openSheet('Set a new password', setPwBody());
+  else if (event === 'AUTH_ERROR' && !me()) { UI.loginErr = (info && info.error) || 'Sign-in did not complete. Please try again.'; UI.loginTab = 'login'; if (currentRoute() === 'login') render(); }
   else if (event === 'SIGNED_OUT' && me() && !UI.loggingOut) sessionEnded('Your session has ended. Please sign in again.');
 };
 
