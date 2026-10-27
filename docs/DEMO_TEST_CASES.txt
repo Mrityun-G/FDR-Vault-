@@ -1,0 +1,620 @@
+===============================================================================
+ FDR VAULT (AICTE) - DEMO TEST CASES AND TEST DATA FOR ALL PORTALS
+===============================================================================
+Version : 1.0 (27-Oct-2026)
+Covers  : Institution app, Officer (Scrutiny) portal, Bank portal, Admin portal
+
+-------------------------------------------------------------------------------
+0. BEFORE YOU START
+-------------------------------------------------------------------------------
+Portals
+  Institution app : https://fdr-vault.vercel.app        (also the Android app)
+  Officer / Bank  : https://fdr-vault-sbf7.vercel.app/officer
+  Admin           : https://fdr-vault-sbf7.vercel.app/admin
+
+Demo logins (password for all: Sih@2026Demo)
+  Institution : sih_demo.institution@example.com   -> DITS Delhi, PID 1-10928371
+  Officer     : sih_demo.officer@example.com       -> Scrutiny Officer (REVIEWER)
+  Bank        : sih_demo.bank@example.com          -> Bank Official, State Bank of India
+  Admin       : sih_demo.admin@example.com         -> Administrator
+
+Demo data
+  The records named below (applications APP-..., FDRs ...-FDR-...) come from the
+  demo dataset. Load it once with:  npm run db:demo-data
+  (see README, "Demo accounts").
+
+Notes
+  * Many cases CHANGE the data (approve, endorse, decide). Each can be run once.
+    Run them in the order given; section 6 lists the order across portals.
+  * "Unique" values (FDR numbers, emails) must not exist yet. If a case was run
+    before, change the last digits (e.g. SBI-FDR-77120-2026 -> SBI-FDR-77130-2026).
+  * Uploads need real files: any PDF, JPG or PNG up to 10 MB. Use a DIFFERENT
+    file for each document (the same file twice is flagged as a duplicate).
+  * Dates are entered as DD-MM-YYYY in the date picker; written here as YYYY-MM-DD.
+  * Amounts are entered in rupees: Rs 1 Crore = 10000000, Rs 40 Lakhs = 4000000.
+
+Field rules used by every form
+  Mobile    : 10 digits starting with 6, 7, 8 or 9 (+91 prefix allowed)
+  Email     : name@domain.tld
+  Password  : 8+ characters with upper-case, lower-case, number and special character
+  IFSC      : 4 letters + 0 + 6 letters/digits, e.g. SBIN0001234 (11 characters)
+  FDR number: letters/digits, - or /, at least 6 characters, e.g. SBI-FDR-77120-2026
+  FDR tenure: maturity date at least 10 years after the issue date
+  Files     : PDF / JPG / PNG, max 10 MB each
+
+Reference: banks and IFSC prefixes accepted by the bank check
+  State Bank of India SBIN | Punjab National Bank PUNB | Canara Bank CNRB
+  HDFC Bank Ltd HDFC | Bank of Baroda BARB | ICICI Bank Ltd ICIC
+  Axis Bank Ltd UTIB | Union Bank of India UBIN
+
+
+===============================================================================
+1. INSTITUTION APP  (login: sih_demo.institution@example.com)
+===============================================================================
+
+What the demo institution already has (DITS Delhi, 1-10928371)
+  Applications
+    APP-2026-INFRA-3312   Change in Institution Details   Submitted
+    APP-2026-EOA-1082     Extension of Approval           Under Scrutiny
+    APP-2026-INTAKE-5520  Change in Program Details       Clarification Required
+    APP-2026-NEW-6204     New Programme (M.Tech VLSI)     Scrutiny Cleared
+    APP-2025-NEW-7710     New Programme (B.Tech AI & DS)  Approved
+    APP-2025-CLOSE-2207   Closure (Diploma Civil)         Rejected
+  FDRs
+    SBI-FDR-99201-2024    Rs 100 L  Active                (no request - free to test)
+    PNB-FDR-64410-2025    Rs 40 L   Active                (no request - free to test)
+    SBI-FDR-41207-2016    Rs 50 L   Expiring Soon         renewal request pending
+    PNB-FDR-30115-2016    Rs 25 L   Matured               release request pending
+    SBI-FDR-51630-2026    Rs 30 L   Under Verification    waiting for SBI lien
+    SBI-FDR-20118-2011    Rs 25 L   Lien Released
+  Required FDR corpus for DITS Delhi: Rs 100 Lakhs (10000000)
+
+-------------------------------------------------------------------------------
+1.1 LOGIN
+-------------------------------------------------------------------------------
+TC-INST-01  Login with the demo account
+  Email     : sih_demo.institution@example.com
+  Password  : Sih@2026Demo
+  Expected  : Dashboard of Delhi Institute of Technology & Science opens.
+  (Or tap "Login as Institution - DITS Delhi" below the login card.)
+
+TC-INST-02  Wrong password (negative)
+  Email     : sih_demo.institution@example.com
+  Password  : Wrong@1234
+  Expected  : "Authentication Failed" - Invalid login credentials.
+
+TC-INST-03  Empty fields (negative)
+  Email     : (blank)
+  Password  : (blank)
+  Expected  : "Please enter your registered email", "Please enter your password".
+
+-------------------------------------------------------------------------------
+1.2 REGISTER A NEW INSTITUTION  (Login screen -> Register tab)
+-------------------------------------------------------------------------------
+TC-INST-04  Register (valid)
+  Institution Name        : Rajdhani Institute of Engineering & Technology
+  PID / Application ID    : (leave blank - a new PID is allotted)
+  State                   : Delhi
+  District / City         : South West Delhi
+  Institution Type        : Unaided - Private
+  Head of Institution     : Dr. Anita Verma
+  Official Email          : test.rajdhani01@example.com     (unique)
+  Mobile Number           : 9876543210
+  Create Password         : Test@2026Pass
+  Confirm Password        : Test@2026Pass
+  Declaration checkbox    : ticked
+  Expected  : Account created and active at once; dashboard of the new
+              institution opens (or "confirm your email" if email is configured).
+  Tip       : "Fill sample institution details" fills most of these fields.
+
+TC-INST-05  Register - invalid inputs (negative; one change at a time)
+  Official Email   : rajdhani@            -> "Enter a valid official email"
+  Mobile Number    : 5123456789           -> "Enter a valid 10-digit Indian mobile number"
+  Mobile Number    : 98765                -> same message
+  Create Password  : password             -> "Use 8+ characters with upper, lower, number and special character"
+  Confirm Password : Test@2026Pas         -> "Passwords do not match"
+  Institution Name : (blank)              -> "Institution name is required"
+  District / City  : (blank)              -> "District / City is required"
+  Head             : (blank)              -> "Head of institution is required"
+  Declaration      : not ticked           -> "Please confirm the declaration"
+  PID              : 1-10928371           -> "This PID is already registered to another account"
+
+-------------------------------------------------------------------------------
+1.3 APPLICATION FORM  (Dashboard -> New Application)
+-------------------------------------------------------------------------------
+The form has 4 steps: Institution -> Program -> FDR -> Documents, then
+AI / rule check -> Review -> e-Sign -> Submit.
+
+TC-INST-06  Approval Application - New Programme (valid, all checks green)
+  Type: Approval Application
+
+  Step 1 - Institution (name, PID, region are read-only)
+    State              : Delhi
+    District / City    : North Delhi
+    Address            : Revenue Village Alipur, North Delhi, Delhi - 110036
+    Institution Type   : Unaided - Private
+    Academic Year      : 2027-28
+
+  Step 2 - Program
+    Programme Level        : Post Graduate (M.E./M.Tech)
+    Programme / Course Name: M.Tech Artificial Intelligence
+    Discipline             : Engineering & Technology
+    Proposed Intake        : 24
+    Shift                  : 1st Shift
+    Current Total Intake   : 618
+    Proposed Total Intake  : 642
+    Total Students on Rolls: 2400
+    Professors             : 14
+    Assoc. Profs           : 28
+    Asst. Profs            : 82
+    Built-up Area (sq.m)   : 24200
+    Expected live norm check: SFR 1:19.4 (ok), Professors 14 of min 13 (ok),
+      Assoc. Profs 28 of min 26 (ok), Built-up area min 13,200 (ok).
+
+  Step 3 - FDR
+    Choose "FDR on Record" -> SBI-FDR-99201-2024
+    Expected: "FDR is valid and within the required amount as per AICTE norms."
+
+  Step 4 - Documents (upload one different file for each)
+    Land Title / Registered Sale Deed            : Land_Title.pdf
+    Building Stability / Completion Certificate  : Building_NOC.pdf   Valid till 2029-03-31
+    Fire Safety NOC                              : Fire_NOC.pdf       Valid till 2028-01-09
+    FDR Certificate (Joint Lien)                 : FDR_Certificate.pdf
+    University Affiliation Letter                : Affiliation.pdf    Valid till 2028-06-30
+    State Govt / DTE NOC                         : State_NOC.pdf
+    Certified Faculty Cadre Register             : Faculty_Register.pdf
+    Optional: Bank Lien Confirmation Letter, Affidavit, Any Other Document
+    Expected: "7/7 mandatory".
+
+  Validate -> AI check -> Review -> tick the declaration -> e-Sign
+    e-Sign (Aadhaar)   : last 4 digits 1234, consent ticked, Send OTP,
+                         enter the 6-digit OTP shown on screen (simulated gateway)
+    OR e-Sign (DSC)    : token PIN 4821
+  Expected : Application submitted; a new number APP-2026-NEW-xxxx (or 2027),
+             status "Submitted", acknowledgement downloadable, notification
+             "Application Submitted Successfully".
+
+TC-INST-07  Approval Application - norms NOT met (negative, still submits)
+  Same as TC-INST-06 but Step 2:
+    Total Students on Rolls: 3120
+    Professors             : 8
+    Assoc. Profs           : 22
+    Asst. Profs            : 108
+    Built-up Area (sq.m)   : 15000
+  Expected live norm check: SFR 1:22.6 (fail), Professors 8 of min 17 (fail),
+    Assoc. Profs 22 of min 34 (warning), built-up area min 17,160 (warning).
+  Expected after submit: CRITICAL finding RULE-CADRE-RATIO-05 and the notification
+    "Rule engine flagged critical findings".
+
+TC-INST-08  Extension of Approval (EoA)
+  Type: Extension of Approval
+  Step 1   : as TC-INST-06, Academic Year 2027-28
+  Step 2   : Change since last approval: No change from previous year
+             Current 600 / Proposed 600 / Students 2400 / Prof 14 / Assoc 28 /
+             Asst 82 / Area 24200
+  Step 3   : FDR on Record -> SBI-FDR-99201-2024
+  Step 4   : 7 mandatory documents as TC-INST-06
+  Expected : Submitted as APP-....-EOA-xxxx.
+
+TC-INST-09  Change in Institution Details
+  Type: Change in Institution Details
+  Step 2   : Change Category  : Built-up Area Update
+             Details of Change: Addition of academic Block D (4,200 sq.m) completed in
+                                Sept 2026; total built-up area rises from 24,200 to
+                                28,400 sq.m. Completion certificate attached.
+             Intake fields    : Current 600 / Proposed 600 / Students 2400 / Prof 14 /
+                                Assoc 28 / Asst 82 / Area 28400
+  Step 3/4 : as TC-INST-06
+  Negative : Details of Change blank -> "Describe the requested change"
+
+TC-INST-10  Change in Program Details (intake reduction)
+  Type: Change in Program Details
+  Step 2   : Programme / Course: B.Tech Mechanical Engineering
+             Nature of Change  : Reduction in intake
+             Seats Affected    : 60
+             Current 600 / Proposed 540 / Students 2400 / Prof 14 / Assoc 28 /
+             Asst 82 / Area 24200
+  Step 3/4 : as TC-INST-06
+  Negative : Programme / Course blank -> "Programme name is required"
+
+TC-INST-11  Closure / Withdrawal
+  Type: Closure / Withdrawal
+  Step 2   : Closure Type      : Progressive closure of programme
+             Reason for Closure: Low admissions in Diploma in Electrical Engineering for
+                                 three consecutive years (below 30%). Existing students
+                                 will complete the programme by May 2028.
+             Liabilities checkbox: ticked
+             Intake fields     : Current 600 / Proposed 540 / Students 2400 / Prof 14 /
+                                 Assoc 28 / Asst 82 / Area 24200
+  Negative : Reason blank          -> "State the reason for closure"
+             Checkbox not ticked   -> "Confirmation is mandatory for closure"
+
+TC-INST-12  Application form - invalid inputs (negative; one at a time)
+  Step 1  District / City blank             -> "District / City is required"
+  Step 1  Address blank                     -> "Address is required"
+  Step 2  Professors = abc or -5            -> "Enter a valid number"
+  Step 2  Prof 0, Assoc 0, Asst 0           -> "Total faculty cannot be zero"
+  Step 2  Proposed Intake (New Programme) 0 -> "Enter the proposed programme intake"
+  Step 3  (Enter New FDR) see TC-INST-13
+  Step 4  Same file for two documents       -> duplicate document flagged by forensics
+  Step 4  File of 12 MB                     -> rejected: max 10 MB
+  Step 4  .docx or .txt file                -> rejected: only PDF, JPG, PNG
+  Step 4  Fire Safety NOC valid till 2026-12-15 (under 6 months)
+                                            -> expiry finding RULE-EXPIRY-02
+  Step 4  Only 5 of 7 mandatory documents   -> CRITICAL RULE-CHECKLIST-01 (missing list)
+  e-Sign  Aadhaar last 4 = 12a4             -> "Enter the last 4 digits of Aadhaar / VID"
+  e-Sign  consent not ticked                -> "Consent is required for Aadhaar authentication"
+  e-Sign  wrong OTP 000000                  -> "Incorrect OTP"
+  e-Sign  DSC PIN 12                        -> "Enter a numeric token PIN of at least 4 digits"
+
+TC-INST-13  Application form Step 3 - Enter New FDR
+  Valid:
+    FDR Number   : SBI-FDR-77120-2026    (unique)
+    Bank Name    : State Bank of India
+    Branch Name  : Institutional Area Branch, New Delhi
+    IFSC Code    : SBIN0001234
+    FDR Amount   : 10000000              (Rs 1 Crore)
+    Issue Date   : 2026-10-01
+    Maturity Date: 2036-10-01
+    Expected     : all FDR checks green except "Bank CBS lien endorsement"
+                   (warning: awaiting bank). After submit the FDR shows
+                   "Under Verification" until the bank endorses it.
+  Negative (one at a time):
+    FDR Number   : AB1                    -> "Enter a valid FDR / TDR number"
+    Branch Name  : (blank)                -> "Branch name is required"
+    IFSC Code    : SBIN001234             -> "IFSC must be 11 characters, e.g. SBIN0001234"
+    FDR Amount   : 0                      -> "Enter the deposit amount in Rs"
+    Issue Date   : 2027-01-15             -> "Issue date cannot be in the future"
+    Maturity Date: 2026-09-01             -> "Maturity must be after issue date"
+  Check warnings (form still continues):
+    FDR Amount 5000000                    -> amount below required corpus (fail check)
+    Maturity 2031-10-01                   -> "Tenure is 10 years" check fails
+    Bank State Bank of India + IFSC HDFC0000003 -> IFSC / bank mismatch warning
+
+-------------------------------------------------------------------------------
+1.4 ANSWER A DEFICIENCY NOTICE  (Applications -> APP-2026-INTAKE-5520 -> Respond)
+-------------------------------------------------------------------------------
+TC-INST-14  Compliance response (valid)
+  Point 1 response : Recruitment of 8 Assistant Professors (CSE) completed on
+                     05-Nov-2026 through the statutory selection committee.
+                     Appointment orders and AICTE faculty IDs attached.
+  Point 2 response : SBI has endorsed the joint lien on SBI-FDR-51630-2026.
+                     Bank lien confirmation letter attached.
+  Attachments      : Appointment_Orders_CSE.pdf, SBI_Lien_Confirmation.pdf
+  Certification    : ticked
+  Expected : Status changes to "Under Scrutiny", version v2 created, scrutiny
+             shows "Compliance response under review".
+TC-INST-15  Compliance response (negative)
+  Point 1 response : ok        -> "Response is required (at least a short sentence)"
+  Certification    : unticked  -> "Certification is required"
+
+-------------------------------------------------------------------------------
+1.5 FDR REQUESTS  (FDRs tab -> open an FDR)
+-------------------------------------------------------------------------------
+TC-INST-16  Submit a new FDR  (FDRs -> Submit New FDR)
+  FDR Number         : SBI-FDR-77121-2026    (unique)
+  Bank Name          : State Bank of India
+  Branch Name        : Institutional Area Branch, New Delhi
+  IFSC Code          : SBIN0001234
+  FDR Amount (Rs)    : 10000000
+  Issue Date         : 2026-10-15
+  Maturity Date      : 2036-10-15
+  Linked Application : APP-2026-INFRA-3312
+  FDR Advice upload  : SBI_FDR_77121_Advice.pdf
+  Expected : FDR listed as "Under Verification"; it appears in the Bank portal
+             queue for State Bank of India (TC-BANK-03).
+TC-INST-17  Submit a new FDR (negative; one at a time)
+  FDR Number    : SBI-FDR-99201-2024   -> "This FDR number is already registered"
+  FDR Number    : 12                   -> "Enter a valid FDR number"
+  IFSC Code     : 1234567890A          -> "Invalid IFSC, e.g. SBIN0001234"
+  FDR Amount    : (blank)              -> "Enter the amount"
+  Issue Date    : 2027-02-01           -> "Cannot be in the future"
+  Maturity Date : 2031-10-15           -> "Tenure must be 10 years"
+  No file       :                      -> "Upload the FDR advice"
+
+TC-INST-18  Renewal - Extension, same bank  (SBI-FDR-99201-2024 -> Renew)
+  Mode                           : Extension (same bank)
+  New Extended Maturity Date     : 2044-03-31
+  CBS Renewal Token / Txn Ref    : CBS-RENEW-SBI-2026-9901   (optional)
+  Expected : Renewal Status "RENEWAL SUBMITTED"; request waits for the Admin.
+TC-INST-19  Renewal (negative)
+  New Extended Maturity Date : 2030-01-01  -> "Must be later than the current maturity date"
+  SBI-FDR-41207-2016 (request already pending) -> no new request possible
+      ("A request for this FDR is already pending.")
+
+TC-INST-20  Replacement / Bank change  (PNB-FDR-64410-2025 -> Renew -> Replacement)
+  New FDR Number  : HDFC-FDR-12345-2026      (unique)
+  Bank Name       : HDFC Bank Ltd
+  Branch Name     : Connaught Place Branch, New Delhi
+  IFSC Code       : HDFC0000003
+  Amount (Rs)     : 4000000                  (must be at least the current Rs 40 L)
+  New Maturity    : 2036-10-31
+  Token           : (blank)
+  Expected : Renewal Status "REPLACEMENT SUBMITTED"; waits for the Admin.
+TC-INST-21  Replacement (negative; one at a time)
+  Amount (Rs)     : 3000000         -> "Must be at least Rs 4000000.00"
+  IFSC Code       : HDFC000003      -> "Invalid IFSC"
+  New FDR Number  : SBI-FDR-99201-2024 -> "This FDR number is already registered"
+  Branch Name     : (blank)         -> "Branch is required"
+
+TC-INST-22  Lien release  (PNB-FDR-30115-2016 -> Release; run after TC-ADM-05)
+  Statutory Grounds : Completion of mandatory 10-year lock-in period with zero
+                      student liabilities. Corpus now held in SBI-FDR-99201-2024.
+  Certification     : ticked
+  Expected : Release request submitted; "Placed before Regulation Bureau".
+TC-INST-23  Lien release (negative)
+  Grounds "Done" (under 10 chars) -> "State the statutory grounds"
+  Certification unticked          -> "Certification is required"
+  SBI-FDR-99201-2024 (not matured) -> release is not possible
+      ("Lien release is only possible after the 10-year lock-in matures.")
+
+-------------------------------------------------------------------------------
+1.6 PROFILE
+-------------------------------------------------------------------------------
+TC-INST-24  Institution Details -> Edit
+  Address   : Revenue Village Alipur, GT Karnal Road, North Delhi, Delhi - 110036
+  District  : North Delhi
+  State     : Delhi
+  Type      : Unaided - Private
+  Website   : www.dits-delhi.edu.in
+  Negative  : Address blank -> "Address is required"; District blank -> "District is required"
+
+TC-INST-25  Contact Person Details -> Edit
+  Head - Name        : Dr. R. K. Sharma (Demo)
+  Head - Designation : Principal
+  Head - Mobile      : 9811122233
+  Nodal - Name       : Shri Manoj Gupta
+  Nodal - Email      : nodal.dits@example.com
+  Nodal - Mobile     : 9810011223
+  Negative : Mobile 12345 -> "Enter a valid Indian mobile number";
+             Nodal Email nodal@dits -> "Invalid email"; Designation blank ->
+             "Designation is required"
+
+TC-INST-26  Change Password
+  On the demo account: any input -> "Password changes are disabled on the
+    shared demo account" (by design).
+  On the account from TC-INST-04:
+    Current : Test@2026Pass
+    New     : Test@2027Pass
+    Confirm : Test@2027Pass
+    Expected: password updated.
+  Negative: New "test1234" -> rule message; New = Current -> "New password must
+    differ from the current one"; Confirm different -> "Passwords do not match"
+
+-------------------------------------------------------------------------------
+1.7 HELPDESK TICKET  (Profile -> Grievance / Raise a Ticket)
+-------------------------------------------------------------------------------
+TC-INST-27  Raise a ticket
+  Category          : Application / Scrutiny
+  Related Reference : APP-2026-EOA-1082
+  Subject           : Clarification on Fire NOC renewal undertaking
+  Description       : The Delhi Fire Service renewal inspection is scheduled for
+                      02-Nov-2026. Please confirm whether the inspection receipt is
+                      accepted in place of the renewed NOC.
+  Expected : New ticket TKT-2026-xxxxx with status "Open".
+  Negative : Subject blank -> "Subject is required";
+             Description "help" -> "Describe the issue (min 10 characters)"
+
+TC-INST-28  View-only checks
+  Notifications : 12 alerts, including "Deficiency notice issued" (Critical)
+  Tickets       : TKT-2026-90001 (Open), TKT-2026-90002 (Resolved), TKT-2026-90003 (Open)
+  Activity log  : audit entries for the institution
+  Language      : tap the EN / Hindi button on the login screen
+
+
+===============================================================================
+2. OFFICER (SCRUTINY) PORTAL  (login: sih_demo.officer@example.com, /officer)
+===============================================================================
+Queue: 14 applications from 7 institutions.
+  Submitted      : APP-2026-INFRA-3312 (DITS), APP-2026-NEW-3307 (BCE),
+                   APP-2026-NEW-4458 (KST)
+  Under scrutiny : APP-2026-EOA-1082 (DITS), APP-2026-EOA-8830 (CIET),
+                   APP-2026-CLOSE-0915 (GTC)
+  Clarification  : APP-2026-INTAKE-5520 (DITS), APP-2026-INTAKE-4491 (BCE)
+  Cleared        : APP-2026-NEW-6204 (DITS), APP-2026-NEW-9021 (PAT)
+  Approved       : APP-2025-NEW-7710 (DITS), APP-2026-EOA-6612 (BIE)
+  Rejected       : APP-2025-CLOSE-2207 (DITS), APP-2026-INTAKE-1904 (KST)
+The officer may move: Submitted -> Under Scrutiny / Clarification;
+Under Scrutiny -> Clarification / Cleared / Rejected. Final approval is Admin only.
+
+TC-OFF-01  Login
+  Email / Password : sih_demo.officer@example.com / Sih@2026Demo
+  Expected : Reviewer desk with the 14 applications.
+
+TC-OFF-02  Start review
+  Application : APP-2026-NEW-3307 (Bangalore College of Engineering)
+  Action      : Start Review
+  Expected    : Status "Under Scrutiny".
+
+TC-OFF-03  Issue a deficiency notice (request clarification)
+  Application : APP-2026-EOA-8830 (Chennai Institute of Engineering & Technology)
+  Point 1     : FDR SBI-FDR-73315-2017 matures on 14-Feb-2027, within AY 2026-27.
+                Submit the replacement FDR receipt with joint lien.
+  Point 2     : Submit the Fire NOC renewal schedule from TNFRS.
+  Rationale   : EoA can be recommended once the security deposit is valid for the
+                whole approval year.
+  Expected    : Status "Clarification Required", notice number AICTE/.../DEF/2026/xxxx
+                issued; the institution gets a Critical notification.
+  Negative    : No points or blank rationale -> "At least one deficiency point and a
+                rationale are required."
+
+TC-OFF-04  Override a rule-engine finding
+  Application : APP-2026-NEW-3307 (after TC-OFF-02)
+  Finding     : RULE-FDR-CORPUS-07 (Warning - lien awaiting bank endorsement)
+  Rationale   : SBI branch confirmed the lien by letter dated 26-Oct-2026; CBS
+                endorsement is in process.
+  Citation    : APH 2024-27 Clause 6.2
+  Expected    : Finding shows "Overridden" with your name; audit entry FINDING_OVERRIDE.
+  Negative    : Rationale "ok" -> "A reasoned justification (at least 10 characters)
+                is mandatory."; Citation "6" -> "A handbook citation is mandatory.";
+                a PASSED finding -> "Passed checks cannot be overridden."; same
+                finding twice -> "This finding has already been overridden."
+
+TC-OFF-05  Clear scrutiny (recommend approval)
+  Application : APP-2026-CLOSE-0915 (Guwahati Technical College)
+  Decision    : Scrutiny Cleared
+  Rationale   : Teach-out plan for 41 enrolled students verified with the State
+                Board; no outstanding liabilities. Recommended for approval.
+  Expected    : Status "Scrutiny Cleared"; it now waits for the Admin.
+
+TC-OFF-06  Reject
+  Application : APP-2026-NEW-4458 (Kolkata School of Technology) - first Start Review
+  Decision    : Reject
+  Rationale   : Affiliating university consent covers only 30 seats against the
+                60 applied for.
+  Expected    : Status "Rejected"; institution notified "Application not approved".
+  Negative    : Rationale "fine" -> "A reasoned decision (rationale) is mandatory."
+
+TC-OFF-07  View-only checks
+  * Open APP-2026-INTAKE-1904: compliance response v2 and full status history.
+  * Open APP-2026-INTAKE-5520: officer note about dual faculty affiliation.
+  * Document register: documents with SHA-256, AI summaries, flagged items.
+  * FDR register: 15 FDRs; 3 SBI FDRs are awaiting lien endorsement.
+  * After TC-INST-14: APP-2026-INTAKE-5520 is back in the queue with response v2.
+
+
+===============================================================================
+3. BANK PORTAL  (login: sih_demo.bank@example.com, /officer)
+===============================================================================
+The bank official sees only State Bank of India FDRs (10 of 15).
+Awaiting joint-lien endorsement:
+  SBI-FDR-51630-2026  DITS Delhi     Rs 30 L
+  SBI-FDR-62290-2026  BCE Bangalore  Rs 50 L
+  SBI-FDR-80551-2026  KST Kolkata    Rs 25 L
+
+TC-BANK-01  Login
+  Email / Password : sih_demo.bank@example.com / Sih@2026Demo
+  Expected : Bank desk for State Bank of India with 3 FDRs awaiting endorsement.
+
+TC-BANK-02  Endorse the joint lien
+  FDR                 : SBI-FDR-51630-2026
+  CBS lien reference  : CBS-SBI-LIEN-2026-51630
+  Expected : FDR becomes "Active (Lien Secured)"; DITS Delhi gets the
+             notification "CBS Joint Lien Confirmed".
+  Repeat with         : SBI-FDR-62290-2026 -> CBS-SBI-LIEN-2026-62290
+
+TC-BANK-03  Endorse a newly submitted FDR (after TC-INST-16)
+  FDR                 : SBI-FDR-77121-2026
+  CBS lien reference  : CBS-SBI-LIEN-2026-77121
+
+TC-BANK-04  Endorse (negative)
+  CBS lien reference "ABC" (under 6 characters)
+      -> "CBS endorsement token is required."
+
+TC-BANK-05  Search and visibility
+  Search "1-14829104"   -> BCE Bangalore FDRs
+  Search "DITS"         -> DITS Delhi SBI FDRs
+  Search "PNB-FDR-64410-2025" -> not found (held with Punjab National Bank)
+
+
+===============================================================================
+4. ADMIN PORTAL  (login: sih_demo.admin@example.com, /admin)
+===============================================================================
+Pending FDR requests:
+  SBI-FDR-41207-2016  DITS Delhi  RENEWAL      new maturity 2036-12-29
+  PNB-FDR-30115-2016  DITS Delhi  RELEASE      lock-in completed
+  SBI-FDR-73315-2017  CIET Chennai REPLACEMENT -> Canara Bank CNRB-FDR-11842-2026, Rs 1.2 Cr
+Applications waiting for final approval: APP-2026-NEW-6204, APP-2026-NEW-9021
+Staff invites not yet used: demo.reviewer2@example.com, demo.pnb.official@example.com,
+  demo.principal.ciet@example.com
+
+TC-ADM-01  Login
+  Email / Password : sih_demo.admin@example.com / Sih@2026Demo
+
+TC-ADM-02  Approve an application
+  Application : APP-2026-NEW-6204 (M.Tech VLSI Design, DITS Delhi)
+  Decision    : Approve
+  Rationale   : Scrutiny Committee recommendation accepted. EoA for M.Tech VLSI
+                Design (18 seats) for AY 2026-27.
+  Expected    : Status "Approved"; EoA letter can be generated; institution notified.
+
+TC-ADM-03  Approve FDR renewal
+  Request : SBI-FDR-41207-2016 RENEWAL
+  Note    : Renewal for 10 years verified with SBI CBS.
+  Expected: Maturity 2036-12-29, Renewal Status "RENEWED"; FDR no longer
+            "Expiring Soon" in the institution app.
+
+TC-ADM-04  Approve FDR replacement
+  Request : SBI-FDR-73315-2017 REPLACEMENT
+  Note    : Canara Bank FDR verified; old lien to be discharged after endorsement.
+  Expected: FDR number becomes CNRB-FDR-11842-2026 (Canara Bank, Rs 1.2 Cr),
+            lien "Awaiting Bank CBS Endorsement".
+
+TC-ADM-05  Reject FDR release
+  Request : PNB-FDR-30115-2016 RELEASE
+  Note    : Attach the no-dues certificate from the affiliating university and
+            re-apply.
+  Expected: Request "Rejected"; institution notified; the institution can now
+            send a new release request (TC-INST-22).
+
+TC-ADM-06  Decide requests created during testing
+  After TC-INST-18 : approve SBI-FDR-99201-2024 RENEWAL  (note: Verified with SBI CBS.)
+  After TC-INST-20 : approve PNB-FDR-64410-2025 REPLACEMENT (note: HDFC FDR verified.)
+  After TC-INST-22 : approve PNB-FDR-30115-2016 RELEASE (note: Lien discharge approved.)
+                     -> FDR shows "Lien Released".
+
+TC-ADM-07  Invite staff
+  Reviewer      : Email demo.reviewer3@example.com | Role Scrutiny Officer (REVIEWER)
+                  Full name Dr. Nikhil Rao | Designation Scrutiny Officer
+  Bank official : Email demo.canara.official@example.com | Role Bank Official
+                  Full name Smt. Lakshmi Iyer | Designation Branch Manager
+                  Bank Canara Bank
+  Admin         : Email demo.admin2@example.com | Role Administrator
+                  Full name Shri Vivek Malhotra | Designation Deputy Director
+  Expected      : Invites listed; the person gets that role on first sign-in.
+  Negative      : Email "abc@"          -> "Enter a valid email address."
+                  Full name "AB"        -> "Enter the full name."
+                  Bank official, no bank-> "Bank officials need a bank name."
+
+TC-ADM-08  Invite an institution user
+  Email : demo.principal.kst@example.com
+  PID   : 1-17730264   (Kolkata School of Technology)
+  Negative: PID 1-99999999 -> "Unknown institution PID."
+
+TC-ADM-09  Disable / enable an account
+  Use the account from TC-INST-04 (test.rajdhani01@example.com):
+    Disable -> that user can no longer sign in; Enable -> works again.
+  Negative: disabling your own account -> "You cannot change your own account status."
+  Do NOT disable the four sih_demo accounts.
+
+TC-ADM-10  View-only checks
+  * Audit trail: hash-chained entries (deficiency notices, lien endorsements,
+    FDR decisions, DEMO_DATA_LOADED).
+  * Users: the 4 demo accounts plus any created in testing.
+  * Totals before testing: 7 institutions, 14 applications, 15 FDRs.
+
+
+===============================================================================
+5. STAFF SIGN-UP WITH GOOGLE  (optional)
+===============================================================================
+TC-STAFF-01  First Google sign-in on /officer or /admin asks for details once
+  Full name   : Dr. Kavita Joshi
+  Designation : Scrutiny Officer
+  Mobile      : 9822233344
+  Bank name   : (only for Bank Official) State Bank of India
+  Negative    : Mobile 12345 -> "Enter a valid 10-digit Indian mobile number";
+                Bank Official without bank -> "Bank officials need a bank name."
+  Note: while Google sign-in is in Testing mode, the Google account must be added
+  as a test user in Google Cloud.
+
+
+===============================================================================
+6. SUGGESTED END-TO-END ORDER (one FDR and one application through all portals)
+===============================================================================
+ 1. TC-INST-01  Institution logs in
+ 2. TC-INST-16  Institution submits new FDR SBI-FDR-77121-2026
+ 3. TC-BANK-03  Bank endorses its lien
+ 4. TC-INST-06  Institution submits a New Programme application
+ 5. TC-OFF-02   Officer starts review (use the new application number)
+ 6. TC-OFF-03   Officer issues a deficiency notice on it
+ 7. TC-INST-14  Institution answers (on the new application)
+ 8. TC-OFF-05   Officer clears scrutiny
+ 9. TC-ADM-02   Admin approves it
+10. TC-INST-18  Institution requests renewal of SBI-FDR-99201-2024
+11. TC-ADM-06   Admin approves the renewal
+12. TC-ADM-05 -> TC-INST-22 -> TC-ADM-06  Release of PNB-FDR-30115-2016
+13. TC-ADM-10   Check every step in the audit trail
+
+===============================================================================
+ END
+===============================================================================
