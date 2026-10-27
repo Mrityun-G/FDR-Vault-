@@ -8,6 +8,7 @@
     "serve:demo": "node tests/serve-demo.mjs",
     "server": "node server/index.mjs",
     "db:migrate": "node server/migrate.mjs",
+    "db:demo-data": "node server/migrate.mjs --demo-data",
     "seed:generate": "node supabase/scripts/generate-seed.mjs",
     "test:db": "node supabase/tests/backend.test.mjs",
     "test:server": "node tests/server/api.test.mjs",
