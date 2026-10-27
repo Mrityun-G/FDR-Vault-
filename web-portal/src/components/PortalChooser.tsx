@@ -58,7 +58,7 @@ export const PortalChooser: React.FC = () => {
   }, []);
 
   return (
-  <div className="relative min-h-screen bg-slate-950 overflow-hidden flex flex-col items-center justify-center p-6 text-white font-sans">
+  <div className="relative min-h-screen bg-slate-950 overflow-hidden flex flex-col items-center p-6 text-white font-sans">
     <video
       ref={video}
       className="pointer-events-none absolute inset-0 w-full h-full object-cover"
@@ -71,11 +71,12 @@ export const PortalChooser: React.FC = () => {
       preload="auto"
       aria-hidden="true"
     />
-    {/* Darkens the video so the heading stays readable. */}
-    <div className="pointer-events-none absolute inset-0 bg-linear-to-b from-slate-950/75 via-slate-950/45 to-slate-950/75" aria-hidden="true" />
+    {/* Darkens only the top (heading) and bottom (portals); the middle of the video stays clear. */}
+    <div className="pointer-events-none absolute inset-0 bg-linear-to-b from-slate-950/80 via-slate-950/10 to-slate-950/85" aria-hidden="true" />
 
-    <motion.div variants={stagger} initial="hidden" animate="show" className="relative w-full max-w-5xl space-y-8">
-      <motion.header variants={rise} className="text-center space-y-3">
+    {/* Heading at the top, the three portals at the bottom: the video plays in between. */}
+    <motion.div variants={stagger} initial="hidden" animate="show" className="relative w-full max-w-5xl flex-1 flex flex-col justify-between gap-10 py-4 sm:py-8">
+      <motion.header variants={rise} className="text-center space-y-3 drop-shadow-[0_2px_8px_rgba(2,6,23,0.6)]">
         <div className="inline-flex items-center gap-3 bg-white/10 ring-1 ring-white/20 rounded-2xl px-4 py-2">
           <AicteLogo size={40} className="w-10 h-10" />
           <div className="text-left">
@@ -90,7 +91,8 @@ export const PortalChooser: React.FC = () => {
         <p className="text-sm text-indigo-100">One live record, three doors. Choose yours.</p>
       </motion.header>
 
-      <div className="grid gap-5 md:grid-cols-3">
+      {/* Frosted-glass cards of equal height: the video shows through, and every card lines up the same way. */}
+      <div className="grid gap-4 md:grid-cols-3 items-stretch">
         {cards.map(c => {
           const Icon = c.icon;
           return (
@@ -99,16 +101,20 @@ export const PortalChooser: React.FC = () => {
               href={c.href}
               variants={rise}
               whileHover={{ y: -6 }}
-              className="group relative bg-white text-slate-900 rounded-3xl p-6 shadow-2xl shadow-indigo-950/40 overflow-hidden"
+              className="group relative h-full flex flex-col rounded-2xl p-5 bg-white/10 backdrop-blur-md ring-1 ring-white/25 shadow-xl shadow-slate-950/30 overflow-hidden transition-colors hover:bg-white/20"
             >
-              <div className={`absolute inset-x-0 top-0 h-1.5 bg-linear-to-r ${c.grad}`} />
-              <span className={`w-12 h-12 rounded-2xl bg-linear-to-br ${c.grad} text-white flex items-center justify-center shadow-lg`}>
-                <Icon className="w-6 h-6" />
-              </span>
-              <h2 className="mt-4 text-lg font-extrabold">{c.title}</h2>
-              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{c.who}</p>
-              <p className="mt-2 text-xs text-slate-600 leading-relaxed">{c.text}</p>
-              <p className="mt-4 text-xs font-bold text-indigo-700 flex items-center gap-1">
+              <div className={`absolute inset-x-0 top-0 h-1 bg-linear-to-r ${c.grad}`} />
+              <div className="flex items-center gap-3">
+                <span className={`shrink-0 w-11 h-11 rounded-xl bg-linear-to-br ${c.grad} text-white flex items-center justify-center shadow-lg`}>
+                  <Icon className="w-5 h-5" />
+                </span>
+                <div className="min-w-0">
+                  <h2 className="text-base font-extrabold leading-tight">{c.title}</h2>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-white/70 truncate">{c.who}</p>
+                </div>
+              </div>
+              <p className="mt-3 text-xs text-white/85 leading-relaxed">{c.text}</p>
+              <p className="mt-auto pt-4 text-xs font-bold text-white flex items-center gap-1">
                 <span className="font-mono truncate">{c.path}</span>
                 <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
               </p>
