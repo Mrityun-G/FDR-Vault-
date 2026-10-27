@@ -115,6 +115,23 @@ Set `ANTHROPIC_API_KEY` on the server to turn it on. The result is **advisory**;
 Server-side refusal fallback is enabled (`fallbacks: "default"`). Without a key the app says so and shows the on-device
 preview instead; submission is never blocked.
 
+### AI Regulatory Assistant (institution app)
+Dashboard → **AI Regulatory Assistant** guides an institution through one FDR request: a new FDR, renewal, replacement,
+lien release, a correction of FDR details, or a reply to a deficiency notice. It asks only what it needs (profile data is
+reused), shows where the request goes in this portal, builds a document checklist with the **source** of each item, checks
+every upload (GREEN / AMBER / RED, with how to fix each issue), fills the form from the documents with the page and line
+each value came from, and submits through the portal's existing functions only after the user confirms. Requests the portal
+cannot submit are packaged as **Ready for submission** and never marked submitted.
+
+- Rules: [`assistant-rules.js`](assistant-rules.js) (shared by the server and demo mode). API: [`server/assistant.mjs`](server/assistant.mjs) (`/assistant/*`).
+- Sources and requirements live in the database and are maintained in the staff portal (Admin → **Regulatory Sources**).
+  Only *Verified* and *Portal rule* requirements can block a submission; *Unverified* ones are shown for human confirmation.
+  The default catalog marks the AICTE handbook as **Unverified**: an administrator must add the section and excerpt to verify it.
+- Document reading uses the same `ANTHROPIC_API_KEY` as above. Without it, uploads are AMBER (manual review) and the user types
+  the values; nothing is guessed. Free-text requests are classified by keywords when AI is off.
+- No new environment variables. The migration `20261027000000_regulatory_assistant.sql` is applied by `npm run db:migrate`
+  (and by the Render start command on the next deploy).
+
 ### Moving from the previous Supabase project
 The schema files in `supabase/migrations/` are unchanged and run as-is on standalone PostgreSQL, between
 [`server/db/000_platform.sql`](server/db/000_platform.sql) (roles, `auth.users` + `auth.uid()`, document storage tables) and
@@ -246,9 +263,12 @@ npm install                  # includes dev tools: PGlite, embedded-postgres (a 
 npm run test:db              # 96 checks — all migrations + seed in embedded Postgres under RLS (incl. Google sign-in, staff portal roles)
 npm run test:server          # 51 checks — real PostgreSQL + the API over HTTP: auth (password, confirmation, OTP, reset, refresh, logout, Google),
                              #   RPC permissions, RLS, storage, live updates, AI function, scheduled job
+npm run test:assistant       # 59 checks — Regulatory Assistant: new FDR end to end, missing / conflicting documents, unverified
+                             #   requirements, other institutions, no submission channel, renewal, compliance reply
 npm run test:ai              # 17 checks — AI document reader with a fake Claude client (no cost)
 npm run serve:demo           # (terminal 1) serves the app in demo mode (empty API_URL) for the browser tests, then:
 npm run test:e2e:demo        # full institution walkthrough in demo mode
+npm run test:e2e:assistant   # assistant in the browser (demo mode): chat, checklist, uploads, form, review, submit
 npm run test:e2e:onboarding  # layout at 320–430 px widths, slideshow motion, skip/next, legal links, fallbacks
 npm run e2e:server           # (terminal 2) real PostgreSQL + the real API server + the app on :8790 — TEST ONLY
 npm run test:e2e:server      # app against that server: auth, RLS, uploads, AI reading, validation, idempotency, workflow, expiry
@@ -267,9 +287,10 @@ Set `EDGE_PATH` if Microsoft Edge is installed elsewhere, and `BLOCK_WEBFONTS=1`
 | `backend.js` | Backend layer: the API server (auth, RPC, storage, live updates) or the on-device demo store |
 | `api-client.js` | Browser client for the API server (shared with the staff portal as `web-portal/src/lib/api-client.js`; `npm run sync:api-client`) |
 | `app.js` | Screens, router, rule engine (client preview), forms and flows |
+| `assistant.js`, `assistant-rules.js` | AI Regulatory Assistant screens and its shared rules (checklist, validation, form mapping) |
 | `data.js` | Demo dataset (from the web prototype) |
 | `i18n.js` | English / हिन्दी interface |
-| `server/` | API server: `index.mjs` (start), `app.mjs`, `auth.mjs`, `api.mjs`, `db.mjs`, `migrate.mjs`, `db/*.sql` (platform layer) |
+| `server/` | API server: `index.mjs` (start), `app.mjs`, `auth.mjs`, `api.mjs`, `assistant.mjs`, `db.mjs`, `migrate.mjs`, `db/*.sql` (platform layer) |
 | `.env.example`, `render.yaml` | Server configuration template and Render deployment |
 | `supabase/functions/analyze-document/extract.ts` | Claude document reading + cross-checks, used by the API server (with its unit test) |
 | `android/`, `capacitor.config.json`, `scripts/build-www.mjs`, `dist/` | Android app project and the built APK |

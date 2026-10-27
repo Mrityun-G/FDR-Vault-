@@ -973,6 +973,49 @@ body { font-family: 'Public Sans', -apple-system, 'Segoe UI', Roboto, Helvetica,
   .fv-refresh.spinning .ic { animation: none !important; opacity: .5; }
 }
 
+/* ---------- Regulatory Assistant (assistant.js) ---------- */
+.as-entry { width: 100%; text-align: left; gap: 12px; margin: 14px 0 0; border: 1px solid var(--blue2); }
+.as-hero .h3 { margin: 0; }
+.as-item { width: 100%; text-align: left; gap: 10px; margin-top: 10px; }
+.as-top { padding: 10px 16px; background: var(--surface); border-bottom: 1px solid var(--line); }
+.as-top .seg button { font-size: 12px; }
+.as-top .seg button.as-done { color: var(--green); }
+.as-thread { display: flex; flex-direction: column; gap: 10px; padding-bottom: 8px; }
+.as-msg { display: flex; gap: 8px; align-items: flex-start; max-width: 100%; }
+.as-msg.me { justify-content: flex-end; }
+.as-av { flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--navy); color: #F5B82E; }
+.as-b { padding: 10px 12px; border-radius: 14px; font-size: 13.5px; line-height: 1.5; max-width: 86%; overflow-wrap: anywhere; }
+.as-msg.bot .as-b { background: var(--surface); border: 1px solid var(--line); border-top-left-radius: 4px; }
+.as-msg.me .as-b { background: var(--navy); color: #fff; border-top-right-radius: 4px; }
+.as-chips { display: flex; flex-wrap: wrap; gap: 8px; padding-left: 36px; }
+.as-chip { border: 1px solid var(--blue2); background: var(--surface); color: var(--blue2); border-radius: 999px; padding: 8px 12px; font-size: 12.5px; font-weight: 600; text-align: left; }
+.as-chip.on { background: var(--blue2); color: #fff; }
+.as-chip.as-wide { border-radius: 12px; width: 100%; display: flex; flex-direction: column; gap: 2px; }
+.as-chip small { font-weight: 500; opacity: .8; }
+.as-ul { margin: 6px 0 8px; padding-left: 18px; }
+.as-ul li { margin: 3px 0; }
+.as-bar { height: 8px; border-radius: 999px; background: var(--line); overflow: hidden; }
+.as-bar i { display: block; height: 100%; background: var(--green); transition: width .3s; }
+.as-doc { border-left: 4px solid var(--line); transition: box-shadow .15s; }
+.as-doc.v-green { border-left-color: var(--green); }
+.as-doc.v-amber { border-left-color: var(--amber); }
+.as-doc.v-red { border-left-color: var(--red); }
+.as-doc.as-drag { box-shadow: 0 0 0 3px rgba(11, 58, 112, .35); }
+.as-off { opacity: .7; }
+.as-src summary, .as-doc details summary { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.as-issue { margin-top: 6px; padding: 8px 10px; border-radius: 8px; font-size: 12.5px; }
+.as-issue.red { background: var(--red-bg); border: 1px solid var(--red-line); }
+.as-issue.amber { background: var(--amber-bg); border: 1px solid var(--amber-line); }
+.as-issue div { margin-top: 2px; }
+.as-field.bad { border-color: var(--red-line); }
+.as-field .field { margin: 6px 0 4px; }
+.as-field .field label:empty { display: none; }
+.as-val { margin: 6px 0 4px; font-weight: 600; overflow-wrap: anywhere; }
+.as-quote { margin-top: 4px; padding-left: 8px; border-left: 3px solid var(--line); font-style: italic; color: var(--muted); }
+.as-done-card { border: 1px solid var(--green-line); background: var(--green-bg); }
+.footer-bar #asstAsk { flex: 1; min-width: 0; }
+.footer-bar [data-act="asstAsk"] { flex: 0 0 52px; }
+.as-top .seg button { display: inline-flex; align-items: center; justify-content: center; gap: 3px; white-space: nowrap; }
 /* Google profile photo inside the round avatar */
 .avatar { overflow: hidden; }
 .avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }

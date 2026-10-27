@@ -1,7 +1,7 @@
 // Offline support for the app shell. Network-first (so updates and config.js changes apply immediately),
 // falling back to the cache when offline. API, auth and storage traffic to the API server is never cached.
-const CACHE = 'aicte-inst-v19';
-const SHELL = ['./', './index.html', './styles.css', './config.js', './data.js', './backend.js', './api-client.js', './i18n.js', './app.js', './guide.js', './manifest.webmanifest',
+const CACHE = 'aicte-inst-v20';
+const SHELL = ['./', './index.html', './styles.css', './config.js', './data.js', './backend.js', './api-client.js', './i18n.js', './app.js', './assistant-rules.js', './assistant.js', './guide.js', './manifest.webmanifest',
   './emblem.png', './fdr-vault-logo.png', './fdr-vault-mark.png', './delhi.webp', './mumbai.webp', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {

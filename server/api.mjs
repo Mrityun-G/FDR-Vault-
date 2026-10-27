@@ -131,6 +131,8 @@ apiRouter.get('/storage/signed/:bucket/*path', async (req, res) => {
 const anthropic = config.anthropicApiKey ? new Anthropic({ apiKey: config.anthropicApiKey }) : null;
 // Test hook: a fake Anthropic client, or a function ({ content, docType, declared }) returning one. Never set in production.
 export const aiOverride = { client: null };
+// The document reader for this server: the test override, the configured Claude client, or null when AI is off.
+export const aiClient = () => aiOverride.client || anthropic;
 
 apiRouter.post('/functions/analyze-document', requireUser, async (req, res) => {
   if (!aiOverride.client && !anthropic) return fail(res, 503, 'AI service is not configured.', { code: 'AI_NOT_CONFIGURED' });

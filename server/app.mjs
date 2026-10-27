@@ -5,6 +5,7 @@ import cors from 'cors';
 import { config } from './config.mjs';
 import { authRouter, authenticate } from './auth.mjs';
 import { apiRouter, health } from './api.mjs';
+import { assistantRouter } from './assistant.mjs';
 
 export function createApp() {
   const app = express();
@@ -23,6 +24,7 @@ export function createApp() {
   app.use(authenticate);
   app.use('/auth', authRouter);
   app.use(apiRouter);
+  app.use(assistantRouter);
   app.use((req, res) => res.status(404).json({ message: 'Not found' }));
   // eslint-disable-next-line no-unused-vars
   app.use((err, req, res, next) => {

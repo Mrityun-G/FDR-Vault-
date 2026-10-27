@@ -54,6 +54,7 @@ function countPdfPages(buf) {
 
 /* ============================== icons ============================== */
 const P = {
+  spark: '<path d="M12 3l1.8 4.6L18.5 9l-4.7 1.6L12 15l-1.8-4.4L5.5 9l4.7-1.4z"/><path d="M19 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/>',
   home: '<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M10 21v-6h4v6"/>',
   file: '<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/>',
   files: '<path d="M15 2H8a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7z"/><path d="M15 2v5h5"/><path d="M4 7v13a2 2 0 0 0 2 2h9"/>',
@@ -1136,6 +1137,7 @@ V.dashboard = () => {
         ${tile('Clarification Required', cnt(['DEFICIENCIES_NOTED']), 'alert', 'red', 'CLARIFICATION')}
         ${tile('Approved / Cleared', cnt(['SCRUTINY_CLEARED', 'APPROVED']), 'checkCircle', 'green', 'APPROVED')}
       </div>
+      <button class="card row as-entry" data-go="assistant"><span class="tile-ico tone-blue">${ic('spark', 20)}</span><span class="grow"><b class="small">AI Regulatory Assistant</b><small class="xs muted" style="display:block">New FDR, renewal, release or a deficiency reply: guided step by step, with document checks.</small></span>${ic('chev', 18)}</button>
       <h2 class="fv-h">Quick Actions</h2>
       <div class="fv-qa">
         <button data-go="apptype"><span class="fv-qa-i">${ic('filePlus', 22)}</span>New Application</button>
