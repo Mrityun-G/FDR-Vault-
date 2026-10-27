@@ -1,3 +1,8 @@
+$env:DATABASE_URL = ""
+node "C:\Users\MRITYU~1\AppData\Local\Temp\claude\c--Users-Mrityunjai-OneDrive-Desktop-FDR-Mrityun\672f2330-ef5a-4c86-9348-66a202e6fd48\scratchpad\check-db.mjs"
+
+
+
 # AICTE Institution Portal — Mobile App (PWA) + Node.js / PostgreSQL backend
 Government Application
 This is the mobile version of the **Institution (Applicant) portal** of the
