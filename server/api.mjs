@@ -9,7 +9,7 @@ import { pool, asUser, asService, query } from './db.mjs';
 import { signPath, verifyPathSig } from './tokens.mjs';
 import { requireUser } from './auth.mjs';
 import { analyzeDocument, buildResult, DOC_TYPES, MEDIA_TYPES, RefusedError } from '../supabase/functions/analyze-document/extract.ts';
-import { readWithoutAi, RULES_MODEL } from './read-pdf.mjs';
+import { readWithoutAi, readerName } from './read-pdf.mjs';
 
 export const apiRouter = express.Router();
 const fail = (res, status, message, extra = {}) => res.status(status).json({ message, ...extra });
@@ -152,9 +152,9 @@ apiRouter.post('/functions/analyze-document', requireUser, async (req, res) => {
   if (!aiOverride.client && !anthropic) {
     const r = await readWithoutAi(o.content, mimeType, docType, declared).catch(() => ({}));
     if (!r.extraction) return fail(res, 503, 'AI service is not configured.', { code: 'AI_NOT_CONFIGURED' });
-    const result = buildResult(r.extraction, docType, declared, RULES_MODEL);
+    const result = buildResult(r.extraction, docType, declared, readerName(r.extraction));
     await query(`select public._audit(p_inst => $1, p_actor => null, p_actor_name => 'Document Reader (rules)', p_actor_role => 'SYSTEM', p_action => 'DOCUMENT_READ_BY_RULES',
-        p_target_type => 'DOCUMENT', p_target_id => $2, p_details => $3)`, [me.id, storagePath.split('/').pop(), `${docType}: ${result.status.toUpperCase()} (${RULES_MODEL}); ${result.mismatches.length} mismatch(es) with declared values.`]).catch(() => {});
+        p_target_type => 'DOCUMENT', p_target_id => $2, p_details => $3)`, [me.id, storagePath.split('/').pop(), `${docType}: ${result.status.toUpperCase()} (${readerName(r.extraction)}); ${result.mismatches.length} mismatch(es) with declared values.`]).catch(() => {});
     return res.json(result);
   }
   const ai = typeof aiOverride.client === 'function' ? aiOverride.client({ content: o.content, docType, declared }) : aiOverride.client || anthropic;

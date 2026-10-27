@@ -41,12 +41,14 @@
     "@capacitor/core": "^6.2.2",
     "@capacitor/filesystem": "^6.0.4",
     "@capacitor/share": "^6.0.4",
+    "@tesseract.js-data/eng": "^1.0.0",
     "cors": "2.8.5",
     "express": "5.2.1",
     "helmet": "8.2.0",
     "nodemailer": "10.0.16",
     "pdfjs-dist": "^4.10.38",
-    "pg": "8.23.0"
+    "pg": "8.23.0",
+    "tesseract.js": "^5.1.1"
   },
   "type": "module",
   "engines": {

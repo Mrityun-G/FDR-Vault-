@@ -3,6 +3,7 @@
 // E access by another institution, F no submission channel, plus renewal, compliance reply and no-AI fallback.
 // Usage: npm run test:assistant
 import crypto from 'node:crypto';
+import fs from 'node:fs';
 import { startPostgres } from './embedded-pg.mjs';
 import { makePdf, adviceLines } from './make-pdf.mjs';
 
@@ -46,11 +47,11 @@ const extraction = o => ({ documentKind: 'Fixed deposit advice', matchesExpected
   maturityDate: '', facultyProfessors: '', facultyAssociate: '', facultyAssistant: '', keyFields: [], anomalies: [], summary: 'Deposit advice.', confidence: 0.92, ...o });
 const fake = () => ({ beta: { messages: { create: async () => ({ model: 'claude-opus-5-5', stop_reason: 'end_turn', stop_details: null, content: [{ type: 'text', text: JSON.stringify(reading) }] }) } } });
 
-async function upload(token, inst, name, bytes = `%PDF-1.4 ${name} ${Math.random()}`) {
+async function upload(token, inst, name, bytes = `%PDF-1.4 ${name} ${Math.random()}`, mime = 'application/pdf') {
   const path = `${inst}/${crypto.randomUUID()}/${name}`, buf = Buffer.isBuffer(bytes) ? bytes : Buffer.from(bytes);
-  const r = await call('POST', `/storage/object/institution-documents/${path}`, { token, raw: buf, type: 'application/pdf' });
+  const r = await call('POST', `/storage/object/institution-documents/${path}`, { token, raw: buf, type: mime });
   if (r.status !== 200) throw new Error(`upload ${r.status}`);
-  return { fileName: name, fileSizeBytes: buf.length, mimeType: 'application/pdf', fileHash: crypto.createHash('sha256').update(buf).digest('hex'), storagePath: path, pageCount: 1 };
+  return { fileName: name, fileSizeBytes: buf.length, mimeType: mime, fileHash: crypto.createHash('sha256').update(buf).digest('hex'), storagePath: path, pageCount: 1 };
 }
 const start = async (token, workflow) => (await call('POST', '/assistant/sessions', { token, body: workflow ? { workflow } : {} })).body;
 const answer = async (token, id, key, value) => (await call('POST', `/assistant/sessions/${id}/answer`, { token, body: { key, value } })).body;
@@ -102,6 +103,11 @@ try {
   ok(rv.status === 'GREEN' && rv.checks.some(c => /rules, no AI/.test(c)), `text PDF advice read without AI: ${rv.status} (${rv.checks[2]})`);
   ok(field(a, 'fdrNumber').value === 'SBI-FDR-55500-2026' && field(a, 'amountRs').value === '10000000' && field(a, 'maturityDate').value === '2036-10-01'
     && field(a, 'fdrNumber').source.page === 1 && /FDR No\./.test(field(a, 'fdrNumber').source.line), 'form filled from the PDF text, with page and source line');
+  const photo = await upload(dits, ditsId, 'advice-photo.jpg', fs.readFileSync(new URL('../fixtures/fdr-advice-photo.jpg', import.meta.url)), 'image/jpeg');
+  a = (await attach(dits, a.id, 'FDR_ADVICE', photo)).body;
+  const pv = item(a, 'FDR_ADVICE').validation;
+  ok(pv.status === 'GREEN' && pv.checks.some(c => /OCR \(Tesseract, no AI\)/.test(c)) && field(a, 'fdrNumber').value === 'SBI-FDR-71234-2026',
+    `photo of the advice read by free OCR: ${pv.status}, FDR ${field(a, 'fdrNumber').value}`);
 
   aiOverride.client = fake;
   reading = extraction({ fdrNumber: 'SBI-FDR-55501-2026', amountInr: '10000000', issueDate: '2026-10-01', maturityDate: '2036-10-01', lienHolder: 'Regional Officer, Northern Regional Office, AICTE',

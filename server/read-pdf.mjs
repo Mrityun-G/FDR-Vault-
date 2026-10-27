@@ -3,8 +3,10 @@
 // cross-checks and validation apply. Only what is written in the document is returned; anything not found is "".
 // Scanned PDFs (no text layer) and images return null: they need the AI reader or a person.
 import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
+import { OCR_ENABLED, ocrPages, pdfPageJpegs } from './ocr.mjs';
 
 export const RULES_MODEL = 'rules (PDF text)';
+export const readerName = x => (x && x.method === 'ocr' ? 'OCR (Tesseract)' : RULES_MODEL);
 
 /** Text lines per page: [{ page, text }]. null when the PDF cannot be opened (damaged or password-protected). */
 export async function pdfLines(buffer, maxPages = 20) {
@@ -88,9 +90,11 @@ export function parseLines(lines, docType, declared = {}) {
   const referenceNumber = find(/\b(cbs\s*(ref(erence)?|token)|ref(erence)?\s*no\.?|transaction\s*ref)\b/i, word, 'Reference number');
   // IFSC (bank code + 0 + branch code) and the branch named on the same line, e.g. "Institutional Area Branch, New Delhi  IFSC: SBIN0001234".
   let ifscCode = '', branchName = '';
-  const ifscLine = lines.find(l => /\b[A-Z]{4}0[A-Z0-9]{6}\b/.test(l.text));
+  // After an "IFSC" label, OCR's letter O for the fifth character (always the digit 0) is corrected; elsewhere only an exact code counts.
+  const ifscOf = text => { const m = /\b([A-Z]{4}0[A-Z0-9]{6})\b/.exec(text) || (/IFSC/i.test(text) && /IFSC\W*([A-Z]{4})[0O]([A-Z0-9]{6})\b/i.exec(text)); return m ? (m[2] ? `${m[1]}0${m[2]}` : m[1]).toUpperCase() : ''; };
+  const ifscLine = lines.find(l => ifscOf(l.text));
   if (ifscLine) {
-    ifscCode = /\b([A-Z]{4}0[A-Z0-9]{6})\b/.exec(ifscLine.text)[1];
+    ifscCode = ifscOf(ifscLine.text);
     keyFields.push({ label: 'IFSC', value: ifscCode, page: ifscLine.page, sourceLine: ifscLine.text });
   }
   const br = lines.map(l => ({ l, m: /([A-Z][A-Za-z.&() -]*\bBranch\b(?:,\s*[A-Z][A-Za-z .]+?)?)(?=\s{2,}|\s+IFSC|$)/.exec(l.text) })).find(x => x.m);
@@ -118,11 +122,29 @@ export function parseLines(lines, docType, declared = {}) {
   };
 }
 
+// OCR text is less certain: below 70% confidence the document counts as partly legible (AMBER), never silently GREEN.
+async function readByOcr(images, docType, declared) {
+  let r;
+  try { r = await ocrPages(images); }
+  catch { return { error: 'UNREADABLE', message: 'the image could not be read; it may be damaged. Upload it again or take a new photo' }; }
+  if (!r) return { error: 'NO_TEXT', message: 'no readable text was recognised; upload a clearer, straight, well-lit scan' };
+  const x = parseLines(r.lines, docType, declared);
+  return { extraction: { ...x, method: 'ocr', confidence: Math.round(r.confidence) / 100, legibility: r.confidence < 70 ? 'partially_legible' : 'clear',
+    summary: `Read from the image with OCR (Tesseract, no AI), ${Math.round(r.confidence)}% confidence: ${x.keyFields.length} field(s) found.` } };
+}
+
 /** Reads a stored document without AI. Returns { extraction } or { error, message } explaining why it could not be read. */
 export async function readWithoutAi(buffer, mimeType, docType, declared) {
-  if (mimeType !== 'application/pdf') return { error: 'NO_TEXT', message: 'photos and scans need the AI reader' };
+  if (mimeType === 'image/jpeg' || mimeType === 'image/png') {
+    if (!OCR_ENABLED) return { error: 'NO_TEXT', message: 'photos and scans need the AI reader' };
+    return readByOcr([buffer], docType, declared);
+  }
+  if (mimeType !== 'application/pdf') return { error: 'UNREADABLE', message: 'unsupported file type' };
   const lines = await pdfLines(buffer);
   if (!lines) return { error: 'UNREADABLE', message: 'the PDF could not be opened; it may be damaged or password-protected' };
-  if (lines.map(l => l.text).join('').replace(/\s/g, '').length < 40) return { error: 'NO_TEXT', message: 'this PDF is a scan with no text layer; scans need the AI reader' };
-  return { extraction: parseLines(lines, docType, declared) };
+  if (lines.map(l => l.text).join('').replace(/\s/g, '').length >= 40) return { extraction: parseLines(lines, docType, declared) };
+  // A scan: read its page images with OCR.
+  const pages = OCR_ENABLED ? pdfPageJpegs(buffer) : [];
+  if (!pages.length) return { error: 'NO_TEXT', message: 'this PDF is a scan whose pages could not be extracted for OCR; scans like this need the AI reader' };
+  return readByOcr(pages, docType, declared);
 }
