@@ -159,11 +159,17 @@ try {
   const gs = (await call('POST', '/auth/exchange', { body: { code: gb.searchParams.get('auth_code') } })).body;
   const gp = (await call('GET', '/data/me', { token: gs.access_token })).body;
   ok(gp && gp.needs_registration === true, 'new Google account is asked for registration details once (needs_registration)');
-  GOOGLE_USER = { sub: 'g-999', email: 'sih_demo.admin@example.com', name: 'Admin' };
+  GOOGLE_USER = { sub: 'g-999', email: 'sih_demo.admin@example.com', name: 'Admin', picture: 'https://lh3.googleusercontent.com/a/admin-photo=s96-c' };
   const a2 = await call('GET', '/auth/authorize?provider=google&redirect_to=http://localhost:5180/admin');
   const cb2 = await call('GET', (await fetch(a2.location, { redirect: 'manual' }).then(r => r.headers.get('location'))).replace(API, ''));
   const gs2 = (await call('POST', '/auth/exchange', { body: { code: new URL(cb2.location).searchParams.get('auth_code') } })).body;
   ok((await call('GET', '/data/me', { token: gs2.access_token })).body.role === 'ADMIN', 'Google account with an existing email links to that account');
+  ok(gs2.user.user_metadata.avatar_url === 'https://lh3.googleusercontent.com/a/admin-photo=s96-c', 'Google profile photo saved for an existing account (shown as its avatar)');
+  GOOGLE_USER = { ...GOOGLE_USER, picture: 'https://evil.example.com/x.png' };
+  const a3 = await call('GET', '/auth/authorize?provider=google&redirect_to=http://localhost:5180/admin');
+  const cb3 = await call('GET', (await fetch(a3.location, { redirect: 'manual' }).then(r => r.headers.get('location'))).replace(API, ''));
+  const gs3 = (await call('POST', '/auth/exchange', { body: { code: new URL(cb3.location).searchParams.get('auth_code') } })).body;
+  ok(gs3.user.user_metadata.avatar_url === 'https://lh3.googleusercontent.com/a/admin-photo=s96-c', "a picture from any other host is ignored");
   GOOGLE_USER = { sub: 'g-777', email: 'x@gmail.com', tokenError: 'invalid_client' };
   const a4 = await call('GET', '/auth/authorize?provider=google&redirect_to=http://localhost:5180/officer');
   const cb4 = new URL((await call('GET', (await fetch(a4.location, { redirect: 'manual' }).then(r => r.headers.get('location'))).replace(API, ''))).location);

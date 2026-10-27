@@ -226,6 +226,9 @@ authRouter.get('/callback', async (req, res) => {
         [email, { full_name: id.name || '', name: id.name || '', avatar_url: id.picture || '', email, provider: 'google' }])).rows[0];
       await query(`insert into auth.identities(provider, provider_id, user_id, email) values ('google', $1, $2, $3) on conflict do nothing`, [id.sub, user.id, email]);
     }
+    // Keep the Google profile photo current; the apps show it as the account picture. Only Google's own image host is accepted.
+    if (/^https:\/\/[a-z0-9-]+\.googleusercontent\.com\//.test(id.picture || ''))
+      await query(`update auth.users set raw_user_meta_data = coalesce(raw_user_meta_data, '{}'::jsonb) || jsonb_build_object('avatar_url', $2::text) where id = $1`, [user.id, id.picture]);
     const code = await newOneTimeToken(user.id, 'auth_code', 5);
     res.redirect(withParams(st.back, { auth_code: code, auth_type: 'signin' }));
   } catch (e) {

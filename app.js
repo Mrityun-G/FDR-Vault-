@@ -24,6 +24,8 @@ const rand = (a, b) => Math.floor(a + Math.random() * (b - a + 1));
 const hex = n => [...crypto.getRandomValues(new Uint8Array(n))].map(b => b.toString(16).padStart(2, '0')).join('');
 const uid = p => `${p}-${Date.now().toString(36)}${hex(2)}`;
 const initials = n => n.split(' ').filter(w => !/^(Dr|Prof|Shri|Smt|Mr|Ms)\.?$/i.test(w) && /^[A-Za-z]/.test(w)).map(w => w[0].toUpperCase()).slice(0, 2).join('');
+// Account picture: the Google profile photo when there is one, otherwise the initials (also if the photo fails to load).
+const avatar = (u, cls = '') => `<span class="avatar ${cls}">${u.avatarUrl ? `<img src="${esc(u.avatarUrl)}" alt="" referrerpolicy="no-referrer" onerror="this.replaceWith(document.createTextNode('${esc(initials(u.name))}'))">` : esc(initials(u.name))}</span>`;
 const short = h => h ? `${h.slice(0, 10)}…${h.slice(-6)}` : '—';
 
 // Deterministic 256-bit fallback used only when SubtleCrypto is unavailable (non-secure context).
@@ -423,7 +425,7 @@ function brandHeader() {
     <div class="fv-brand-t"><b translate="no">FDR VAULT</b><span>AICTE · Institution Portal</span></div>
     ${refreshBtn()}
     <button class="icon-btn" data-tab="alerts" aria-label="Notifications">${ic('bell', 22)}${n ? `<span class="dot-badge">${n}</span>` : ''}</button>
-    <button class="icon-btn" data-tab="profile" aria-label="Profile"><span class="avatar">${esc(initials(me().name))}</span></button></header>`;
+    <button class="icon-btn" data-tab="profile" aria-label="Profile">${avatar(me())}</button></header>`;
 }
 function tabbar(active) {
   const T = [['dashboard', 'home', 'Home'], ['apps', 'files', 'Applications'], ['fdrs', 'landmark', 'FDR'], ['alerts', 'bell', 'Alerts'], ['profile', 'user', 'Profile']];
@@ -1749,7 +1751,7 @@ V.profile = () => {
   const li = (icon, t, s, attr, extra = '') => `<button class="li" ${attr}><span class="li-ico">${ic(icon, 20)}</span><div class="grow"><div class="li-t">${t}</div>${s ? `<div class="li-s">${s}</div>` : ''}</div>${extra || ic('chev', 18, 'chev')}</button>`;
   return {
     header: 'none', tab: 'profile',
-    pre: `<div class="fv-profile"><span class="avatar">${esc(initials(u.name))}</span>
+    pre: `<div class="fv-profile">${avatar(u)}
         <div class="grow"><span class="fv-kicker" style="color:#E8D29A;text-transform:none;letter-spacing:.3px">Profile &amp; Settings</span><b translate="no">${esc(u.name)}</b><span class="fv-role" translate="no">${esc(u.designation)}</span><span class="fv-org"><span translate="no">${esc(i.name)}</span> · PID <span translate="no">${esc(i.pid)}</span></span></div>
         <button class="icon-btn" data-go="instDetails" aria-label="Edit institution details" style="color:#fff">${ic('edit', 20)}</button></div>`,
     body: `<h2 class="fv-h" style="margin-top:0">Account</h2>
@@ -1803,7 +1805,7 @@ V.contact = () => {
     body: e ? `<form id="contactForm" novalidate onsubmit="return false"><div class="card"><div class="h3" style="margin-bottom:12px">Head of Institution</div>
         ${fld('Name', 'name', u.name, { req: true })}${fld('Designation', 'designation', u.designation, { req: true })}${fld('Official Email', 'email', u.email, { ro: true, hint: 'Login ID — change via DTE request.' })}${fld('Mobile', 'mobile', u.mobile, { req: true, type: 'tel' })}</div>
         <div class="card"><div class="h3" style="margin-bottom:12px">Alternate Nodal Officer</div>${fld('Name', 'nodalName', n.name)}${fld('Email', 'nodalEmail', n.email, { type: 'email' })}${fld('Mobile', 'nodalMobile', n.mobile, { type: 'tel' })}</div></form>`
-      : `<div class="card"><div class="row"><span class="avatar lg">${esc(initials(u.name))}</span><div><div class="h3">${esc(u.name)}</div><div class="xs muted">${esc(u.designation)}</div></div></div><div class="mt12">${kv('Official Email', u.email)}${kv('Mobile', u.mobile || '—')}${kv('Portal Role', 'Institution (Applicant)')}</div></div>
+      : `<div class="card"><div class="row">${avatar(u, 'lg')}<div><div class="h3">${esc(u.name)}</div><div class="xs muted">${esc(u.designation)}</div></div></div><div class="mt12">${kv('Official Email', u.email)}${kv('Mobile', u.mobile || '—')}${kv('Portal Role', 'Institution (Applicant)')}</div></div>
         <div class="card"><div class="h3">Alternate Nodal Officer</div><div class="mt8">${n.name ? kv('Name', n.name) + kv('Email', n.email || '—') + kv('Mobile', n.mobile || '—') : '<div class="xs muted">Not designated. Tap Edit to add a nodal officer.</div>'}</div></div>`,
     footer: e ? `<button class="btn btn-ghost" data-act="editOff">Cancel</button><button class="btn btn-primary" data-act="saveContact">Save</button>` : '',
   };
