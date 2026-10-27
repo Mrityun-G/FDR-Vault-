@@ -189,7 +189,7 @@
       'Enter the values in the form yourself. The bank official or AICTE officer will check the document by hand.');
       return finish(issues, checks);
     }
-    checks.push(x.method === 'rules' ? 'Text read from the PDF (rules, no AI)' : 'Read by AI', 'Document type', 'Readability');
+    checks.push(x.method === 'rules' ? 'Text read from the PDF (rules, no AI)' : x.method === 'ocr' ? 'Text recognised by OCR (Tesseract, no AI)' : 'Read by AI', 'Document type', 'Readability');
     if (x.matchesExpectedType === false) add('RED', `This looks like “${x.documentKind}”, not a ${req.name.toLowerCase()}.`, `Upload the ${req.name.toLowerCase()}.`);
     if (x.legibility === 'illegible') add('RED', 'The document is not readable.', 'Upload a clearer scan (at least 200 dpi, all pages, no glare).');
     else if (x.legibility === 'partially_legible') add('AMBER', 'Parts of the document are hard to read, so some values may be wrong.', 'Upload a clearer scan if you have one, and check the values in the form.');

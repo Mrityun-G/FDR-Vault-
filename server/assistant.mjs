@@ -12,7 +12,7 @@ import { asUser, asService, query } from './db.mjs';
 import { requireUser } from './auth.mjs';
 import { aiClient } from './api.mjs';
 import { analyzeDocument, MODEL, RefusedError } from '../supabase/functions/analyze-document/extract.ts';
-import { readWithoutAi, RULES_MODEL } from './read-pdf.mjs';
+import { readWithoutAi, readerName } from './read-pdf.mjs';
 
 const sandbox = {};
 vm.runInNewContext(fs.readFileSync(path.join(ROOT, 'assistant-rules.js'), 'utf8'), sandbox);
@@ -257,7 +257,7 @@ assistantRouter.post('/assistant/sessions/:id/documents', limit(20, 'docs'), gua
   }
   if (!extraction) {
     const r = await readWithoutAi(o.content, file.mimeType, item.docType, declared).catch(() => ({ error: 'UNREADABLE', message: 'the document could not be read' }));
-    if (r.extraction) { extraction = r.extraction; reader = RULES_MODEL; error = null; message = null; }
+    if (r.extraction) { extraction = r.extraction; reader = readerName(r.extraction); error = null; message = null; }
     else if (!ai) { error = r.error === 'NO_TEXT' ? 'AI_NOT_CONFIGURED' : r.error; message = r.message; }
   }
   await query(`insert into public.assistant_documents(session_id, institution_id, doc_key, file_name, file_size_bytes, mime_type, file_hash, storage_path, page_count, extraction, extraction_error, extraction_message)

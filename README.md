@@ -116,9 +116,11 @@ Server-side refusal fallback is enabled (`fallbacks: "default"`).
 
 **Without a key (free):** text PDFs are still read automatically. [`server/read-pdf.mjs`](server/read-pdf.mjs) takes the PDF's
 own text (pdf.js) and finds the FDR number, amount, issue and maturity dates, bank, depositor and lien holder with fixed rules,
-keeping the page and line of each value; the same cross-checks and GREEN / AMBER / RED validation then apply. Scanned PDFs
-(no text layer) and photos cannot be read this way: they are marked for manual review, and need the key to be read.
-Submission is never blocked by reading.
+keeping the page and line of each value; the same cross-checks and GREEN / AMBER / RED validation then apply.
+Photos (JPG / PNG) and scanned PDFs are read with free OCR ([`server/ocr.mjs`](server/ocr.mjs), Tesseract with bundled English
+data, nothing downloaded at run time; about 1–2 s and ~170 MB per page, one document at a time). Scanned PDFs are read from their
+page images when stored as JPEG, which is how scanners save them. OCR below 70% confidence counts as partly legible (AMBER).
+Set `OCR_ENABLED=false` on the server to switch OCR off. Submission is never blocked by reading.
 
 ### AI Regulatory Assistant (institution app)
 Dashboard → **AI Regulatory Assistant** guides an institution through one FDR request: a new FDR, renewal, replacement,
@@ -270,7 +272,7 @@ npm run test:server          # 51 checks — real PostgreSQL + the API over HTTP
                              #   RPC permissions, RLS, storage, live updates, AI function, scheduled job
 npm run test:assistant       # 59 checks — Regulatory Assistant: new FDR end to end, missing / conflicting documents, unverified
                              #   requirements, other institutions, no submission channel, renewal, compliance reply
-npm run test:read-pdf         # 15 checks — free rule-based PDF reading: dates, amounts, evidence, scans / damaged files / wrong documents
+npm run test:read-pdf         # 22 checks — free reading: PDF text rules (dates, amounts, evidence) and OCR of photos / scanned PDFs
 npm run test:ai              # 17 checks — AI document reader with a fake Claude client (no cost)
 npm run serve:demo           # (terminal 1) serves the app in demo mode (empty API_URL) for the browser tests, then:
 npm run test:e2e:demo        # full institution walkthrough in demo mode
