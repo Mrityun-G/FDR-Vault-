@@ -3,7 +3,7 @@
  * Root page of the staff site: links to the Officer portal, the Admin console and the institution app.
  */
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
 import { AicteLogo } from './AicteLogo';
 import { RotatingText, rise, stagger } from './fx';
@@ -41,10 +41,38 @@ const cards = [
   }
 ];
 
-export const PortalChooser: React.FC = () => (
-  <div className="relative min-h-screen bg-aurora overflow-hidden flex flex-col items-center justify-center p-6 text-white font-sans">
-    <div className="pointer-events-none absolute -top-32 -left-24 w-[28rem] h-[28rem] rounded-full bg-fuchsia-500/35 blur-3xl animate-float" aria-hidden="true" />
-    <div className="pointer-events-none absolute bottom-0 -right-32 w-[32rem] h-[32rem] rounded-full bg-cyan-400/30 blur-3xl animate-float-slow" aria-hidden="true" />
+const VIDEO = `${import.meta.env.BASE_URL}portal-bg.mp4`;
+const POSTER = `${import.meta.env.BASE_URL}portal-bg-poster.jpg`;
+
+export const PortalChooser: React.FC = () => {
+  const video = useRef<HTMLVideoElement>(null);
+  // Background video, muted and looping. With "reduce motion" it stays on its first frame (the poster).
+  useEffect(() => {
+    const v = video.current;
+    if (!v) return;
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const apply = () => { if (mq.matches) v.pause(); else v.play().catch(() => {}); };
+    apply();
+    mq.addEventListener('change', apply);
+    return () => mq.removeEventListener('change', apply);
+  }, []);
+
+  return (
+  <div className="relative min-h-screen bg-slate-950 overflow-hidden flex flex-col items-center justify-center p-6 text-white font-sans">
+    <video
+      ref={video}
+      className="pointer-events-none absolute inset-0 w-full h-full object-cover"
+      src={VIDEO}
+      poster={POSTER}
+      autoPlay
+      muted
+      loop
+      playsInline
+      preload="auto"
+      aria-hidden="true"
+    />
+    {/* Darkens the video so the heading stays readable. */}
+    <div className="pointer-events-none absolute inset-0 bg-linear-to-b from-slate-950/75 via-slate-950/45 to-slate-950/75" aria-hidden="true" />
 
     <motion.div variants={stagger} initial="hidden" animate="show" className="relative w-full max-w-5xl space-y-8">
       <motion.header variants={rise} className="text-center space-y-3">
@@ -90,4 +118,5 @@ export const PortalChooser: React.FC = () => (
       </div>
     </motion.div>
   </div>
-);
+  );
+};
