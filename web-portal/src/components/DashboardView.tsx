@@ -89,7 +89,7 @@ export const DashboardView: React.FC = () => {
   const corpus = live.reduce((s, f) => s + f.amountLakhs * 1e5, 0);
   const fdrCards: { label: string; value: number; sub: string; icon: React.FC<{ className?: string }>; grad: string; tab: SidebarTab; money?: boolean }[] = [
     { label: 'Corpus under lien', value: corpus, sub: `${live.length} live deposits`, icon: Landmark, grad: 'from-indigo-500 to-blue-600', tab: 'fdr_records', money: true },
-    { label: 'Active', value: fdrs.filter(f => f.status === 'ACTIVE').length, sub: 'Joint lien confirmed', icon: CheckCircle2, grad: 'from-emerald-500 to-teal-600', tab: 'fdr_records' },
+    { label: 'Active', value: fdrs.filter(f => f.status === 'ACTIVE').length, sub: 'Joint lien on record', icon: CheckCircle2, grad: 'from-emerald-500 to-teal-600', tab: 'fdr_records' },
     { label: 'Expiring ≤ 180 days', value: fdrs.filter(f => f.status === 'EXPIRING_SOON').length, sub: 'Renewal due', icon: Clock, grad: 'from-amber-500 to-orange-600', tab: 'renewals' },
     { label: 'Awaiting bank lien', value: fdrs.filter(f => f.status === 'UNDER_VERIFICATION').length, sub: 'CBS endorsement', icon: ShieldAlert, grad: 'from-cyan-500 to-sky-600', tab: 'verification_center' },
     { label: 'Open FDR requests', value: fdrs.filter(f => f.pendingRequest).length, sub: 'Renewal / replacement / release', icon: Send, grad: 'from-fuchsia-500 to-pink-600', tab: 'renewals' }

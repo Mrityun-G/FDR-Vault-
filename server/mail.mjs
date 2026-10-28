@@ -29,4 +29,6 @@ export const mail = {
     html('Your sign-in code', `<p>Your one-time sign-in code is</p><p style="font-size:26px;letter-spacing:6px;font-weight:bold">${esc(code)}</p><p style="font-size:12px">It expires in 10 minutes.</p>`)),
   recovery: (to, url) => send(to, 'Reset your password', `Open this link to set a new password:\n${url}\n\nThe link is valid for 1 hour.`,
     html('Reset your password', `<p>Open the link below to set a new password.</p>${button(url, 'Set a new password')}<p style="font-size:12px">The link is valid for 1 hour.</p>`)),
+  reminder: (to, title, message) => send(to, title, `${message}\n\nOpen the FDR Vault institution app for details.`,
+    html(title, `<p>${esc(message)}</p><p style="font-size:12px">Open the FDR Vault institution app for details.</p>`)),
 };

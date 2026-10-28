@@ -20,7 +20,8 @@ import {
   UserInvite,
   RegulatoryNotification,
   RegulatorySource,
-  DocumentRequirement
+  DocumentRequirement,
+  ReminderJobStatus
 } from '../types';
 
 export const STAFF_ROLES: UserRole[] = ['REVIEWER', 'ADMIN', 'BANK_OFFICIAL'];
@@ -263,9 +264,12 @@ function mapRequest(r: any): FdrRequest {
     requestedAt: r.requested_at,
     decidedBy: r.decided_by_name || undefined,
     decidedAt: r.decided_at || undefined,
-    decisionNote: r.decision_note || undefined
+    decisionNote: r.decision_note || undefined,
+    orderNumber: r.decision_evidence?.orderNumber || undefined
   };
 }
+
+export { LIEN_CONFIRMATION_LABEL } from './reports';
 
 function fdrStatus(f: any): FdrStatus {
   if (f.released) return 'RELEASED';
@@ -301,6 +305,17 @@ function mapFdr(f: any): FdrRecord {
     isLienConfirmed: f.is_lien_confirmed,
     lienEndorsementToken: f.lien_endorsement_token || undefined,
     lienEndorsedAt: f.lien_endorsed_at || undefined,
+    lienConfirmation: !f.is_lien_confirmed ? 'PENDING' : f.lien_confirmation_source || (f.demo ? 'DEMO_SIMULATED' : 'UNRECORDED'),
+    lienConfirmedBy: f.lien_confirmed_by_name || undefined,
+    release: f.released
+      ? {
+          approvedAt: f.released_at || undefined,
+          orderNumber: requests.find((r: FdrRequest) => r.id === f.release_request_id)?.orderNumber,
+          dischargedAt: f.lien_discharged_at || undefined,
+          dischargeRef: f.lien_discharge_ref || undefined,
+          dischargedBy: f.lien_discharged_by_name || undefined
+        }
+      : undefined,
     renewalStatus: f.renewal_status,
     releaseRequest: release
       ? {
@@ -410,6 +425,9 @@ export function buildNotifications(user: User, apps: InstitutionApplication[], f
     fdrs.filter(f => !f.isLienConfirmed && f.status !== 'RELEASED').forEach(f =>
       push({ id: `lien-${f.id}`, title: 'Joint lien endorsement pending', message: `${f.fdrNumber} (${f.institutionName}, ${f.amountFormatted}) awaits CBS lien endorsement.`, type: 'WARNING', timestamp: f.issueDate + 'T00:00:00Z', linkTab: 'verification_center', fdrNumber: f.fdrNumber })
     );
+    fdrs.filter(f => f.release && !f.release.dischargedAt).forEach(f =>
+      push({ id: `discharge-${f.id}`, title: 'Lien discharge to record', message: `AICTE released the lien on ${f.fdrNumber} (${f.institutionName}, order ${f.release!.orderNumber || '—'}). Record the CBS discharge.`, type: 'CRITICAL', timestamp: f.release!.approvedAt || f.maturityDate + 'T00:00:00Z', linkTab: 'verification_center', fdrNumber: f.fdrNumber })
+    );
     return out.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
   }
   apps.filter(a => a.status === 'SUBMITTED').forEach(a =>
@@ -455,8 +473,11 @@ export const actions = {
   overrideFinding: (findingId: string, rationale: string, citation: string) =>
     rpc('review_override_finding', { p_finding_id: findingId, p_rationale: rationale, p_citation: citation }),
   endorseLien: (fdrId: string, token: string) => rpc('bank_endorse_lien', { p_fdr_id: fdrId, p_token: token }),
-  decideFdrRequest: (requestId: string, approve: boolean, note: string) =>
-    rpc('decide_fdr_request', { p_request_id: requestId, p_approve: approve, p_note: note }),
+  decideFdrRequest: (requestId: string, approve: boolean, note: string, evidence?: { orderNumber: string; orderDate?: string }) =>
+    rpc('decide_fdr_request', { p_request_id: requestId, p_approve: approve, p_note: note, p_evidence: evidence || null }),
+  dischargeLien: (fdrId: string, reference: string) => rpc('bank_discharge_lien', { p_fdr_id: fdrId, p_reference: reference }),
+  reminderJobStatus: () => rpc<ReminderJobStatus>('reminder_job_status'),
+  runReminders: () => rpc<{ ran: boolean; checked?: number; created?: number; reason?: string }>('run_daily_reminders'),
   completeRegistration: (details: StaffRegistration) => rpc('complete_registration', { p: details }),
   inviteStaff: (email: string, role: UserRole, fullName: string, designation: string, bankName: string) =>
     rpc('admin_invite_staff', { p_email: email, p_role: role, p_full_name: fullName, p_designation: designation, p_bank_name: bankName || null }),

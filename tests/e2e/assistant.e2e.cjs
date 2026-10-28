@@ -42,7 +42,7 @@ const ok = (c, m) => { console.log(`  ${c ? '✓' : '✗'} ${m}`); if (!c) faile
     await clickText('Start a new request');
     await until(() => document.body.innerText.includes('Welcome to the AICTE Regulatory Assistant'));
     const t0 = await text();
-    ok(t0.includes('What would you like to do today?') && t0.includes('Renew an existing FDR') && t0.includes('Request release / refund'), 'greets and offers the request types');
+    ok(t0.includes('What would you like to do today?') && t0.includes('Renew an existing FDR') && t0.includes('Request lien release'), 'greets and offers the request types');
 
     console.log('\nFree text, then questions one at a time');
     await page.type('#asstAsk', 'Our FDR is expiring next month and we need to extend it');

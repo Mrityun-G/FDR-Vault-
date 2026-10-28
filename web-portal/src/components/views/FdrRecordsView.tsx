@@ -6,6 +6,7 @@
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../../context/AppContext';
 import { FdrStatus, FdrRecord } from '../../types';
+import { LIEN_CONFIRMATION_LABEL } from '../../services/backend';
 import {
   FileText,
   Search,
@@ -294,12 +295,19 @@ export const FdrRecordsView: React.FC = () => {
               </div>
 
               {inspectFdr.isLienConfirmed ? (
-                <div className="p-3 bg-emerald-50 border border-emerald-300 rounded text-emerald-900 text-xs flex justify-between items-center">
+                <div
+                  className={`p-3 border rounded text-xs flex justify-between items-center ${
+                    inspectFdr.lienConfirmation === 'BANK_OFFICIAL' ? 'bg-emerald-50 border-emerald-300 text-emerald-900' : 'bg-amber-50 border-amber-300 text-amber-900'
+                  }`}
+                >
                   <div>
-                    <span className="font-bold block">CBS Joint Lien Confirmed</span>
-                    <span className="font-mono text-[10px] text-emerald-800">Token: {inspectFdr.lienEndorsementToken || 'CBS-AUTH-VERIFIED'}</span>
+                    <span className="font-bold block">Joint lien: {LIEN_CONFIRMATION_LABEL[inspectFdr.lienConfirmation]}</span>
+                    <span className="font-mono text-[10px]">
+                      Token: {inspectFdr.lienEndorsementToken || '—'}
+                      {inspectFdr.lienConfirmedBy && <> • {inspectFdr.lienConfirmedBy}</>}
+                    </span>
                   </div>
-                  <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                  {inspectFdr.lienConfirmation === 'BANK_OFFICIAL' && <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />}
                 </div>
               ) : (
                 <div className="p-3 bg-amber-50 border border-amber-300 rounded text-amber-900 text-xs space-y-2">

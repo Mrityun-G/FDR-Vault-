@@ -51,10 +51,13 @@ export const FdrRequestDecisionModal: React.FC<DecisionProps> = ({ fdr, request,
   const [note, setNote] = useState(
     approve
       ? request.kind === 'RELEASE'
-        ? 'Lock-in completed with no outstanding student or regulatory liabilities. Joint lien discharge approved; bank may release the deposit.'
+        ? 'Lock-in completed with no outstanding student or regulatory liabilities. Release of the AICTE joint lien approved; the bank may now discharge it.'
         : 'Bank evidence verified. Request approved; the joint lien continues on the updated deposit.'
       : ''
   );
+  const needsOrder = approve && request.kind === 'RELEASE';
+  const [orderNumber, setOrderNumber] = useState('');
+  const [orderDate, setOrderDate] = useState(new Date().toISOString().slice(0, 10));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -62,7 +65,7 @@ export const FdrRequestDecisionModal: React.FC<DecisionProps> = ({ fdr, request,
     setBusy(true);
     setError(null);
     try {
-      await decideFdrRequest(request.id, approve, note.trim());
+      await decideFdrRequest(request.id, approve, note.trim(), needsOrder ? { orderNumber: orderNumber.trim(), orderDate } : undefined);
       onDone(`${request.kind.charAt(0) + request.kind.slice(1).toLowerCase()} request for ${fdr.fdrNumber} ${approve ? 'approved' : 'rejected'}. The institution has been notified.`);
       onClose();
     } catch (e: any) {
@@ -93,6 +96,21 @@ export const FdrRequestDecisionModal: React.FC<DecisionProps> = ({ fdr, request,
             <label className="block font-bold text-slate-700 mb-1">Decision note (shared with the institution)</label>
             <textarea rows={3} value={note} onChange={e => setNote(e.target.value)} className="w-full p-2 border border-slate-300 rounded-md text-xs" />
           </div>
+          {needsOrder && (
+            <div className="grid grid-cols-3 gap-2">
+              <div className="col-span-2">
+                <label className="block font-bold text-slate-700 mb-1">AICTE release order number</label>
+                <input value={orderNumber} onChange={e => setOrderNumber(e.target.value)} placeholder="e.g. AICTE/NRO/LR/2026/014" className="w-full p-2 border border-slate-300 rounded-md text-xs font-mono" />
+              </div>
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Order date</label>
+                <input type="date" value={orderDate} onChange={e => setOrderDate(e.target.value)} className="w-full p-2 border border-slate-300 rounded-md text-xs" />
+              </div>
+              <p className="col-span-3 p-2.5 bg-blue-50 border border-blue-200 rounded text-blue-950 text-[11px]">
+                Approval releases AICTE's claim on the deposit. The bank then discharges the lien in its own system and records it here; the bank pays out the deposit. No money moves through this portal.
+              </p>
+            </div>
+          )}
           {approve && request.kind === 'REPLACEMENT' && (
             <p className="p-2.5 bg-blue-50 border border-blue-200 rounded text-blue-950 text-[11px]">
               Approving replaces the deposit on record. The new deposit then needs its own CBS lien endorsement by the bank.
@@ -106,7 +124,7 @@ export const FdrRequestDecisionModal: React.FC<DecisionProps> = ({ fdr, request,
             <button
               type="button"
               onClick={submit}
-              disabled={busy || (!approve && note.trim().length < 10)}
+              disabled={busy || note.trim().length < 10 || (needsOrder && orderNumber.trim().length < 4)}
               className={`px-4 py-2 text-white font-bold rounded-md disabled:opacity-50 ${approve ? 'bg-emerald-700 hover:bg-emerald-800' : 'bg-rose-700 hover:bg-rose-800'}`}
             >
               {busy ? 'Recording…' : approve ? 'Approve request' : 'Reject request'}

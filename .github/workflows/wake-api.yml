@@ -1,0 +1,23 @@
+# Wakes the API server after 07:00 IST so the daily FDR maturity reminders run even when the free Render
+# instance is asleep: on start-up the server runs the day's job if it has not run yet (see server/api.mjs).
+# Optional repository variable API_URL (Settings → Secrets and variables → Actions → Variables) overrides the address.
+name: Wake API for daily reminders
+
+on:
+  schedule:
+    - cron: '35 1 * * *'     # 01:35 UTC = 07:05 IST
+    - cron: '5 3 * * *'      # 08:35 IST, in case the first wake-up was missed
+  workflow_dispatch:
+
+jobs:
+  wake:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Call the health check
+        run: |
+          url="${{ vars.API_URL || 'https://fdr-vault-api-d2i1.onrender.com' }}/health"
+          for i in 1 2 3 4 5 6; do
+            if curl -fsS --max-time 60 "$url"; then echo; echo "API is awake"; exit 0; fi
+            sleep 20
+          done
+          echo "::error::API did not answer at $url"; exit 1

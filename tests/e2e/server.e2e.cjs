@@ -140,6 +140,13 @@ const pdf = (name, seed, pages = 2) => {
   await h.click('PNB-FDR-30115-2016'); await h.click('Initiate Release Request');
   await page.click('input[name=certify]'); await h.click('Submit Discharge Application');
   ok(await h.waitText('Release Pending Bureau Approval'), 'lien release pending Bureau approval');
+  ok(await h.has('Bank: Simulated (demo record)') && await h.has('Automated checks (advisory)') && await h.has('Submitted by the institution'), 'FDR screen shows the three verification statuses separately');
+  // AICTE approves with a release order (live update reaches the app), then the bank records the discharge.
+  const relReq = (await sql(`select r.id, (select id from public.profiles where email = 'admin.verma@aicte-india.org') a from public.fdr_requests r join public.fdrs f on f.id = r.fdr_id where f.fdr_number = 'PNB-FDR-30115-2016' and r.kind = 'RELEASE' and r.status = 'PENDING'`))[0];
+  await sql(`select set_config('request.jwt.claim.sub', '${relReq.a}', false); select public.decide_fdr_request('${relReq.id}', true, 'Lock-in completed with no outstanding liabilities.', '{"orderNumber":"AICTE/NRO/LR/2026/077"}'::jsonb); select set_config('request.jwt.claim.sub', '', false);`);
+  ok(await h.waitText('Release approved — awaiting bank discharge', 15000) && await h.has('AICTE/NRO/LR/2026/077'), 'app shows AICTE approval with the release order, bank discharge pending');
+  await sql(`update public.fdrs set lien_discharged_at = now(), lien_discharge_ref = 'CBS-PNB-DIS-0077', lien_discharged_by_name = 'PNB Manager (Punjab National Bank)' where fdr_number = 'PNB-FDR-30115-2016'`);
+  ok(await h.waitText('Lien discharged by the bank', 15000) && await h.has('CBS-PNB-DIS-0077') && await h.has('no money moves through this portal'), 'app shows the bank discharge with its reference, and no refund claim');
   // Submit New FDR with a number another institution already registered: the server's reason is shown on the field.
   const otherFdr = (await sql(`select fdr_number n from public.fdrs where institution_id <> (select id from public.institutions where pid='1-10928371') limit 1`))[0].n;
   await page.evaluate(() => go('fdrNew')); await wait(400);

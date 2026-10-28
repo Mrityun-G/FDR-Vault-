@@ -16,6 +16,7 @@ import {
   Database
 } from 'lucide-react';
 import { RegulatoryRuleConfig } from '../../types';
+import { ReminderJobCard } from './ReminderJobCard';
 
 export const SettingsView: React.FC = () => {
   const {
@@ -46,6 +47,8 @@ export const SettingsView: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {currentUser.role === 'ADMIN' && <ReminderJobCard />}
+
       {/* Title & Statutory Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-slate-200">
         <div>

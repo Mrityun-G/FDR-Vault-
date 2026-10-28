@@ -2,6 +2,8 @@
  * AICTE Intelligent Regulatory Validation Platform (AI-IRVP)
  * Bank Official Portal View - FDR Verification & CBS Joint Lien Endorsement
  * Bank officials see only deposits held with their bank (enforced by row-level security).
+ * Only a bank official's endorsement counts as confirmation by the bank; an administrator's entry is shown as an AICTE record.
+ * After AICTE approves a release, the bank records the lien discharge here.
  */
 
 import React, { useEffect, useState } from 'react';
@@ -10,8 +12,12 @@ import { formatRupees } from '../services/backend';
 import { Landmark, ShieldCheck, Search, CheckCircle2, AlertTriangle, RefreshCw, FileText, Lock } from 'lucide-react';
 
 export const BankOfficialView: React.FC = () => {
-  const { currentUser, fdrRecords, endorseLien } = useApp();
-  const canEndorse = currentUser.role === 'BANK_OFFICIAL' || currentUser.role === 'ADMIN';
+  const { currentUser, fdrRecords, endorseLien, dischargeLien } = useApp();
+  const isBank = currentUser.role === 'BANK_OFFICIAL';
+  const canEndorse = isBank || currentUser.role === 'ADMIN';
+  const [dischargeRef, setDischargeRef] = useState<Record<string, string>>({});
+  const [dischargeError, setDischargeError] = useState<string | null>(null);
+  const toDischarge = fdrRecords.filter(f => f.release && !f.release.dischargedAt);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -47,6 +53,16 @@ export const BankOfficialView: React.FC = () => {
       setError(e.message || 'The endorsement was not recorded.');
     } finally {
       setIsVerifying(false);
+    }
+  };
+
+  const handleDischarge = async (fdrId: string, fdrNumber: string) => {
+    setDischargeError(null);
+    try {
+      await dischargeLien(fdrId, (dischargeRef[fdrId] || '').trim());
+      setFlash(`Lien discharge on ${fdrNumber} recorded. The institution has been notified.`);
+    } catch (e: any) {
+      setDischargeError(e.message || 'The discharge was not recorded.');
     }
   };
 
@@ -86,7 +102,7 @@ export const BankOfficialView: React.FC = () => {
           <div className="bg-emerald-50/70 p-3.5 rounded-lg border border-emerald-200">
             <p className="text-[11px] text-emerald-900 font-semibold uppercase">Lien Endorsed</p>
             <p className="text-xl font-extrabold text-emerald-900 mt-1">{endorsed.length}</p>
-            <p className="text-[10px] text-emerald-700 mt-0.5">Confirmed in CBS</p>
+            <p className="text-[10px] text-emerald-700 mt-0.5">Joint lien on record</p>
           </div>
           <div className="bg-amber-50/70 p-3.5 rounded-lg border border-amber-200">
             <p className="text-[11px] text-amber-900 font-semibold uppercase">Pending Endorsement</p>
@@ -106,6 +122,53 @@ export const BankOfficialView: React.FC = () => {
           <button onClick={() => setFlash(null)} className="font-bold" aria-label="Dismiss">
             ×
           </button>
+        </div>
+      )}
+
+      {toDischarge.length > 0 && (
+        <div className="bg-white rounded-xl border border-purple-200 shadow-xs overflow-hidden">
+          <div className="p-4 border-b border-purple-200 bg-purple-50/60">
+            <h3 className="text-sm font-bold text-slate-900">Lien discharges: released by AICTE</h3>
+            <p className="text-[11px] text-slate-600 mt-0.5">
+              Remove the AICTE lien in your Core Banking System, then record the CBS discharge reference. Payment of the deposit follows your bank's own process.
+            </p>
+          </div>
+          {dischargeError && <p className="m-4 p-2 bg-rose-50 border border-rose-200 rounded text-rose-800 text-xs">{dischargeError}</p>}
+          <div className="divide-y divide-slate-100 text-xs">
+            {toDischarge.map(f => (
+              <div key={f.id} className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
+                <div>
+                  <span className="font-mono font-bold text-slate-900">{f.fdrNumber}</span> • {f.institutionName}
+                  <span className="block text-[11px] text-slate-500">
+                    {f.amountFormatted} • AICTE release order {f.release?.orderNumber || '—'}
+                    {f.release?.approvedAt && <> of {new Date(f.release.approvedAt).toLocaleDateString()}</>}
+                  </span>
+                </div>
+                {isBank ? (
+                  <div className="flex items-center gap-2">
+                    <input
+                      value={dischargeRef[f.id] || ''}
+                      onChange={e => setDischargeRef({ ...dischargeRef, [f.id]: e.target.value })}
+                      placeholder="CBS discharge reference"
+                      aria-label={`CBS discharge reference for ${f.fdrNumber}`}
+                      className="px-3 py-2 border border-slate-300 rounded-md font-mono bg-white"
+                    />
+                    <button
+                      onClick={() => handleDischarge(f.id, f.fdrNumber)}
+                      disabled={(dischargeRef[f.id] || '').trim().length < 6}
+                      className="px-4 py-2 bg-purple-700 hover:bg-purple-800 text-white font-bold rounded-lg disabled:opacity-60 cursor-pointer"
+                    >
+                      Record discharge
+                    </button>
+                  </div>
+                ) : (
+                  <span className="text-[11px] text-slate-500 flex items-center gap-1.5">
+                    <Lock className="w-3.5 h-3.5" /> Recorded by the bank official
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
@@ -215,13 +278,20 @@ export const BankOfficialView: React.FC = () => {
                   <div className="flex items-center justify-between text-emerald-950 font-bold gap-2">
                     <div className="flex items-center gap-1.5">
                       <CheckCircle2 className="w-4 h-4 text-emerald-700" />
-                      Irrevocable Joint Lien Confirmed in CBS Ledger
+                      {activeRecord.lienConfirmation === 'BANK_OFFICIAL'
+                        ? 'Joint lien confirmed by the bank'
+                        : activeRecord.lienConfirmation === 'AICTE_RECORDED'
+                          ? 'Joint lien recorded by AICTE (not confirmed by a bank official)'
+                          : activeRecord.lienConfirmation === 'DEMO_SIMULATED'
+                            ? 'Joint lien on record (simulated demo data)'
+                            : 'Joint lien on record (confirming party not on file)'}
                     </div>
                     <span className="text-[10px] font-mono text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded">Token: {activeRecord.lienEndorsementToken}</span>
                   </div>
                   {activeRecord.lienEndorsedAt && (
                     <p className="text-[10px] text-slate-500 font-mono pt-1 border-t border-emerald-200">
-                      Endorsed at: {new Date(activeRecord.lienEndorsedAt).toLocaleString()}
+                      Recorded {new Date(activeRecord.lienEndorsedAt).toLocaleString()}
+                      {activeRecord.lienConfirmedBy && <> by {activeRecord.lienConfirmedBy}</>}
                     </p>
                   )}
                 </div>
@@ -255,7 +325,7 @@ export const BankOfficialView: React.FC = () => {
                     ) : (
                       <>
                         <CheckCircle2 className="w-4 h-4" />
-                        Confirm & Endorse Joint Lien with AICTE
+                        {isBank ? 'Confirm & Endorse Joint Lien with AICTE' : 'Record lien from bank token (AICTE entry)'}
                       </>
                     )}
                   </button>
