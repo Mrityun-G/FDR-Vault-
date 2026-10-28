@@ -184,6 +184,11 @@ begin
     jsonb_build_object('route', 'fdrDetail', 'id', f.id));
 end $$;
 
+-- Bank officials read the requests on their own bank's FDRs (they need the AICTE release order to discharge a lien).
+drop policy if exists fdr_requests_read_bank on public.fdr_requests;
+create policy fdr_requests_read_bank on public.fdr_requests for select to authenticated
+  using (exists (select 1 from public.fdrs f where f.id = fdr_id and f.bank_name = public.my_bank()));
+
 -- ------------------------------------------------------------------ institution app: lifecycle fields on each FDR
 
 do $$

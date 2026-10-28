@@ -6,7 +6,7 @@
 import crypto from 'node:crypto';
 import { startPostgres } from './embedded-pg.mjs';
 
-const db = await startPostgres(54332);
+const db = await startPostgres(54333);
 const API_PORT = 8797, API = `http://127.0.0.1:${API_PORT}`;
 Object.assign(process.env, {
   DATABASE_URL: db.url, JWT_SECRET: crypto.randomBytes(32).toString('hex'), PUBLIC_URL: API, PORT: String(API_PORT),
@@ -141,6 +141,9 @@ try {
   ok(code(await rpc(admin, 'decide_fdr_request', approve)) === 'NOT_FOUND', 'a decided request cannot be decided again');
   let rr = (await rpc(instA, 'get_portal_state')).body.fdrs.find(f => f.id === rel).release;
   ok(rr && rr.orderNumber === 'AICTE/NRO/LR/2026/014' && rr.approvedBy && !rr.dischargedAt, 'institution app: release approved, bank discharge pending');
+  const bankView = (await call('GET', '/data/fdrs', { token: bank.access_token })).body.find(f => f.id === rel);
+  ok(bankView && bankView.fdr_requests.some(r => r.decision_evidence && r.decision_evidence.orderNumber === 'AICTE/NRO/LR/2026/014'), "the FDR's bank sees the AICTE release order");
+  ok(!(await call('GET', '/data/fdrs', { token: pnb.access_token })).body.some(f => f.id === rel), 'another bank does not see the FDR or its requests');
   ok(code(await rpc(pnb, 'bank_discharge_lien', { p_fdr_id: rel, p_reference: 'CBS-DIS-000001' })) === 'FORBIDDEN', 'another bank cannot discharge the lien');
   ok(code(await rpc(admin, 'bank_discharge_lien', { p_fdr_id: rel, p_reference: 'CBS-DIS-000001' })) === 'FORBIDDEN', 'AICTE admin cannot record the bank\'s discharge');
   ok((await rpc(bank, 'bank_discharge_lien', { p_fdr_id: rel, p_reference: 'CBS-SBI-DIS-55021' })).status === 200, 'the FDR\'s bank records the lien discharge');
