@@ -90,7 +90,8 @@ interface AppContextType {
   finalDecision: (appId: string, approve: boolean, rationale: string) => Promise<void>;
   overrideFinding: (appId: string, findingId: string, rationale: string, statutoryCitation: string) => Promise<void>;
   endorseLien: (fdrId: string, token: string) => Promise<void>;
-  decideFdrRequest: (requestId: string, approve: boolean, note: string) => Promise<void>;
+  decideFdrRequest: (requestId: string, approve: boolean, note: string, evidence?: { orderNumber: string; orderDate?: string }) => Promise<void>;
+  dischargeLien: (fdrId: string, reference: string) => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -356,7 +357,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const overrideFinding = (_appId: string, findingId: string, rationale: string, citation: string) =>
     run(() => actions.overrideFinding(findingId, rationale, citation));
   const endorseLien = (fdrId: string, token: string) => run(() => actions.endorseLien(fdrId, token));
-  const decideFdrRequest = (requestId: string, approve: boolean, note: string) => run(() => actions.decideFdrRequest(requestId, approve, note));
+  const decideFdrRequest = (requestId: string, approve: boolean, note: string, evidence?: { orderNumber: string; orderDate?: string }) =>
+    run(() => actions.decideFdrRequest(requestId, approve, note, evidence));
+  const dischargeLien = (fdrId: string, reference: string) => run(() => actions.dischargeLien(fdrId, reference));
 
   // Simulated issuing-authority adapters (no live government integrations in this prototype).
   const pingAuthorityAdapter = (adapterId: string) =>
@@ -418,7 +421,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         finalDecision,
         overrideFinding,
         endorseLien,
-        decideFdrRequest
+        decideFdrRequest,
+        dischargeLien
       }}
     >
       {children}

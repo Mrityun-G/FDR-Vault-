@@ -267,6 +267,11 @@ export interface FdrRecord {
   isLienConfirmed: boolean;
   lienEndorsementToken?: string;
   lienEndorsedAt?: string;
+  /** Who confirmed the joint lien: only BANK_OFFICIAL is a confirmation by the bank itself. */
+  lienConfirmation: LienConfirmation;
+  lienConfirmedBy?: string;
+  /** Set once AICTE approved the release; dischargedAt once the bank recorded the lien discharge. */
+  release?: { approvedAt?: string; orderNumber?: string; dischargedAt?: string; dischargeRef?: string; dischargedBy?: string };
   renewalStatus?: 'NOT_APPLICABLE' | 'RENEWAL_SUBMITTED' | 'UNDERTAKING_PENDING' | 'RENEWED';
   releaseRequest?: {
     id?: string;
@@ -294,6 +299,17 @@ export interface FdrRequest {
   decidedBy?: string;
   decidedAt?: string;
   decisionNote?: string;
+  /** AICTE release order number recorded with a release decision. */
+  orderNumber?: string;
+}
+
+export type LienConfirmation = 'BANK_OFFICIAL' | 'AICTE_RECORDED' | 'DEMO_SIMULATED' | 'UNRECORDED' | 'PENDING';
+
+/** Daily FDR maturity reminder job (admin view). */
+export interface ReminderJobStatus {
+  today: string;
+  ranToday: boolean;
+  recent: { runDate: string; trigger: string; startedAt: string; finishedAt?: string; checked?: number; created?: number; error?: string }[];
 }
 
 /** A portal account as stored in public.profiles (visible to AICTE staff). */

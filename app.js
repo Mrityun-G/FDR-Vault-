@@ -226,7 +226,22 @@ function fdrStatus(f) {
   if (d <= 180) return 'EXPIRING_SOON';
   return 'ACTIVE';
 }
-const lienProgress = f => Math.min(1, Math.max(0, (now() - new Date(f.issueDate)) / (new Date(f.maturityDate) - new Date(f.issueDate))));
+// Who confirmed the joint lien. Only a bank official's confirmation on the portal counts as "confirmed by the bank";
+// in the offline demo every confirmation is simulated.
+const LIEN_SOURCE = {
+  BANK_OFFICIAL: ['Confirmed by the bank', 'ok'], AICTE_RECORDED: ['Recorded by AICTE — not confirmed by the bank', 'warn'],
+  DEMO_SIMULATED: ['Simulated (demo record)', 'warn'], UNRECORDED: ['Lien on record — who confirmed it is not on file', 'warn'], PENDING: ['Awaiting bank confirmation', 'warn'],
+};
+const lienSource = f => (f.bankConfirmation && f.bankConfirmation.source) || (!f.isLienConfirmed ? 'PENDING' : Backend.remote ? 'UNRECORDED' : 'DEMO_SIMULATED');
+// Lien release: requested → approved by AICTE (release order) → discharged by the bank in its own system.
+function releaseState(f) {
+  const r = f.release, rr = f.releaseRequest;
+  if (r && r.dischargedAt) return ['Lien discharged by the bank', 'green'];
+  if (r || (rr && rr.status === 'APPROVED')) return ['Release approved — awaiting bank discharge', 'blue'];
+  if (rr && rr.status === 'PENDING') return ['Release Pending Bureau Approval', 'amber'];
+  return null;
+}
+const lienProgress = f =>Math.min(1, Math.max(0, (now() - new Date(f.issueDate)) / (new Date(f.maturityDate) - new Date(f.issueDate))));
 
 function logAudit(action, targetType, targetId, details, actor) {
   const a = actor || { name: me().name, role: 'INSTITUTION' };
@@ -663,7 +678,8 @@ function fdrChecks(fdr) {
   if (fdr.maturityDate) out.push({ label: 'Maturity date is in the future', s: daysUntil(fdr.maturityDate) > 0 ? (daysUntil(fdr.maturityDate) <= 180 ? 'warn' : 'ok') : 'fail', note: daysUntil(fdr.maturityDate) > 0 ? `${daysUntil(fdr.maturityDate)} days remaining` : 'Matured' });
   if (fdr.ifscCode) out.push({ label: 'Bank details consistent (IFSC ↔ bank)', s: bc && fdr.ifscCode.startsWith(bc) ? 'ok' : 'warn', note: bc ? `${fdr.bankName} IFSC prefix ${bc}` : 'Bank not in CBS adapter list' });
   out.push({ label: 'Joint lien in favour of Regional Officer, AICTE', s: /AICTE/.test(fdr.jointLienHolder || '') ? 'ok' : 'fail', note: fdr.jointLienHolder });
-  out.push({ label: 'Bank CBS lien endorsement', s: fdr.isLienConfirmed ? 'ok' : 'warn', note: fdr.isLienConfirmed ? `Token ${fdr.lienEndorsementToken}` : 'Awaiting bank official endorsement in CBS' });
+  const src = lienSource(fdr);
+  out.push({ label: 'Bank confirmation of the joint lien', s: LIEN_SOURCE[src][1], note: src === 'PENDING' ? 'Awaiting confirmation by a bank official' : `${LIEN_SOURCE[src][0]}${fdr.lienEndorsementToken ? ` · Token ${fdr.lienEndorsementToken}` : ''}` });
   return out;
 }
 const sIcon = s => `<span class="vstat ${s}">${s === 'ok' ? ic('check', 13) : s === 'warn' ? ic('alert', 12) : s === 'fail' ? ic('x', 13) : ''}</span>`;
@@ -713,7 +729,7 @@ function analyseDoc(m, d, ctx) {
     fields.push({ label: 'Maturity Date', value: fdr.maturityDate, page: 1, sourceLine: `Tenure 10 years, Maturity Date: ${fdr.maturityDate}`, isCoherent: fdr.maturityDate >= addYears(fdr.issueDate, 10, true) });
     if (fdr.amountLakhs < requiredLakhs()) anomalies.push(`Corpus ${crLabel(fdr.amountLakhs)} below required ${crLabel(requiredLakhs())}.`);
     verified['Corpus Amount'] = `${crLabel(fdr.amountLakhs)} (${fdr.amountLakhs >= requiredLakhs() ? 'Fully met' : 'Shortfall'})`;
-    verified['Lien Status'] = fdr.isLienConfirmed ? 'AICTE Joint Lien Recorded' : 'Awaiting CBS endorsement';
+    verified['Lien Status'] = LIEN_SOURCE[lienSource(fdr)][0];
   } else if (m.type === 'FACULTY_CADRE') {
     fields.push({ label: 'Total Faculty', value: `${n.fac} Regular Faculty`, page: 1, sourceLine: `Total Teaching Faculty on rolls: ${n.fac}`, isCoherent: n.sfrOk });
     fields.push({ label: 'Professors', value: String(n.P), page: 2, sourceLine: `Cadre breakdown: Professors - ${n.P}`, isCoherent: n.profOk });
@@ -1165,11 +1181,38 @@ function fdrMini(f) {
     <div class="bar mt8"><i style="width:${(pr * 100).toFixed(1)}%"></i></div>
     <div class="row between xs muted mt4"><span>Lock-in ${(pr * f.tenureYears).toFixed(1)} of ${f.tenureYears} yrs</span><span>${d > 0 ? `${d} days to maturity` : 'Matured'}</span></div></div></button>`;
 }
+// Three separate statuses: what the institution entered, the automated (advisory) checks, and the bank's own confirmation.
+function verificationCard(f) {
+  const checks = fdrChecks(f).slice(0, -1), passed = checks.filter(c => c.s === 'ok').length;
+  const src = lienSource(f), bc = f.bankConfirmation || {};
+  const bankNote = src === 'BANK_OFFICIAL' ? `${bc.by ? `${bc.by} · ` : ''}${bc.at ? fmtDT(bc.at) : ''}${f.lienEndorsementToken ? ` · Token ${f.lienEndorsementToken}` : ''}`
+    : src === 'AICTE_RECORDED' ? `AICTE entered the bank's token${f.lienEndorsementToken ? ` ${f.lienEndorsementToken}` : ''}. A bank official has not confirmed it on the portal.`
+    : src === 'DEMO_SIMULATED' ? 'Demo data: no bank was contacted.'
+    : src === 'UNRECORDED' ? `Token ${f.lienEndorsementToken || '—'}. The record does not show who confirmed it.`
+    : 'A bank official must confirm the joint lien in the bank portal. Form checks or AI review cannot replace this.';
+  const row = (s, label, note) => `<div class="vrow">${sIcon(s)}<div class="grow"><div class="small b">${esc(label)}</div><div class="xs muted">${esc(note)}</div></div></div>`;
+  return `<div class="card mt12"><div class="h3">Verification</div><div class="mt8">
+    ${row('ok', 'Submitted by the institution', 'Deposit details and FDR advice entered by your institution. Not independent proof.')}
+    ${row(checks.some(c => c.s === 'fail') ? 'fail' : checks.some(c => c.s === 'warn') ? 'warn' : 'ok', 'Automated checks (advisory)', `${passed} of ${checks.length} rule checks passed. Advisory only, not a bank confirmation.`)}
+    ${row(LIEN_SOURCE[src][1], `Bank: ${LIEN_SOURCE[src][0]}`, bankNote)}</div></div>`;
+}
+// Lien release steps: the request, AICTE's decision with its release order, and the bank's discharge in its own system.
+function releaseCard(f) {
+  const rr = f.releaseRequest || {}, r = f.release || {}, rs = releaseState(f) || ['Release requested', 'amber'];
+  const step = (done, label, note) => `<div class="vrow">${sIcon(done ? 'ok' : '')}<div class="grow"><div class="small b">${esc(label)}</div>${note ? `<div class="xs muted">${note}</div>` : ''}</div></div>`;
+  const approvedAt = r.approvedAt || rr.approvedAt, approvedBy = r.approvedBy || rr.approvedBy;
+  return `<div class="card mt12"><div class="row between"><div class="h3">Lien Release</div>${chip(rs, true)}</div><div class="mt8">
+    ${step(true, 'Requested by the institution', `${rr.requestedAt ? `${fmtDT(rr.requestedAt)} · ` : ''}${rr.reason ? `“${esc(rr.reason)}”` : ''}`)}
+    ${step(!!approvedAt, 'Approved by AICTE', approvedAt ? `${esc(approvedBy || '')} · ${fmtDate(approvedAt)}${r.orderNumber ? ` · Release order <span class="mono">${esc(r.orderNumber)}</span>` : ''}${r.note ? `<br>“${esc(r.note)}”` : ''}` : 'Awaiting the Regulation Bureau decision')}
+    ${step(!!r.dischargedAt, `Lien discharged by ${f.bankName}`, r.dischargedAt ? `${fmtDT(r.dischargedAt)} · Reference <span class="mono">${esc(r.dischargeRef)}</span>` : 'After AICTE approval, the bank removes the lien in its own system')}</div>
+    <div class="xs muted mt8">FDR Vault records the lien release. The bank pays out the deposit through its own process; no money moves through this portal.</div></div>`;
+}
 // One deposit in the FDR list: status, bank and amount, and the 10-year lock-in.
 function fdrCard(f) {
   const st = fdrStatus(f), pr = lienProgress(f), d = daysUntil(f.maturityDate);
-  const tail = st === 'MATURED' ? (f.releaseRequest ? 'Release Pending Bureau Approval' : 'Eligible for lien release')
-    : st === 'EXPIRING_SOON' ? `${d} days to maturity` : f.isLienConfirmed ? 'CBS Joint Lien Confirmed' : 'Awaiting Bank CBS Endorsement';
+  const rs = releaseState(f);
+  const tail = rs ? rs[0] : st === 'MATURED' ? 'Eligible for lien release'
+    : st === 'EXPIRING_SOON' ? `${d} days to maturity` : LIEN_SOURCE[lienSource(f)][0];
   return `<button class="fv-card" data-go="fdrDetail" data-id="${f.id}">
     <span class="fv-card-top"><b translate="no">${esc(f.fdrNumber)}</b>${chip(FSTATUS[st], true)}</span>
     <span class="fv-sub"><span translate="no">${esc(f.bankName)} · ${crLabel(f.amountLakhs)} · </span><span>Matures ${fmtDate(f.maturityDate)}</span></span>
@@ -1639,13 +1682,12 @@ V.fdrDetail = ({ id }) => {
         <div class="mt12">${kv('Institution', esc(inst().name))}${kv('Permanent Institute ID', esc(inst().pid))}${kv('Principal Deposit Amount', esc(fmtAmount(f.amountLakhs)))}${kv('Deposit Horizon & Maturity', `${esc(f.issueDate)} to ${esc(f.maturityDate)} (${f.tenureYears} Years)`)}
         ${kv('Issuing Bank & Branch', `${esc(f.bankName)} • ${esc(f.branchName)} (IFSC: ${esc(f.ifscCode)})`)}${kv('Linked Application', esc(f.applicationNumber))}</div>
         <div class="mt12" style="background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:10px"><div class="xs b muted">IRREVOCABLE JOINT LIEN COVENANT</div><div class="small mt4">Jointly pledged in favour of: <b>${esc(f.jointLienHolder)}</b>. Non-encashable without council release decree.</div></div></div>
-      ${f.isLienConfirmed ? `<div class="banner ok mt12">${ic('shieldCheck', 18)}<div><b>CBS Joint Lien Confirmed</b><div class="mono">Token: ${esc(f.lienEndorsementToken || 'CBS-AUTH-VERIFIED')}</div>${f.lienEndorsedAt ? `<div class="xs">Endorsed ${fmtDT(f.lienEndorsedAt)}</div>` : ''}</div></div>`
-        : `<div class="banner warn mt12">${ic('clock', 18)}<div><b>Awaiting Bank CBS Endorsement</b><div>Bank official confirmation pending in Core Banking portal. The joint lien becomes active once the branch endorses it.</div></div></div>`}
+      ${verificationCard(f)}
       <div class="card mt12"><div class="h3">10-Year Lock-in</div><div class="bar mt8"><i style="width:${(lienProgress(f) * 100).toFixed(1)}%"></i></div>
         <div class="row between xs muted mt4"><span>${fmtDate(f.issueDate)}</span><span>${d > 0 ? `${d} days to maturity` : `Matured ${-d} days ago`}</span><span>${fmtDate(f.maturityDate)}</span></div>
         ${f.renewalStatus && f.renewalStatus !== 'NOT_APPLICABLE' ? `<div class="kv mt8"><span>Renewal Status</span><span>${esc(f.renewalStatus.replace(/_/g, ' '))}</span></div>` : ''}</div>
       ${pend ? `<div class="banner info mt12" role="status">${ic('clock', 18)}<div><b>${pend.kind === 'REPLACEMENT' ? 'Replacement' : 'Renewal'} request pending</b><div>Submitted ${fmtDT(pend.requestedAt)}${pend.payload && pend.payload.maturityDate ? ` · proposed maturity ${esc(pend.payload.maturityDate)}` : ''}. Awaiting bank CBS endorsement and AICTE approval — the deposit details change only after approval.</div></div></div>` : ''}
-      ${rr ? `<div class="card mt12"><div class="row between"><div class="h3">Lien Release Request</div>${chip(rr.status === 'APPROVED' ? ['Lien Released', 'green'] : ['Release Pending Bureau Approval', 'amber'], true)}</div><div class="small mt8">Reason: “${esc(rr.reason)}”</div><div class="xs muted mt4">Requested ${fmtDT(rr.requestedAt)}${rr.approvedBy ? ` · Approved by ${esc(rr.approvedBy)} on ${fmtDate(rr.approvedAt)}` : ' · Requires AICTE Regulation Bureau approval'}</div></div>` : ''}
+      ${rr || f.release ? releaseCard(f) : ''}
       <div style="display:grid;gap:10px" class="mt16">${actions}</div>
       ${f.demo ? `<p class="xs muted center mt12">Supplementary demo record for exercising renewal / release flows.</p>` : ''}
       ${hist.length ? `<div class="section-title"><span class="h2">History</span></div><div class="list">${hist.map(auditRow).join('')}</div>` : ''}`,
@@ -1722,7 +1764,7 @@ V.compliance = () => {
       <div class="section-title"><span class="h2">Deterministic Regulatory Rule Matrix</span></div>
       ${m.map(findingCard).join('')}
       <div class="section-title"><span class="h2">Issuing Authority Verification</span><span class="chip blue sm">Simulated</span></div>
-      ${ad.map(x => `<div class="card"><div class="row between top"><div class="small b grow">${esc(x.name)}</div>${chip([x.status.replace(/_/g, ' '), adTone[x.status] || 'slate'], true)}</div>
+      ${ad.map(x => `<div class="card"><div class="row between top"><div class="small b grow">${esc(x.name)}</div>${chip([`Simulated · ${x.status.replace(/_/g, ' ')}`, adTone[x.status] || 'slate'], true)}</div>
         <div class="xs muted mt4 mono" style="word-break:normal">Ref ${esc(x.referenceNumber)} · ${x.latencyMs} ms · ${fmtDT(x.lastPingAt)}</div>
         <div class="mt8">${Object.entries(x.verifiedAttributes).map(([k, v]) => `<div class="kv"><span>${esc(k)}</span><span>${esc(v)}</span></div>`).join('')}</div>
         <div class="row between mt8"><span class="xs muted" style="font-style:italic;flex:1">${esc(x.disclaimer)}</span><button class="btn btn-ghost btn-xs" data-act="pingAdapter" data-id="${x.id}">${ic('refresh', 14)} Re-verify</button></div></div>`).join('')}`,
@@ -2200,7 +2242,7 @@ const ACTIONS = {
     const item = (f, act, label) => `<button class="li" data-go="${act}" data-id="${f.id}"><span class="li-ico">${ic(act === 'fdrRelease' ? 'award' : 'refresh', 20)}</span><div class="grow"><div class="li-t">${label}</div><div class="li-s">${esc(f.fdrNumber)} · ${crLabel(f.amountLakhs)} · ${FSTATUS[fdrStatus(f)][0]}</div></div>${ic('chev', 18, 'chev')}</button>`;
     const items = [
       ...fd.filter(f => fdrStatus(f) === 'EXPIRING_SOON' && !f.pendingRequest).map(f => item(f, 'fdrRenew', 'Renew / Replace expiring FDR')),
-      ...fd.filter(f => fdrStatus(f) === 'MATURED' && !f.releaseRequest).map(f => item(f, 'fdrRelease', 'Request lien release & refund')),
+      ...fd.filter(f => fdrStatus(f) === 'MATURED' && !f.releaseRequest).map(f => item(f, 'fdrRelease', 'Request lien release')),
       ...fd.filter(f => fdrStatus(f) === 'ACTIVE' && !f.pendingRequest).map(f => item(f, 'fdrRenew', 'Bank change / replacement')),
     ];
     openSheet('FDR Related Request', items.length ? `<div class="list">${items.join('')}</div>` : '<div class="empty small">No FDR is currently eligible for renewal, replacement or release.</div>');
@@ -2313,8 +2355,8 @@ const ACTIONS = {
       <button class="li" data-act="csvFdrs"><span class="li-ico">${ic('rupee', 20)}</span><div class="grow"><div class="li-t">FDR / Security Deposit Register</div><div class="li-s">${myFdrs().length} deposit(s) · CSV</div></div>${ic('download', 18)}</button>
       <button class="li" data-act="csvApps"><span class="li-ico">${ic('files', 20)}</span><div class="grow"><div class="li-t">Applications &amp; Status</div><div class="li-s">${myApps().filter(a => a.status !== 'DRAFT').length} application(s) · CSV</div></div>${ic('download', 18)}</button>
       <button class="li" data-act="csvAudit"><span class="li-ico">${ic('activity', 20)}</span><div class="grow"><div class="li-t">Activity Log</div><div class="li-s">${myAudit().length} event(s) · CSV</div></div>${ic('download', 18)}</button></div>`),
-  csvFdrs: () => downloadCsv(`FDR-Register-${inst().pid}.csv`, 'FDR / Security Deposit Register', ['FDR Number', 'Status', 'Amount (INR)', 'Bank', 'Branch', 'IFSC', 'Issue Date', 'Maturity Date', 'Days to Maturity', 'Lien Confirmed', 'Lien Token', 'Pending Request', 'Linked Application'],
-    myFdrs().map(f => [f.fdrNumber, FSTATUS[fdrStatus(f)][0], Math.round(f.amountLakhs * 1e5), f.bankName, f.branchName, f.ifscCode, f.issueDate, f.maturityDate, daysUntil(f.maturityDate), f.isLienConfirmed ? 'Yes' : 'No', f.lienEndorsementToken || '', f.pendingRequest ? f.pendingRequest.kind : (f.releaseRequest ? `RELEASE ${f.releaseRequest.status}` : ''), f.applicationNumber])),
+  csvFdrs: () => downloadCsv(`FDR-Register-${inst().pid}.csv`, 'FDR / Security Deposit Register', ['FDR Number', 'Status', 'Amount (INR)', 'Bank', 'Branch', 'IFSC', 'Issue Date', 'Maturity Date', 'Days to Maturity', 'Lien Confirmed', 'Lien Confirmed By', 'Lien Token', 'Pending Request', 'Release', 'Linked Application'],
+    myFdrs().map(f => [f.fdrNumber, FSTATUS[fdrStatus(f)][0], Math.round(f.amountLakhs * 1e5), f.bankName, f.branchName, f.ifscCode, f.issueDate, f.maturityDate, daysUntil(f.maturityDate), f.isLienConfirmed ? 'Yes' : 'No', LIEN_SOURCE[lienSource(f)][0], f.lienEndorsementToken || '', f.pendingRequest ? f.pendingRequest.kind : '', (releaseState(f) || [''])[0], f.applicationNumber])),
   csvApps: () => downloadCsv(`Applications-${inst().pid}.csv`, 'Applications & Status', ['Application Number', 'Type', 'Status', 'Academic Year', 'Submitted', 'Last Updated', 'Version', 'Critical Findings', 'Warnings', 'Open Queries', 'FDR'],
     myApps().filter(a => a.status !== 'DRAFT').map(a => [a.applicationNumber, TYPE_LONG[a.type], STATUS[a.status][0], a.academicYear, fmtDT(a.submittedAt), fmtDT(a.lastUpdatedAt), a.currentVersion, a.findings.filter(f => f.severity === 'CRITICAL').length, a.findings.filter(f => f.severity === 'WARNING').length, a.scrutinyRecommendation && a.scrutinyRecommendation.status !== 'RESPONSE_SUBMITTED' ? a.scrutinyRecommendation.deficiencyPoints.length : 0, a.fdrNumber])),
   csvAudit: () => downloadCsv(`Activity-Log-${inst().pid}.csv`, 'Activity Log', ['Timestamp', 'Action', 'Actor', 'Role', 'Target', 'Details', 'Correlation ID', 'SHA-256'],

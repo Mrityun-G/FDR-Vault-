@@ -49,7 +49,7 @@ export const AppSidebar: React.FC<Props> = ({ isMobileOpen, setIsMobileOpen }) =
     { id: 'fdr_records', label: 'FDR Records', icon: FileText },
     { id: 'verification_center', label: 'Verification Center', icon: ShieldCheck },
     { id: 'renewals', label: 'Renewals & Replacements', icon: RefreshCw },
-    { id: 'release_requests', label: 'Release / Refund Requests', icon: ArrowUpRightSquare },
+    { id: 'release_requests', label: 'Lien Release Requests', icon: ArrowUpRightSquare },
     { id: 'reports', label: 'Reports & Analytics', icon: BarChart3 },
     { id: 'notifications', label: 'Notifications', icon: Bell, badge: unreadCount },
     { id: 'audit_trail', label: 'Audit Trail', icon: History },

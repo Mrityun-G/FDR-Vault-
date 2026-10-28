@@ -1,7 +1,7 @@
 /**
  * AICTE Intelligent Regulatory Validation Platform (AI-IRVP)
- * ReleaseRequestsView - FDR Joint Lien Release & Security Deposit Refund Requests
- * (requests are filed by institutions in the mobile app after the lock-in matures)
+ * ReleaseRequestsView - FDR joint lien release requests: request (institution app) -> AICTE decision
+ * with release order -> lien discharge recorded by the bank. The portal moves no money.
  */
 
 import React, { useState } from 'react';
@@ -18,7 +18,8 @@ export const ReleaseRequestsView: React.FC = () => {
 
   const pending = fdrRecords.filter(f => f.pendingRequest?.kind === 'RELEASE');
   const maturedNoRequest = fdrRecords.filter(f => f.status === 'MATURED' && !f.pendingRequest);
-  const released = fdrRecords.filter(f => f.status === 'RELEASED');
+  const awaitingBank = fdrRecords.filter(f => f.release && !f.release.dischargedAt);
+  const discharged = fdrRecords.filter(f => f.release?.dischargedAt);
 
   return (
     <div className="space-y-6">
@@ -29,9 +30,10 @@ export const ReleaseRequestsView: React.FC = () => {
               <ArrowUpRightSquare className="w-5 h-5" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-slate-900 tracking-tight">Security Deposit (FDR) Lien Release & Refund Desk</h1>
+              <h1 className="text-xl font-bold text-slate-900 tracking-tight">FDR Lien Release Desk</h1>
               <p className="text-xs text-slate-500 mt-0.5">
-                Discharge of the AICTE joint lien after the lock-in period (APH Clause 6.4). Institutions apply from the mobile app.
+                Release of the AICTE joint lien after the lock-in period (APH Clause 6.4). Institutions apply from the mobile app; after approval the bank
+                discharges the lien and records it here. The bank pays out the deposit; no money moves through this portal.
               </p>
             </div>
           </div>
@@ -83,7 +85,7 @@ export const ReleaseRequestsView: React.FC = () => {
                       className="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-lg text-xs flex items-center gap-1.5 cursor-pointer"
                     >
                       <ShieldCheck className="w-4 h-4" />
-                      Grant Release Decree
+                      Approve release
                     </button>
                     <button
                       onClick={() => setDecision({ fdr, request: req, approve: false })}
@@ -103,7 +105,7 @@ export const ReleaseRequestsView: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
           <h3 className="text-sm font-bold text-slate-900 p-4 border-b border-slate-200">Matured, no release requested</h3>
           <div className="divide-y divide-slate-100 text-xs">
@@ -119,18 +121,34 @@ export const ReleaseRequestsView: React.FC = () => {
           </div>
         </div>
         <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-          <h3 className="text-sm font-bold text-slate-900 p-4 border-b border-slate-200">Lien discharged</h3>
+          <h3 className="text-sm font-bold text-slate-900 p-4 border-b border-slate-200">Approved, awaiting bank discharge</h3>
           <div className="divide-y divide-slate-100 text-xs">
-            {released.length === 0 && <p className="p-4 text-slate-500">None yet.</p>}
-            {released.map(f => (
+            {awaitingBank.length === 0 && <p className="p-4 text-slate-500">None.</p>}
+            {awaitingBank.map(f => (
               <div key={f.id} className="p-3">
                 <span className="font-mono font-bold">{f.fdrNumber}</span> • {f.institutionName}
-                {f.releaseRequest?.approvedBy && (
-                  <span className="block text-[11px] text-emerald-800">
-                    Approved by {f.releaseRequest.approvedBy}
-                    {f.releaseRequest.approvedAt && <> on {new Date(f.releaseRequest.approvedAt).toLocaleDateString()}</>}
-                  </span>
-                )}
+                <span className="block text-[11px] text-slate-600">
+                  Order {f.release?.orderNumber || '—'}
+                  {f.releaseRequest?.approvedBy && <> • approved by {f.releaseRequest.approvedBy}</>}
+                  {f.release?.approvedAt && <> on {new Date(f.release.approvedAt).toLocaleDateString()}</>}
+                </span>
+                <span className="block text-[11px] text-amber-800">Waiting for {f.bankName} to record the lien discharge</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+          <h3 className="text-sm font-bold text-slate-900 p-4 border-b border-slate-200">Lien discharged by the bank</h3>
+          <div className="divide-y divide-slate-100 text-xs">
+            {discharged.length === 0 && <p className="p-4 text-slate-500">None yet.</p>}
+            {discharged.map(f => (
+              <div key={f.id} className="p-3">
+                <span className="font-mono font-bold">{f.fdrNumber}</span> • {f.institutionName}
+                <span className="block text-[11px] text-emerald-800">
+                  {f.release?.dischargedBy} • ref <span className="font-mono">{f.release?.dischargeRef}</span>
+                  {f.release?.dischargedAt && <> • {new Date(f.release.dischargedAt).toLocaleDateString()}</>}
+                </span>
+                <span className="block text-[11px] text-slate-500">AICTE order {f.release?.orderNumber || '—'}</span>
               </div>
             ))}
           </div>
