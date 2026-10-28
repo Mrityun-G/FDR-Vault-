@@ -22,6 +22,7 @@ const one = async q => (await sql(q))[0] || {};
   const page = await ctx.newPage();
   await page.setViewport({ width: 1440, height: 950 });
   page.on('pageerror', e => errors.push(e.message));
+  await (await page.createCDPSession()).send('Page.setDownloadBehavior', { behavior: 'allow', downloadPath: OUT });
 
   const text = () => page.evaluate(() => document.body.innerText);
   const waitText = async (t, timeout = 15000) => {
@@ -70,13 +71,15 @@ const one = async q => (await sql(q))[0] || {};
     await page.goto(WEB + '/admin', { waitUntil: 'networkidle0' });
     ok((await text()).includes('Admin Console Sign-in'), '/admin opens the Admin Console');
     await login('admin.verma@aicte-india.org', 'Admin@2026', '/officer');
-    ok((await text()).includes('signs in at the Admin Console'), 'administrator is sent from the Officer portal to the Admin Console');
+    // One account may use every portal (multi-role): a portal the account is not registered for asks for its details once, and shows nothing else.
+    const gate = t => t.includes('Complete your registration') && !t.includes('Logout');
+    ok(gate(await text()), 'administrator on the Officer portal must register as an officer first (no access before)');
     await login('reviewer.mehta@aicte-india.org', 'Rev@2026', '/admin');
-    ok((await text()).includes('signs in at the Officer Portal'), 'scrutiny officer is sent from the Admin Console to the Officer portal');
+    ok(gate(await text()), 'scrutiny officer on the Admin Console must register as an administrator first (no access before)');
 
     console.log('\nAccess control');
     await login('principal@dits-delhi.edu.in', 'Dits@2026');
-    ok((await text()).includes('institution account'), 'institution account is refused on the staff portal (points to the mobile app)');
+    ok(gate(await text()), 'institution account gets no staff access without registering as staff');
     await login('admin.verma@aicte-india.org', 'wrong-password', '/admin');
     ok((await text()).includes('Invalid email or password'), 'wrong password shows a clear error');
 
@@ -133,6 +136,53 @@ const one = async q => (await sql(q))[0] || {};
     const renewed = await one(`select f.maturity_date::text m, r.status from public.fdrs f join public.fdr_requests r on r.fdr_id = f.id where f.id = '${fdr}' order by r.requested_at desc limit 1`);
     ok(renewed.status === 'APPROVED' && renewed.m === '2036-12-29', 'renewal approved and the deposit maturity updated');
 
+    // Lien release: the institution's request, approved here with the AICTE release order (the bank discharges it later)
+    const ditsInst = (await one(`select institution_id i from public.profiles where email = 'principal@dits-delhi.edu.in'`)).i;
+    const relId = (await one(`insert into public.fdrs(institution_id, fdr_number, amount, bank_name, branch_name, ifsc_code, issue_date, maturity_date, joint_lien_holder, is_lien_confirmed, lien_endorsement_token)
+      values ('${ditsInst}', 'SBI-FDR-E2E01-2016', 10000000, 'State Bank of India', 'Institutional Area', 'SBIN0001234', '2016-01-01', '2026-01-01', 'Regional Officer, AICTE', true, 'CBS-E2E-01') returning id`)).id;
+    await sql(`select set_config('request.jwt.claim.sub', '${dits}', false); select public.request_lien_release('${relId}', 'Completion of the mandatory 10-year lock-in.', true); select set_config('request.jwt.claim.sub', '', false);`);
+    await page.reload({ waitUntil: 'networkidle2' });
+    await waitText('Shri R. C. Verma');
+    await click('Lien Release Requests');
+    await waitText('FDR Lien Release Desk');
+    ok(!(await text()).toLowerCase().includes('refund'), 'release desk makes no refund claim');
+    await click('Approve release');
+    await waitText('AICTE release order number');
+    ok(await page.evaluate(() => [...document.querySelectorAll('button')].find(b => b.textContent.trim() === 'Approve request').disabled), 'approval is blocked until the release order number is entered');
+    await fill('input[placeholder^="e.g. AICTE/"]', 'AICTE/NRO/LR/2026/101');
+    await click('Approve request');
+    await waitText('request for SBI-FDR-E2E01-2016 approved');
+    const rel = await one(`select f.released, f.released_at is not null at, r.decision_evidence->>'orderNumber' o from public.fdrs f join public.fdr_requests r on r.id = f.release_request_id where f.id = '${relId}'`);
+    ok(rel.released === true && rel.at && rel.o === 'AICTE/NRO/LR/2026/101', 'release approved with its order number recorded on the FDR');
+    await waitText('Approved, awaiting bank discharge');
+    ok((await text()).includes('Waiting for State Bank of India to record the lien discharge'), 'desk shows the release waiting for the bank');
+
+    // Reports from live records
+    await click('Reports');
+    await waitText('Download all reports (CSV)');
+    const rep = await text();
+    ok(['FDR register', 'Pending verification', 'Missing or incomplete documents', 'Approaching or past maturity', 'Requests awaiting action'].every(t => rep.includes(t)), 'Reports page lists the five reports');
+    ok(!/100% CBS Verified|2\.4 Working Days|88\.5%/.test(rep), 'no hard-coded figures on the Reports page');
+    await click('Requests awaiting action');
+    await waitText('LIEN DISCHARGE');
+    ok((await text()).includes('SBI-FDR-E2E01-2016'), 'awaiting-action report shows the release waiting for the bank');
+    await click('Export CSV');
+    await wait(1000);
+    const csvFile = fs.readdirSync(OUT).find(f => /^AICTE_awaiting-action_.*\.csv$/.test(f));
+    ok(csvFile && fs.readFileSync(path.join(OUT, csvFile), 'utf8').includes('"LIEN DISCHARGE","SBI-FDR-E2E01-2016"'), 'report exported as CSV');
+    await fill('input[aria-label="Filter by institution name or PID"]', 'no-such-institution');
+    await click('FDR register');
+    await waitText('Nothing to report.');
+    ok(true, 'institution filter narrows the reports');
+    await page.screenshot({ path: path.join(OUT, '2b-reports.png') });
+
+    // Daily reminder job
+    await click('Settings');
+    await waitText('Daily FDR maturity reminders');
+    await click('Run now');
+    await waitText('Run complete:');
+    ok((await one(`select count(*)::int n from public.job_runs where trigger = 'ADMIN' and error is null`)).n >= 1, 'admin ran the reminder job from Settings; the run is logged');
+
     // Staff invitation
     await click('User Management');
     await waitText('Stakeholder Accounts');
@@ -170,6 +220,13 @@ const one = async q => (await sql(q))[0] || {};
     await waitText('Joint lien on SBI-FDR-44012-2025 recorded');
     const lien = await one(`select is_lien_confirmed c, lien_endorsement_token t from public.fdrs where fdr_number = 'SBI-FDR-44012-2025'`);
     ok(lien.c === true && lien.t === 'CBS-SBI-LIEN-2026-04412', 'bank lien endorsement recorded with the CBS reference');
+    // Lien discharge after the AICTE release
+    ok((await text()).includes('Lien discharges: released by AICTE') && (await text()).includes('AICTE/NRO/LR/2026/101'), 'bank sees the released FDR with the AICTE release order');
+    await fill('input[aria-label="CBS discharge reference for SBI-FDR-E2E01-2016"]', 'CBS-SBI-DIS-2026-0101');
+    await click('Record discharge');
+    await waitText('Lien discharge on SBI-FDR-E2E01-2016 recorded');
+    const dis = await one(`select lien_discharge_ref r, lien_discharged_at is not null at from public.fdrs where fdr_number = 'SBI-FDR-E2E01-2016'`);
+    ok(dis.r === 'CBS-SBI-DIS-2026-0101' && dis.at, 'bank recorded the lien discharge with its CBS reference');
     await page.screenshot({ path: path.join(OUT, '4-bank.png') });
     await logout();
   } catch (e) {
