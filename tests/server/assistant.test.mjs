@@ -97,6 +97,12 @@ try {
   const cert = await upload(dits, ditsId, 'Oracle-Certificate.pdf', makePdf([['Oracle Certified Professional', 'This certifies that Mrityunjai has completed the Java SE 17 Developer exam.']]));
   a = (await attach(dits, a.id, 'FDR_ADVICE', cert)).body;
   ok(item(a, 'FDR_ADVICE').validation.status === 'RED' && /not a fdr certificate/i.test(item(a, 'FDR_ADVICE').validation.issues.map(i => i.message).join(' ')), 'a certificate uploaded as the FDR advice is RED (wrong document), without AI');
+  const letter = await upload(dits, ditsId, 'Authorisation.pdf', makePdf([['DELHI INSTITUTE OF TECHNOLOGY & SCIENCE', 'AUTHORISATION LETTER',
+    'I authorise Shri Manoj Gupta to submit the security deposit (FDR) of the institution on the FDR Vault portal.', 'Signature of the Head: Dr. R. K. Sharma, Principal']]));
+  a = (await attach(dits, a.id, 'FDR_ADVICE', letter)).body;
+  const lv = item(a, 'FDR_ADVICE').validation;
+  ok(lv.status === 'RED' && lv.issues.length === 1 && /does not look like the FDR certificate/.test(lv.issues[0].message),
+    'a letter that mentions “FDR” but has no FDR number, amount or maturity date is RED in the advice slot, without AI');
   const real = await upload(dits, ditsId, 'SBI-advice.pdf', makePdf([adviceLines({ fdr: 'SBI-FDR-55500-2026' })]));
   a = (await attach(dits, a.id, 'FDR_ADVICE', real)).body;
   const rv = item(a, 'FDR_ADVICE').validation;
@@ -110,6 +116,15 @@ try {
     `photo of the advice read by free OCR: ${pv.status}, FDR ${field(a, 'fdrNumber').value}`);
 
   aiOverride.client = fake;
+  reading = extraction({});
+  a = (await attach(dits, a.id, 'FDR_ADVICE', await upload(dits, ditsId, 'blurred-advice.pdf'))).body;
+  const bv = item(a, 'FDR_ADVICE').validation;
+  ok(bv.status === 'AMBER' && bv.issues.length === 1 && /FDR number, amount and maturity date could not be found/.test(bv.issues[0].message),
+    'AI read no deposit details: one AMBER issue (manual review), not a list of four and not RED');
+  reading = extraction({ maturityDate: '2036-10-01' });
+  a = (await attach(dits, a.id, 'FDR_ADVICE', await upload(dits, ditsId, 'partial-advice.pdf'))).body;
+  const partial = item(a, 'FDR_ADVICE').validation.issues.map(i => i.message).join(' ');
+  ok(/beneficiary \/ lien details could not be found/.test(partial) && !/number and amount were read/.test(partial), 'lien message does not claim the FDR number and amount were read when they were not');
   reading = extraction({ fdrNumber: 'SBI-FDR-55501-2026', amountInr: '10000000', issueDate: '2026-10-01', maturityDate: '2036-10-01', lienHolder: 'Regional Officer, Northern Regional Office, AICTE',
     keyFields: [{ label: 'FDR No.', value: 'SBI-FDR-55501-2026', page: 1, sourceLine: 'Receipt No. SBI-FDR-55501-2026' }] });
   f1 = await upload(dits, ditsId, 'fdr-advice-v2.pdf');

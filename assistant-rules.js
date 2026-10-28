@@ -198,7 +198,7 @@
       if (nameSimilarity(x.institutionNameInDocument, institution.name) < 0.6)
         add('RED', `The document names “${x.institutionNameInDocument}”, not your institution (${institution.name}).`, 'Upload the document issued in your institution’s name, or ask the bank to correct it.');
     }
-    if (req.docType === 'FDR_CORPUS') validateFdrAdvice(x, add, checks, { workflow, answers, institution, record, today });
+    if (req.docType === 'FDR_CORPUS') validateFdrAdvice(x, add, checks, { req, workflow, answers, institution, record, today });
     if (req.docType === 'BANK_LETTER' && x.lienHolder && !/aicte|all india council/i.test(x.lienHolder) && workflow !== 'CORRECT_FDR')
       add('RED', `The lien is marked in favour of “${x.lienHolder}”, not AICTE.`, 'Ask the bank for a letter marking the lien in favour of the Regional Officer, AICTE.');
     for (const a of x.anomalies || []) add('AMBER', `Possible problem noticed in the document: ${a}`, 'Check the original. If it is correct, leave a note for the reviewer; otherwise upload a corrected copy.');
@@ -212,13 +212,23 @@
     return finish(issues, checks);
   }
 
-  function validateFdrAdvice(x, add, checks, { workflow, answers, institution, record, today }) {
+  function validateFdrAdvice(x, add, checks, { req, workflow, answers, institution, record, today }) {
     const fdr = record.fdr;
     checks.push('FDR number', 'Amount', 'Dates', 'Beneficiary / lien wording', 'Bank');
+    const amount = Number(digits(x.amountInr));
+    // None of the deposit's own details: another document in this slot, or one the reader could not make out.
+    if (!x.fdrNumber && !amount && !isDate(x.maturityDate)) {
+      if (x.matchesExpectedType === false) return;   // already RED as the wrong kind of document
+      // A clearly read text PDF without them is not a deposit advice; a photo, scan or AI reading may simply have missed them.
+      if (x.method === 'rules' && x.legibility === 'clear')
+        add('RED', `No FDR number, amount or maturity date was found, so this does not look like the ${req.name}.`,
+          `Check that you uploaded the ${req.name} in this slot. If it is the advice, upload the bank’s original PDF or a clearer copy.`);
+      else add('AMBER', 'The FDR number, amount and maturity date could not be found in the document.', 'Upload a clearer copy, or type the values in the form. The reviewer will check the document by hand.');
+      return;
+    }
     if (!x.fdrNumber) add('AMBER', 'The FDR number could not be found in the document.', 'Upload a clearer copy, or type the FDR number in the form.');
     else if (fdr && ['RENEW_FDR', 'RELEASE_FDR'].includes(workflow) && digits(x.fdrNumber) !== digits(fdr.fdrNumber))
       add('RED', `The document is for FDR ${x.fdrNumber}, but you chose ${fdr.fdrNumber}.`, 'Upload the advice of the FDR you selected.');
-    const amount = Number(digits(x.amountInr));
     if (!amount) add('AMBER', 'The deposit amount could not be found in the document.', 'Upload a clearer copy, or type the amount in the form.');
     else if (workflow === 'REPLACE_FDR' && fdr && amount < fdr.amount) add('RED', `The replacement amount ${fmtRs(amount)} is less than the current deposit of ${fmtRs(fdr.amount)}.`, 'The replacement must be for at least the current amount.');
     else if (workflow === 'NEW_FDR' && institution.requiredFdrLakhs && amount < institution.requiredFdrLakhs * 1e5)
@@ -233,7 +243,8 @@
       if (workflow === 'RENEW_FDR' && fdr && x.maturityDate <= fdr.maturityDate)
         add('RED', `The new maturity date ${x.maturityDate} is not later than the current one (${fdr.maturityDate}).`, 'Upload the renewed advice showing the extended maturity date.');
     }
-    if (!x.lienHolder) add('AMBER', 'The FDR number and amount were read, but the beneficiary / lien details could not be verified.', 'Upload a clearer copy, or add the bank’s lien letter.');
+    if (!x.lienHolder) add('AMBER', x.fdrNumber && amount ? 'The FDR number and amount were read, but the beneficiary / lien details could not be verified.'
+      : 'The beneficiary / lien details could not be found in the document.', 'Upload a clearer copy, or add the bank’s lien letter.');
     else if (!/aicte|all india council/i.test(x.lienHolder)) add('RED', `The lien / joint holder is “${x.lienHolder}”, not AICTE.`, 'The deposit must be under joint lien with the Regional Officer, AICTE. Ask the bank to correct it.');
     const bank = answers.bankName || (record.fdr && workflow !== 'REPLACE_FDR' ? record.fdr.bankName : null);
     if (bank && x.bankName && nameSimilarity(x.bankName, bank) < 0.5) add('AMBER', `The document is from “${x.bankName}”, but you said ${bank}.`, 'Check the bank name and correct your answer or the document.');
