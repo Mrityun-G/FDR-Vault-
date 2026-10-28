@@ -31,7 +31,7 @@
     { code: 'REPLACE_FDR', name: 'Replace an expired or expiring FDR', short: 'Replacement', integration: 'request_fdr_renewal',
       destination: { role: 'AICTE administrator, then the new bank’s official', verified: 'PORTAL_WORKFLOW', note: ROUTE_NOTE,
         why: 'An administrator approves the replacement; the new FDR then needs a fresh joint-lien endorsement by its bank.' } },
-    { code: 'RELEASE_FDR', name: 'Request release / refund of a security deposit', short: 'Lien release', integration: 'request_lien_release',
+    { code: 'RELEASE_FDR', name: 'Request lien release of a security deposit', short: 'Lien release', integration: 'request_lien_release',
       destination: { role: 'AICTE administrator (FDR Vault Admin portal)', verified: 'PORTAL_WORKFLOW', note: ROUTE_NOTE,
         why: 'Release of the joint lien is decided by an administrator after the deposit has matured.' } },
     { code: 'CORRECT_FDR', name: 'Correct or update existing FDR details', short: 'Correction', integration: 'raise_ticket',

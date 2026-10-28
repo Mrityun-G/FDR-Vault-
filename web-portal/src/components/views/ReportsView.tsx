@@ -33,9 +33,11 @@ export const ReportsView: React.FC = () => {
   const reports = useMemo(() => buildReports(applications, fdrRecords, { search, bank }), [applications, fdrRecords, search, bank]);
   const report = reports.find(r => r.id === selected) || reports[0];
   const lienData = useMemo(() => {
-    const live = fdrRecords.filter(f => f.status !== 'RELEASED' && (!bank || f.bankName === bank));
+    const q = search.trim().toLowerCase();
+    const live = fdrRecords.filter(f => f.status !== 'RELEASED' && (!bank || f.bankName === bank) &&
+      (!q || f.institutionName.toLowerCase().includes(q) || f.pid.toLowerCase().includes(q)));
     return SOURCES.map(s => ({ name: LIEN_CONFIRMATION_LABEL[s], count: live.filter(f => f.lienConfirmation === s).length })).filter(d => d.count);
-  }, [fdrRecords, bank]);
+  }, [fdrRecords, bank, search]);
 
   const downloadAll = () => reports.forEach((r, i) => setTimeout(() => download(r), i * 400));
 

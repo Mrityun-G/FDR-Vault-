@@ -349,7 +349,10 @@ function render(resetScroll) {
   const key = `${r.name}|${JSON.stringify(r.params || {})}`;
   $('#view').classList.toggle('enter', key !== UI.screenKey && !reducedMotion());
   UI.screenKey = key;
+  // Removing a focused, edited field fires a late 'change' event; it must not mark the new screen as unsaved.
+  const dirty = UI.dirty, wChanged = UI.wChanged;
   $('#view').innerHTML = shell(v);
+  UI.dirty = dirty; UI.wChanged = wChanged;
   const c = $('.content');
   if (c) c.scrollTop = keep;
   v.after && v.after();
@@ -2315,7 +2318,7 @@ const ACTIONS = {
     if (!r.district.trim()) e.district = 'District is required';
     if (Object.keys(e).length) { UI.err = e; UI.vals = r; render(); return; }
     UI.vals = r;
-    await busy(el, async () => { await Backend.updateInstitution(r); UI.edit = null; UI.vals = null; render(); toast('Institution details updated'); }, 'Saving…');
+    await busy(el, async () => { await Backend.updateInstitution(r); UI.edit = null; UI.vals = null; UI.dirty = false; render(); toast('Institution details updated'); }, 'Saving…');
   },
   saveContact: async el => {
     const r = readForm($('#contactForm')), e = {};
@@ -2326,7 +2329,7 @@ const ACTIONS = {
     if (r.nodalMobile && !mobileOk(r.nodalMobile)) e.nodalMobile = 'Invalid mobile';
     if (Object.keys(e).length) { UI.err = e; UI.vals = r; render(); return; }
     UI.vals = r;
-    await busy(el, async () => { await Backend.updateContact(r); UI.edit = null; UI.vals = null; render(); toast('Contact details saved'); }, 'Saving…');
+    await busy(el, async () => { await Backend.updateContact(r); UI.edit = null; UI.vals = null; UI.dirty = false; render(); toast('Contact details saved'); }, 'Saving…');
   },
   savePassword: async el => {
     const r = readForm($('#pwForm')), e = {};
@@ -2340,14 +2343,14 @@ const ACTIONS = {
     await busy(el, async () => { await Backend.changePassword(me().email, r.current, r.next); back(); toast('Password updated'); }, 'Updating…');
   },
   ticketNew: () => { UI.ticketForm = true; UI.err = {}; render(true); },
-  ticketCancel: () => { UI.ticketForm = false; render(true); },
+  ticketCancel: () => { UI.ticketForm = false; UI.dirty = false; render(true); },
   submitTicket: async el => {
     const r = readForm($('#ticketForm')), e = {};
     if (!r.subject.trim()) e.subject = 'Subject is required';
     if (r.desc.trim().length < 10) e.desc = 'Describe the issue (min 10 characters)';
     if (Object.keys(e).length) { UI.err = e; UI.vals = r; render(); return; }
     UI.vals = r;
-    await busy(el, async () => { const id = await Backend.raiseTicket(r); UI.ticketForm = false; UI.vals = null; render(true); toast(`Ticket ${id} raised`); }, 'Submitting…');
+    await busy(el, async () => { const id = await Backend.raiseTicket(r); UI.ticketForm = false; UI.vals = null; UI.dirty = false; render(true); toast(`Ticket ${id} raised`); }, 'Submitting…');
   },
   handbook: el => { const [t, d] = HANDBOOKS[el.dataset.v]; openSheet(t, `<p class="small" style="color:var(--text2)">${esc(d)}</p><p class="xs muted mt12">Summary for reference within this prototype. Refer to the official AICTE publication for the authoritative text.</p>`); },
   reports: () => openSheet('Download Reports', `<p class="small muted">Reports contain only records your institution is authorised to see, as of now.</p>
