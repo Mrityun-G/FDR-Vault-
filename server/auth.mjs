@@ -171,6 +171,8 @@ authRouter.put('/user', requireUser, async (req, res) => {
   if (password !== undefined) {
     if (String(password).length < 8) return fail(res, 400, 'Password should be at least 8 characters.');
     await query(`update auth.users set encrypted_password = crypt($2, gen_salt('bf', 10)), updated_at = now() where id = $1`, [req.uid, String(password)]);
+    // A new password signs out every other session (e.g. one opened with the old, possibly stolen, password).
+    await query('update auth.sessions set revoked_at = now() where user_id = $1 and id <> $2 and revoked_at is null', [req.uid, req.sid]);
   }
   res.json(publicUser(await userById(req.uid)));
 });

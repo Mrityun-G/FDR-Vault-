@@ -27,7 +27,8 @@
     "web:test-server": "node tests/web-test-server.mjs",
     "sync:api-client": "node -e \"require('fs').copyFileSync('api-client.js', 'web-portal/src/lib/api-client.js')\"",
     "test:e2e:staff": "node tests/e2e/staff-portal.e2e.cjs",
-    "test:e2e:assistant": "node tests/e2e/assistant.e2e.cjs"
+    "test:e2e:assistant": "node tests/e2e/assistant.e2e.cjs",
+    "test:lifecycle": "node tests/server/lifecycle.test.mjs"
   },
   "devDependencies": {
     "@capacitor/cli": "^6.2.2",

@@ -8,6 +8,7 @@ import { config } from './config.mjs';
 import { pool, asUser, asService, query } from './db.mjs';
 import { signPath, verifyPathSig } from './tokens.mjs';
 import { requireUser } from './auth.mjs';
+import { mail } from './mail.mjs';
 import { analyzeDocument, buildResult, DOC_TYPES, MEDIA_TYPES, RefusedError } from '../supabase/functions/analyze-document/extract.ts';
 import { readWithoutAi, readerName } from './read-pdf.mjs';
 
@@ -203,16 +204,43 @@ apiRouter.get('/events', requireUser, async (req, res) => {
   req.on('close', () => { clearInterval(ping); listeners.delete(l); });
 });
 
-// ---------------------------------------------------------------- scheduled job (was pg_cron, 01:30 UTC daily)
+// ---------------------------------------------------------------- scheduled job (was pg_cron, 01:30 UTC = 07:00 IST daily)
+// run_daily_reminders() runs the job at most once per India date, from 07:00 IST, under a lock, and logs it in job_runs.
+// So every server may call it: at start-up (catches up after a restart or a sleeping instance) and every 10 minutes.
 
-export function startScheduler() {
-  const runAt = () => { const n = new Date(), t = new Date(Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate(), 1, 30)); if (t <= n) t.setUTCDate(t.getUTCDate() + 1); return t - n; };
-  const run = async () => {
-    try { const { rows } = await asService(c => c.query('select public.generate_expiry_reminders() as n')); console.log(`[scheduler] FDR expiry reminders: ${rows[0].n}`); }
-    catch (e) { console.error('[scheduler]', e.message); }
-    setTimeout(run, runAt()).unref();
-  };
-  setTimeout(run, runAt()).unref();
+export async function runReminders({ force = false } = {}) {
+  try {
+    const { rows: [{ r }] } = await asService(c => c.query('select public.run_daily_reminders($1) as r', [force]));
+    if (r.ran) {
+      console.log(`[scheduler] FDR reminders for ${r.runDate}: ${r.checked} FDR(s) in a reminder window, ${r.created} new notification(s)`);
+      r.emailed = await emailReminders();
+    }
+    return r;
+  } catch (e) {
+    console.error('[scheduler]', e.message);
+    await query(`insert into public.job_runs(job, run_date, trigger, finished_at, error)
+                 values ('fdr-expiry-reminders', (now() at time zone 'Asia/Kolkata')::date, $1, clock_timestamp(), $2)`, [force ? 'SERVER_FORCED' : 'SCHEDULE', e.message]).catch(() => {});
+    return { ran: false, error: e.message };
+  }
 }
+
+// New reminder notifications are also emailed to the institution's active accounts (written to the log without SMTP).
+async function emailReminders() {
+  const { rows } = await query(`
+    select n.id, n.title, n.message, p.email from public.notifications n
+      join public.profiles p on p.institution_id = n.institution_id and p.status = 'ACTIVE' and 'INSTITUTION' = any(p.roles)
+     where n.dedupe_key like 'fdr-expiry-%' and n.emailed_at is null and n.created_at > now() - interval '2 days'`);
+  for (const m of rows) await mail.reminder(m.email, m.title, m.message).catch(e => console.error('[scheduler] mail', e.message));
+  if (rows.length) await query('update public.notifications set emailed_at = now() where id = any($1)', [[...new Set(rows.map(m => m.id))]]);
+  return rows.length;
+}
+
+let schedulerTimer = null;
+export function startScheduler(everyMs = 10 * 60_000) {
+  runReminders();
+  schedulerTimer = setInterval(runReminders, everyMs);
+  schedulerTimer.unref();
+}
+export const stopScheduler = () => clearInterval(schedulerTimer);
 
 export const health = async (req, res) => { await pool.query('select 1'); res.json({ ok: true }); };

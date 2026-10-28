@@ -21,6 +21,10 @@ services:
           property: connectionString
       - key: JWT_SECRET
         generateValue: true
+      # Daily FDR maturity reminders (07:00 IST). Safe on several instances: the database lets one run per day.
+      # The free plan sleeps when idle; .github/workflows/wake-api.yml wakes it after 07:00 IST so the day's run happens.
+      - key: RUN_SCHEDULER
+        value: "true"
       - key: PUBLIC_URL
         sync: false            # e.g. https://fdr-vault-api.onrender.com
       - key: ALLOWED_ORIGINS
