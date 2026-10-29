@@ -9,7 +9,14 @@ import { AicteLogo } from './AicteLogo';
 import { RotatingText, rise, stagger } from './fx';
 import { PORTALS, portalUrl } from '../lib/portal';
 import { INSTITUTION_APP_URL } from '../lib/api';
-import { ShieldCheck, Crown, Smartphone, ArrowRight } from 'lucide-react';
+import { ShieldCheck, Crown, Smartphone, ArrowRight, CheckCircle2 } from 'lucide-react';
+
+const highlights = [
+  'Bank-confirmed FDR liens, renewals and releases',
+  'AI checks every uploaded document against the rules',
+  'Live status and deficiency notices — no letters, no visits',
+  'A full audit trail of every decision'
+];
 
 const cards = [
   {
@@ -71,12 +78,12 @@ export const PortalChooser: React.FC = () => {
       preload="auto"
       aria-hidden="true"
     />
-    {/* Darkens only the top (heading) and bottom (portals); the middle of the video stays clear. */}
-    <div className="pointer-events-none absolute inset-0 bg-linear-to-b from-slate-950/80 via-slate-950/10 to-slate-950/85" aria-hidden="true" />
+    {/* Darkens the heading (left) and the portals (right) on wide screens, top and bottom on phones. */}
+    <div className="pointer-events-none absolute inset-0 bg-linear-to-b from-slate-950/80 via-slate-950/30 to-slate-950/85 lg:bg-linear-to-r lg:from-slate-950/85 lg:via-slate-950/35 lg:to-slate-950/75" aria-hidden="true" />
 
-    {/* Heading at the top, the three portals at the bottom: the video plays in between. */}
-    <motion.div variants={stagger} initial="hidden" animate="show" className="relative w-full max-w-5xl flex-1 flex flex-col justify-between gap-10 py-4 sm:py-8">
-      <motion.header variants={rise} className="text-center space-y-3 drop-shadow-[0_2px_8px_rgba(2,6,23,0.6)]">
+    {/* Heading on the left, the three portals stacked on the right; stacked one under the other on phones. */}
+    <motion.div variants={stagger} initial="hidden" animate="show" className="relative w-full max-w-6xl flex-1 flex flex-col lg:flex-row lg:items-center justify-between gap-10 py-4 sm:py-8">
+      <motion.header variants={rise} className="lg:flex-1 lg:max-w-xl text-center lg:text-left space-y-4 drop-shadow-[0_2px_8px_rgba(2,6,23,0.6)]">
         <div className="inline-flex items-center gap-3 bg-white/10 ring-1 ring-white/20 rounded-2xl px-4 py-2">
           <AicteLogo size={40} className="w-10 h-10" />
           <div className="text-left">
@@ -84,15 +91,27 @@ export const PortalChooser: React.FC = () => {
             <p className="text-[11px] text-indigo-100 leading-tight">All India Council for Technical Education</p>
           </div>
         </div>
-        <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
+        <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight leading-tight">
           Security Deposit & Approvals —{' '}
           <RotatingText items={['Transparent.', 'Secure.', 'Real-time.', 'Paperless.']} className="text-gradient-light" />
         </h1>
-        <p className="text-sm text-indigo-100">One live record, three doors. Choose yours.</p>
+        <p className="text-sm sm:text-base text-indigo-100 leading-relaxed">
+          From the first application to the Extension of Approval letter, every Fixed Deposit Receipt and every
+          scrutiny step lives in one shared record — seen the same way by the institution, the AICTE officer and the bank.
+        </p>
+        <ul className="space-y-2 text-sm text-white/90 inline-block text-left">
+          {highlights.map(h => (
+            <li key={h} className="flex items-start gap-2">
+              <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0 text-emerald-300" />
+              <span>{h}</span>
+            </li>
+          ))}
+        </ul>
+        <p className="text-sm font-semibold text-indigo-100">One live record, three doors. Choose yours.</p>
       </motion.header>
 
-      {/* Frosted-glass cards of equal height: the video shows through, and every card lines up the same way. */}
-      <div className="grid gap-4 md:grid-cols-3 items-stretch">
+      {/* Frosted-glass cards stacked down the right side: the video shows through. */}
+      <div className="grid gap-4 w-full lg:w-[26rem] lg:shrink-0">
         {cards.map(c => {
           const Icon = c.icon;
           return (
