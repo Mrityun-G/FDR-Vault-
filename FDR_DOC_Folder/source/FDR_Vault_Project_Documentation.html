@@ -1,0 +1,1027 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>FDR Vault Project Documentation</title>
+<style>
+:root{
+  --navy:#0d2a5c; --navy2:#123b7a; --blue:#1e6fd0; --sky:#e8f1fc; --sky2:#f4f8fe;
+  --saffron:#f39a1e; --green:#2e9e44; --red:#d92d43; --amber:#f5a524;
+  --ink:#1b2433; --muted:#5b6575; --line:#d5dde8; --zebra:#f6f8fb;
+}
+@page{
+  size:A4; margin:17mm 15mm 16mm 15mm;
+  @top-left{content:"FDR Vault · AICTE Intelligent Regulatory Validation Platform"; font:7.5pt 'Segoe UI',Arial,sans-serif; color:#5b6575; vertical-align:bottom; padding-bottom:3mm}
+  @top-right{content:"Team Prime Developers · Smart India Hackathon 2026"; font:7.5pt 'Segoe UI',Arial,sans-serif; color:#5b6575; vertical-align:bottom; padding-bottom:3mm}
+  @bottom-left{content:"Project Documentation · v1.1.0 · 30 October 2026"; font:7.5pt 'Segoe UI',Arial,sans-serif; color:#5b6575; vertical-align:top; padding-top:3mm}
+  @bottom-right{content:"Page " counter(page) " of " counter(pages); font:600 7.5pt 'Segoe UI',Arial,sans-serif; color:#0d2a5c; vertical-align:top; padding-top:3mm}
+}
+@page :first{margin:0; @top-left{content:none} @top-right{content:none} @bottom-left{content:none} @bottom-right{content:none}}
+*{box-sizing:border-box}
+html{-webkit-print-color-adjust:exact; print-color-adjust:exact}
+body{margin:0; background:#fff; color:var(--ink); font:9.6pt/1.47 'Segoe UI','Nirmala UI',Arial,sans-serif}
+.cond,h1,h2,h3,.kpi b,.cover-title{font-family:Bahnschrift,'Segoe UI',Arial,sans-serif}
+p{margin:0 0 6pt}
+a{color:var(--blue); text-decoration:none}
+code,.mono{font-family:Consolas,'Cascadia Mono','Courier New',monospace; font-size:8.6pt; background:#eef2f8; border-radius:3px; padding:0 3px; color:#0b3d91}
+ul,ol{margin:2pt 0 7pt; padding-left:15pt}
+li{margin:1.5pt 0}
+strong{color:#0f2350}
+
+/* ---------- cover ---------- */
+.cover{height:297mm; width:210mm; position:relative; overflow:hidden; color:#fff;
+  background:radial-gradient(120mm 120mm at 85% 12%, rgba(64,140,255,.35), transparent 70%),
+             radial-gradient(110mm 110mm at 5% 95%, rgba(243,154,30,.22), transparent 70%),
+             linear-gradient(160deg,#0a1b3f 0%,#0f2f66 55%,#123b7a 100%);
+  break-after:page; padding:0}
+.tri{position:absolute; left:0; right:0; top:0; height:5mm; display:flex}
+.tri i{flex:1}
+.cover .inner{position:absolute; left:20mm; right:20mm; top:24mm; bottom:18mm; display:flex; flex-direction:column}
+.cover .top{display:flex; justify-content:space-between; align-items:flex-start}
+.badge-sih{border:1px solid rgba(255,255,255,.45); border-radius:30px; padding:4pt 12pt; font:600 9pt 'Segoe UI',Arial; letter-spacing:.6pt; text-transform:uppercase; color:#dbe8ff}
+.logo-card{width:44mm; height:56mm; background:#fff; border-radius:7mm; display:grid; place-items:center; box-shadow:0 6mm 14mm rgba(0,0,0,.35)}
+.logo-card img{width:34mm}
+.cover-title{font-size:46pt; font-weight:700; letter-spacing:1.5pt; line-height:1; margin:14mm 0 4mm; font-stretch:80%}
+.cover-sub{font-size:15pt; font-weight:600; color:#cfe1ff; line-height:1.3; max-width:150mm}
+.cover-sub2{font-size:11pt; color:#aac4ee; margin-top:3mm; max-width:150mm}
+.doc-tag{display:inline-block; margin-top:9mm; background:var(--saffron); color:#1d1300; font:700 10.5pt Bahnschrift,'Segoe UI'; letter-spacing:1pt; padding:5pt 14pt; border-radius:4pt; text-transform:uppercase}
+.cover .grid{margin-top:auto; display:grid; grid-template-columns:1fr 1fr; gap:4mm}
+.cell{background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.18); border-radius:3mm; padding:4mm 5mm}
+.cell h4{margin:0 0 1.5mm; font:700 8pt 'Segoe UI'; letter-spacing:1pt; text-transform:uppercase; color:#ffcf8a}
+.cell p{margin:0; font-size:9.5pt; color:#e9f0ff; line-height:1.45}
+.cell a{color:#fff}
+.cover .foot{margin-top:5mm; font-size:8pt; color:#9fb6dd; display:flex; justify-content:space-between}
+
+/* ---------- headings ---------- */
+h2.sec{display:flex; align-items:center; gap:9pt; margin:16pt 0 8pt; padding:0 0 5pt; border-bottom:2px solid var(--navy); color:var(--navy); font-size:17pt; font-weight:700; letter-spacing:.3pt; break-after:avoid}
+h2.sec .n{flex:none; width:24pt; height:24pt; border-radius:50%; background:var(--blue); color:#fff; display:grid; place-items:center; font-size:12.5pt}
+h2.sec.first{margin-top:0}
+h3{font-size:12pt; color:var(--navy2); margin:11pt 0 4pt; break-after:avoid; font-weight:700}
+h3 .tag{font:600 7.5pt 'Segoe UI'; color:var(--blue); background:var(--sky); border-radius:3pt; padding:1pt 5pt; margin-left:6pt; vertical-align:middle}
+.newpage{break-before:page}
+.lead{font-size:10.4pt; color:#22304a}
+
+/* ---------- toc ---------- */
+.toc-title{font-size:22pt; color:var(--navy); margin:0 0 3mm; font-weight:700}
+.toc{list-style:none; padding:0; margin:0; columns:1}
+.toc li{display:flex; align-items:baseline; gap:6pt; padding:3.3pt 0; border-bottom:1px dotted #c3ccd9; font-size:10.4pt; margin:0}
+.toc li .no{width:20pt; color:var(--blue); font-weight:700; font-family:Bahnschrift,'Segoe UI'}
+.toc li .t{flex:1}
+.toc li .pg{font-weight:700; color:var(--navy); font-family:Bahnschrift,'Segoe UI'; min-width:16pt; text-align:right}
+.toc li small{color:var(--muted); font-size:8.4pt; margin-left:5pt}
+
+/* ---------- tables ---------- */
+table{width:100%; border-collapse:collapse; margin:4pt 0 9pt; font-size:8.7pt; line-height:1.38}
+thead{display:table-header-group}
+tr{break-inside:avoid}
+th{background:var(--navy); color:#fff; text-align:left; font-weight:600; padding:4pt 6pt; border:1px solid var(--navy)}
+td{padding:3.6pt 6pt; border:1px solid var(--line); vertical-align:top}
+tbody tr:nth-child(even) td{background:var(--zebra)}
+td.k{font-weight:600; color:#0f2350; white-space:nowrap}
+td.c, th.c{text-align:center}
+.yes{color:var(--green); font-weight:700}
+.no{color:#a0a8b5}
+
+/* ---------- boxes ---------- */
+.kpis{display:grid; grid-template-columns:repeat(4,1fr); gap:5pt; margin:8pt 0 10pt}
+.kpi{border:1px solid var(--line); border-top:3px solid var(--blue); border-radius:4pt; padding:6pt 7pt; background:var(--sky2); break-inside:avoid}
+.kpi b{display:block; font-size:20pt; color:var(--navy); line-height:1.05}
+.kpi span{display:block; font-size:8pt; color:var(--muted); line-height:1.3; margin-top:2pt}
+.kpi:nth-child(4n+2){border-top-color:var(--saffron)} .kpi:nth-child(4n+3){border-top-color:var(--green)} .kpi:nth-child(4n+4){border-top-color:#7b2fd6}
+.note{border-left:3.5pt solid var(--blue); background:var(--sky2); padding:6pt 9pt; margin:6pt 0 9pt; font-size:9pt; break-inside:avoid; border-radius:0 3pt 3pt 0}
+.note.warn{border-color:var(--saffron); background:#fff8ec}
+.note.ok{border-color:var(--green); background:#f1faf3}
+.note b:first-child{color:var(--navy)}
+.cols2{display:grid; grid-template-columns:1fr 1fr; gap:9pt}
+.card{border:1px solid var(--line); border-radius:4pt; padding:7pt 9pt; break-inside:avoid; background:#fff}
+.card h4{margin:0 0 3pt; font:700 10pt Bahnschrift,'Segoe UI'; color:var(--navy)}
+.card ul{margin:0; padding-left:13pt}
+.card p{margin:0 0 3pt}
+.pill{display:inline-block; font:600 7.6pt 'Segoe UI'; padding:0.5pt 5pt; border-radius:8pt; border:1px solid; white-space:nowrap}
+.pill.g{color:#1e7a33; background:#e6f5ea; border-color:#a7d9b3}
+.pill.a{color:#9a5b00; background:#fff3dc; border-color:#f2c977}
+.pill.r{color:#b3172c; background:#fde7ea; border-color:#f2a7b1}
+.pill.b{color:#0b3d91; background:#e5effc; border-color:#a9c7f0}
+.pill.p{color:#5a2399; background:#f1e8fc; border-color:#cdb2ef}
+figure{margin:6pt 0 10pt; break-inside:avoid; text-align:center}
+figure img{max-width:100%; border:1px solid var(--line); border-radius:3pt}
+figure svg{width:100%; height:auto; display:block}
+figcaption{font-size:8.2pt; color:var(--muted); margin-top:3pt; font-style:italic}
+.steps{counter-reset:s; list-style:none; padding:0; margin:4pt 0 9pt}
+.steps li{counter-increment:s; position:relative; padding:3pt 0 3pt 24pt; margin:0; break-inside:avoid}
+.steps li::before{content:counter(s); position:absolute; left:0; top:3pt; width:16pt; height:16pt; border-radius:50%; background:var(--navy); color:#fff; font:700 8.5pt Bahnschrift,'Segoe UI'; display:grid; place-items:center}
+.avoid{break-inside:avoid}
+</style>
+</head>
+<body>
+
+<!-- ======================= COVER ======================= -->
+<section class="cover">
+  <div class="tri"><i style="background:#f39a1e"></i><i style="background:#ffffff"></i><i style="background:#2e9e44"></i></div>
+  <div class="inner">
+    <div class="top">
+      <div class="logo-card"><img src="assets/fdr-vault-logo.png" alt="FDR Vault logo"></div>
+      <div class="badge-sih">Smart India Hackathon 2026</div>
+    </div>
+    <div class="cover-title">FDR VAULT</div>
+    <div class="cover-sub">AICTE Intelligent Regulatory Validation Platform (AI-IRVP)</div>
+    <div class="cover-sub2">A digital platform for institution approvals and the complete lifecycle of security deposits (Fixed Deposit Receipts) held under joint lien with AICTE: submission, validation, bank lien confirmation, maturity monitoring, renewal, replacement and lien release.</div>
+    <div><span class="doc-tag">Complete Project Documentation</span></div>
+
+    <div class="grid">
+      <div class="cell"><h4>Team</h4><p><b>Prime Developers</b><br>Smart India Hackathon 2026</p></div>
+      <div class="cell"><h4>Document</h4><p>Version 1.1.0 · 30 October 2026<br>Covers the code on branch <span class="mono" style="background:rgba(255,255,255,.12);color:#fff">main</span> (commit 031bfa5)</p></div>
+      <div class="cell"><h4>Live portals</h4><p>Institution app: <a href="https://fdr-vault.vercel.app">fdr-vault.vercel.app</a><br>Officer portal: <a href="https://fdr-vault-sbf7.vercel.app/officer">fdr-vault-sbf7.vercel.app/officer</a><br>Admin console: <a href="https://fdr-vault-sbf7.vercel.app/admin">fdr-vault-sbf7.vercel.app/admin</a></p></div>
+      <div class="cell"><h4>Backend &amp; source</h4><p>API server: <a href="https://fdr-vault-api-d2i1.onrender.com/health">fdr-vault-api-d2i1.onrender.com</a><br>Source code: <a href="https://github.com/Mrityun-G/FDR-Vault-">github.com/Mrityun-G/FDR-Vault-</a><br>Demo password for all 4 demo accounts: <b>Sih@2026Demo</b></p></div>
+    </div>
+    <div class="foot"><span>Node.js · Express · PostgreSQL 17 · React · PWA · Android</span><span>English · हिन्दी</span></div>
+  </div>
+</section>
+
+<!-- ======================= TOC ======================= -->
+<section>
+  <div class="toc-title cond">Contents</div>
+  <ul class="toc">
+    <li><span class="no">1</span><span class="t">Project at a Glance</span><span class="pg" data-sec="s1">3</span></li>
+    <li><span class="no">2</span><span class="t">Problem Statement</span><span class="pg" data-sec="s2">3</span></li>
+    <li><span class="no">3</span><span class="t">Proposed Solution and Innovation</span><span class="pg" data-sec="s3">4</span></li>
+    <li><span class="no">4</span><span class="t">Users and Roles</span><span class="pg" data-sec="s4">5</span></li>
+    <li><span class="no">5</span><span class="t">System Architecture</span><span class="pg" data-sec="s5">6</span></li>
+    <li><span class="no">6</span><span class="t">Technology Stack</span><span class="pg" data-sec="s6">7</span></li>
+    <li><span class="no">7</span><span class="t">End-to-End Workflow</span><small>Technical Approach</small><span class="pg" data-sec="s7">7</span></li>
+    <li><span class="no">8</span><span class="t">Institution App (Mobile / PWA / Android)</span><span class="pg" data-sec="s8">8</span></li>
+    <li><span class="no">9</span><span class="t">Application Workflow and Scrutiny</span><span class="pg" data-sec="s9">9</span></li>
+    <li><span class="no">10</span><span class="t">Deterministic Rule Engine</span><span class="pg" data-sec="s10">10</span></li>
+    <li><span class="no">11</span><span class="t">Document Upload, Reading and Validation</span><span class="pg" data-sec="s11">11</span></li>
+    <li><span class="no">12</span><span class="t">FDR Lifecycle Management</span><span class="pg" data-sec="s12">12</span></li>
+    <li><span class="no">13</span><span class="t">AI Regulatory Assistant</span><span class="pg" data-sec="s13">13</span></li>
+    <li><span class="no">14</span><span class="t">Staff Portal: Officer Portal and Admin Console</span><span class="pg" data-sec="s14">14</span></li>
+    <li><span class="no">15</span><span class="t">Security and Data Protection</span><span class="pg" data-sec="s15">15</span></li>
+    <li><span class="no">16</span><span class="t">Database Design</span><span class="pg" data-sec="s16">16</span></li>
+    <li><span class="no">17</span><span class="t">API Reference</span><span class="pg" data-sec="s17">17</span></li>
+    <li><span class="no">18</span><span class="t">Deployment and DevOps</span><span class="pg" data-sec="s18">18</span></li>
+    <li><span class="no">19</span><span class="t">Testing and Quality Assurance</span><span class="pg" data-sec="s19">19</span></li>
+    <li><span class="no">20</span><span class="t">Evaluator Demo Guide</span><span class="pg" data-sec="s20">20</span></li>
+    <li><span class="no">21</span><span class="t">Simulated Features and Current Limitations</span><span class="pg" data-sec="s21">20</span></li>
+    <li><span class="no">22</span><span class="t">Future Scope</span><span class="pg" data-sec="s22">21</span></li>
+    <li><span class="no">23</span><span class="t">Repository Structure</span><span class="pg" data-sec="s23">21</span></li>
+    <li><span class="no">A</span><span class="t">Appendix: Glossary</span><span class="pg" data-sec="sA">22</span></li>
+  </ul>
+  <div class="note" style="margin-top:12pt"><b>About this document.</b> Every feature, rule, number and limit described here was checked against the project's source code on 30 October 2026. Where something is simulated or not yet built, the document says so (see Section 21). Clause references such as "Clause 6.2" are the labels configured in the portal's rule set <span class="mono">v2026.1</span>; the portal's own regulatory catalog marks the AICTE handbook as <em>Unverified</em> until an administrator records the exact section and excerpt.</div>
+</section>
+
+<!-- ======================= 1 ======================= -->
+<section class="newpage">
+<h2 class="sec first" id="s1"><span class="n">1</span>Project at a Glance</h2>
+<p class="lead"><strong>FDR Vault</strong> is a working prototype of the <strong>AICTE Intelligent Regulatory Validation Platform (AI-IRVP)</strong>. It digitises how AICTE approves technical institutions and manages each institution's <strong>security deposit</strong>, kept as a Fixed Deposit Receipt (FDR) under joint lien with the Regional Officer, AICTE.</p>
+<p>Institutions apply and manage their deposits from a <strong>mobile app</strong> (installable web app and Android APK). AICTE scrutiny officers, bank officials and administrators work in a <strong>staff website</strong> with two portals. Both front ends talk only to the project's own <strong>API server</strong>, and one <strong>PostgreSQL</strong> database enforces every rule, permission and status change. Documents are read automatically and checked against AICTE norms before a human looks at them, the issuing bank confirms the lien, and the system reminds institutions before every maturity.</p>
+
+<div class="kpis">
+  <div class="kpi"><b>3</b><span>connected portals: Institution app, Officer portal, Admin console</span></div>
+  <div class="kpi"><b>4</b><span>user roles: Institution, Scrutiny Officer, Bank Official, Administrator</span></div>
+  <div class="kpi"><b>7</b><span>automatic AICTE norm checks (6 on the server, 1 advisory on the device)</span></div>
+  <div class="kpi"><b>4</b><span>FDR request types: new FDR, renewal, replacement, lien release</span></div>
+  <div class="kpi"><b>29</b><span>database tables (23 application, 6 platform) under row-level security</span></div>
+  <div class="kpi"><b>5</b><span>application types: New Programme, EoA, Infrastructure, Intake Variation, Closure</span></div>
+  <div class="kpi"><b>348</b><span>automated back-end test checks in 7 suites, all passing (30 Oct 2026)</span></div>
+  <div class="kpi"><b>2</b><span>interface languages: English and हिन्दी</span></div>
+</div>
+
+<h3>Live system</h3>
+<table>
+  <thead><tr><th style="width:24%">Component</th><th style="width:43%">Address</th><th>Used by</th></tr></thead>
+  <tbody>
+    <tr><td class="k">Institution app</td><td><a href="https://fdr-vault.vercel.app">https://fdr-vault.vercel.app</a></td><td>Institutions (applicants), on phone or desktop</td></tr>
+    <tr><td class="k">Officer portal</td><td><a href="https://fdr-vault-sbf7.vercel.app/officer">https://fdr-vault-sbf7.vercel.app/officer</a></td><td>Scrutiny officers (REVIEWER), bank officials (BANK_OFFICIAL)</td></tr>
+    <tr><td class="k">Admin console</td><td><a href="https://fdr-vault-sbf7.vercel.app/admin">https://fdr-vault-sbf7.vercel.app/admin</a></td><td>AICTE administrators (ADMIN)</td></tr>
+    <tr><td class="k">API server</td><td><a href="https://fdr-vault-api-d2i1.onrender.com/health">https://fdr-vault-api-d2i1.onrender.com</a></td><td>Both front ends (no direct user access)</td></tr>
+    <tr><td class="k">Android app</td><td><span class="mono">dist/AICTE-Institution-Portal-debug.apk</span> in the repository</td><td>Institutions (debug build, app id <span class="mono">com.fdrportal.aicteinstitution</span>)</td></tr>
+    <tr><td class="k">Source code</td><td><a href="https://github.com/Mrityun-G/FDR-Vault-">https://github.com/Mrityun-G/FDR-Vault-</a></td><td>Developers and evaluators</td></tr>
+  </tbody>
+</table>
+<div class="note warn"><b>First visit may be slow.</b> The API runs on Render's free plan, which sleeps after about 15 minutes without traffic. The first request after a pause can take up to a minute while the server wakes; after that the portals respond normally.</div>
+</section>
+
+<!-- ======================= 2 ======================= -->
+<section>
+<h2 class="sec" id="s2"><span class="n">2</span>Problem Statement</h2>
+<p>Under AICTE's approval process, an institution keeps a <strong>security deposit / corpus fund</strong> as a Fixed Deposit Receipt for a <strong>10-year term</strong>, under <strong>irrevocable joint lien in favour of the Regional Officer, AICTE</strong>. The issuing bank marks the lien in its Core Banking System (CBS). The deposit must be renewed before it matures, and the lien can be discharged only after AICTE approves its release. Each approval application (new programme, extension of approval, intake change and others) is also scrutinised against norms for documents, faculty, built-up area and the deposit.</p>
+<p>When this is handled with paper receipts, letters and spreadsheets, the following problems appear:</p>
+<table>
+  <thead><tr><th style="width:38%">Challenge</th><th>Impact</th></tr></thead>
+  <tbody>
+    <tr><td class="k" style="white-space:normal">FDR receipts and bank letters checked by hand</td><td>Slow scrutiny, inconsistent decisions, typing errors in deposit numbers, amounts and dates.</td></tr>
+    <tr><td class="k" style="white-space:normal">Lien confirmed by letter or email</td><td>No reliable record of which bank official confirmed the lien, when, and with what CBS reference.</td></tr>
+    <tr><td class="k" style="white-space:normal">Maturity dates tracked manually</td><td>Deposits lapse without renewal; releases are approved late or without checking maturity and lien status.</td></tr>
+    <tr><td class="k" style="white-space:normal">Same document reused by different institutions</td><td>Recycled or forged evidence is hard to notice when files are checked one application at a time.</td></tr>
+    <tr><td class="k" style="white-space:normal">Requirements spread across handbook clauses</td><td>Institutions submit incomplete requests, which leads to repeated deficiency notices and delays.</td></tr>
+    <tr><td class="k" style="white-space:normal">No single register of deposits</td><td>Hard to report corpus held, deposits awaiting verification, upcoming maturities and pending requests.</td></tr>
+    <tr><td class="k" style="white-space:normal">No tamper-evident record of decisions</td><td>Weak accountability: changes to records and decisions cannot be proven later.</td></tr>
+  </tbody>
+</table>
+<div class="note"><b>Goal:</b> one secure, centralised platform where every deposit and application is captured once, checked automatically against the norms, confirmed by the bank, monitored until maturity and released through a recorded, auditable decision.</div>
+</section>
+
+<!-- ======================= 3 ======================= -->
+<section>
+<h2 class="sec" id="s3"><span class="n">3</span>Proposed Solution and Innovation</h2>
+<h3>Objectives</h3>
+<ul>
+  <li>Give institutions a <strong>mobile-first, bilingual app</strong> to apply, upload documents, submit FDRs and track every request.</li>
+  <li><strong>Validate automatically</strong> against AICTE norms on the server, so officers start from findings instead of raw paper.</li>
+  <li>Put the <strong>issuing bank in the loop</strong>: only that bank's official can confirm the joint lien and record its discharge.</li>
+  <li><strong>Monitor every deposit</strong> until maturity with automatic reminders, and control renewal, replacement and release.</li>
+  <li>Keep a <strong>tamper-evident audit trail</strong> and strict separation between institutions, banks and AICTE roles.</li>
+</ul>
+<h3>What makes FDR Vault different</h3>
+<div class="cols2">
+  <div class="card"><h4>1 · Rule-checked before human review</h4><p>Seven norm checks (documents, certificate validity, identity, duplicates, faculty ratio, built-up area, FDR corpus) produce Passed / Warning / Critical findings with handbook clause labels.</p></div>
+  <div class="card"><h4>2 · Cross-institution fraud detection</h4><p>The SHA-256 fingerprint of every uploaded file is compared on the server against <em>all</em> institutions' filings, which no single institution could see.</p></div>
+  <div class="card"><h4>3 · Evidence-based document reading</h4><p>Values are read from the FDR advice with the page and line they came from and cross-checked against the form (GREEN / AMBER / RED). A free path (PDF text rules + Tesseract OCR) works without any AI key.</p></div>
+  <div class="card"><h4>4 · Bank in the loop</h4><p>Bank officials see only their own bank's deposits. They confirm the lien with a CBS reference and later record its discharge.</p></div>
+  <div class="card"><h4>5 · Complete FDR lifecycle</h4><p>New FDR → lien confirmation → reminders at 180 / 60 / 30 days and at maturity → renewal or replacement → release order → bank discharge.</p></div>
+  <div class="card"><h4>6 · AI assistant that never invents rules</h4><p>The Regulatory Assistant shows the <em>source</em> and verification status of every required document. Only verified or portal rules can block a submission.</p></div>
+  <div class="card"><h4>7 · Tamper-evident audit</h4><p>The audit log is append-only and hash-chained per institution (<span class="mono">prev_hash → sha256_hash</span>), so any edit breaks the chain.</p></div>
+  <div class="card"><h4>8 · Mobile-first and inclusive</h4><p>Installable app and Android APK, full English / हिन्दी interface, offline banner, built for low bandwidth and small screens (320 px and up).</p></div>
+</div>
+</section>
+
+<!-- ======================= 4 ======================= -->
+<section>
+<h2 class="sec" id="s4"><span class="n">4</span>Users and Roles</h2>
+<p>The platform has four roles. The user interface shows each role only the work it is allowed to do, and the database enforces the same rules again, so hiding a button is never the only protection.</p>
+<table>
+  <thead><tr><th style="width:17%">Role</th><th style="width:15%">Signs in at</th><th style="width:42%">Can do</th><th>Cannot do</th></tr></thead>
+  <tbody>
+    <tr><td class="k">Institution<br><span class="mono">INSTITUTION</span></td><td>Institution app</td><td>Register the institution; file 5 application types; upload documents; submit a new FDR; request renewal, replacement or lien release; answer deficiency notices; raise tickets; download CSV reports; use the AI Regulatory Assistant.</td><td>See any other institution's data; change a decision; approve anything; edit a recorded FDR directly.</td></tr>
+    <tr><td class="k">Scrutiny Officer<br><span class="mono">REVIEWER</span></td><td>Officer portal</td><td>Start scrutiny; issue a deficiency notice (request clarification); override a non-passed finding with a written justification and handbook citation; clear or reject an application with a rationale.</td><td>Give final approval; decide FDR renewal, replacement or release requests.</td></tr>
+    <tr><td class="k">Bank Official<br><span class="mono">BANK_OFFICIAL</span></td><td>Officer portal</td><td>See the FDRs of <em>their own bank only</em>; confirm the joint lien with a CBS reference; read the AICTE release order; record the lien discharge with a CBS reference.</td><td>See other banks' deposits; act on applications; release a lien AICTE has not approved.</td></tr>
+    <tr><td class="k">Administrator<br><span class="mono">ADMIN</span></td><td>Admin console</td><td>Everything a scrutiny officer can do plus final approval; decide renewal, replacement and release requests (release needs an order number); manage users and invitations; maintain regulatory sources; view and run the daily reminder job; record a lien as "AICTE recorded".</td><td>Disable their own account; release an FDR that has not matured or has no recorded lien.</td></tr>
+  </tbody>
+</table>
+<div class="note"><b>Accounts.</b> Users sign in with email and password, a 6-digit email code (OTP) or Google. A first Google sign-in asks for the registration details once. <strong>One Google account can hold several roles</strong> (<span class="mono">profiles.roles[]</span>) and use every portal. In this prototype, registration is open and accounts are active at once, so evaluators can try every role without waiting for approval; administrators can also invite people by email from User Management.</div>
+</section>
+
+<!-- ======================= 5 ======================= -->
+<section class="newpage">
+<h2 class="sec first" id="s5"><span class="n">5</span>System Architecture</h2>
+<p>FDR Vault is a three-tier system. Two front ends are static sites on Vercel. One Node.js API server on Render holds every secret and is the only component that connects to PostgreSQL. Browsers never connect to the database.</p>
+<figure>
+<svg viewBox="0 0 680 470" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#1e6fd0"/></marker>
+    <marker id="ag" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#6b7280"/></marker>
+  </defs>
+  <!-- users -->
+  <g font-size="10.5" fill="#1b2433" text-anchor="middle">
+    <rect x="20" y="8" width="200" height="28" rx="14" fill="#eef4fd" stroke="#a9c7f0"/><text x="120" y="26">Institutions (applicants)</text>
+    <rect x="240" y="8" width="200" height="28" rx="14" fill="#f1e8fc" stroke="#cdb2ef"/><text x="340" y="26">Scrutiny officers · Bank officials</text>
+    <rect x="460" y="8" width="200" height="28" rx="14" fill="#fff1e3" stroke="#f2c38a"/><text x="560" y="26">AICTE administrators</text>
+  </g>
+  <g stroke="#6b7280" stroke-width="1.5" marker-end="url(#ag)"><path d="M120 36v16"/><path d="M340 36v16"/><path d="M560 36v16"/></g>
+  <!-- front ends -->
+  <rect x="20" y="56" width="200" height="92" rx="8" fill="#fff" stroke="#1e6fd0" stroke-width="1.8"/>
+  <rect x="20" y="56" width="200" height="24" rx="8" fill="#1e6fd0"/><rect x="20" y="70" width="200" height="10" fill="#1e6fd0"/>
+  <text x="120" y="73" text-anchor="middle" fill="#fff" font-weight="700" font-size="11.5">Institution App</text>
+  <g font-size="9.5" fill="#1b2433"><text x="30" y="96">Installable PWA + Android (Capacitor 6)</text><text x="30" y="110">HTML · CSS · JavaScript · service worker</text><text x="30" y="124">English / हिन्दी · offline banner</text><text x="30" y="139" fill="#0b3d91" font-weight="600">Vercel · fdr-vault.vercel.app</text></g>
+
+  <rect x="240" y="56" width="420" height="92" rx="8" fill="#fff" stroke="#7b2fd6" stroke-width="1.8"/>
+  <rect x="240" y="56" width="420" height="24" rx="8" fill="#7b2fd6"/><rect x="240" y="70" width="420" height="10" fill="#7b2fd6"/>
+  <text x="450" y="73" text-anchor="middle" fill="#fff" font-weight="700" font-size="11.5">Staff Website (one React build, two portals)</text>
+  <rect x="250" y="86" width="195" height="40" rx="5" fill="#f5effd" stroke="#cdb2ef"/><text x="347" y="102" text-anchor="middle" font-size="10" font-weight="700" fill="#4a1fa8">Officer Portal  /officer</text><text x="347" y="117" text-anchor="middle" font-size="9" fill="#1b2433">REVIEWER · BANK_OFFICIAL</text>
+  <rect x="455" y="86" width="195" height="40" rx="5" fill="#fff4e8" stroke="#f2c38a"/><text x="552" y="102" text-anchor="middle" font-size="10" font-weight="700" fill="#b5520b">Admin Console  /admin</text><text x="552" y="117" text-anchor="middle" font-size="9" fill="#1b2433">ADMIN</text>
+  <text x="250" y="140" font-size="9.5" fill="#0b3d91" font-weight="600">React 19 · Vite 8 · TypeScript · Tailwind 4 · Recharts — Vercel · fdr-vault-sbf7.vercel.app</text>
+
+  <!-- arrows to api -->
+  <g stroke="#1e6fd0" stroke-width="2" marker-end="url(#ar)" marker-start="url(#ar)"><path d="M120 150v34"/><path d="M450 150v34"/></g>
+  <rect x="128" y="157" width="300" height="16" rx="3" fill="#fff"/>
+  <text x="132" y="169" font-size="9.2" fill="#1e6fd0" font-weight="600">HTTPS · JSON · Bearer JWT · Server-Sent Events (live updates)</text>
+
+  <!-- api -->
+  <rect x="20" y="186" width="640" height="124" rx="8" fill="#f4f8fe" stroke="#0d2a5c" stroke-width="2"/>
+  <text x="34" y="206" font-size="12" font-weight="700" fill="#0d2a5c">API Server — Node.js 22.18+ · Express 5 · helmet · CORS allow-list</text>
+  <text x="646" y="206" font-size="9.5" text-anchor="end" fill="#0b3d91" font-weight="600">Render (Singapore) · fdr-vault-api-d2i1.onrender.com</text>
+  <g font-size="9.4" text-anchor="middle">
+    <g fill="#fff" stroke="#a9c7f0">
+      <rect x="32" y="216" width="148" height="38" rx="5"/><rect x="188" y="216" width="148" height="38" rx="5"/><rect x="344" y="216" width="148" height="38" rx="5"/><rect x="500" y="216" width="148" height="38" rx="5"/>
+      <rect x="32" y="262" width="148" height="38" rx="5"/><rect x="188" y="262" width="148" height="38" rx="5"/><rect x="344" y="262" width="148" height="38" rx="5"/><rect x="500" y="262" width="148" height="38" rx="5"/>
+    </g>
+    <g fill="#0d2a5c" font-weight="700"><text x="106" y="232">Authentication</text><text x="262" y="232">RPC gateway</text><text x="418" y="232">Document storage</text><text x="574" y="232">Document reader</text>
+      <text x="106" y="278">Regulatory Assistant</text><text x="262" y="278">Data views</text><text x="418" y="278">Live updates</text><text x="574" y="278">Daily scheduler</text></g>
+    <g fill="#5b6575"><text x="106" y="246">/auth · password, OTP, Google</text><text x="262" y="246">/rpc/:fn (catalog-checked)</text><text x="418" y="246">/storage · signed links</text><text x="574" y="246">pdf.js · Tesseract · Claude*</text>
+      <text x="106" y="292">/assistant/*</text><text x="262" y="292">/data/:view</text><text x="418" y="292">/events (SSE)</text><text x="574" y="292">FDR reminders 07:00 IST</text></g>
+  </g>
+
+  <!-- arrow to db -->
+  <path d="M240 310v32" stroke="#1e6fd0" stroke-width="2" marker-end="url(#ar)" marker-start="url(#ar)"/>
+  <rect x="248" y="318" width="222" height="16" rx="3" fill="#fff"/>
+  <text x="250" y="330" font-size="9.2" fill="#1e6fd0" font-weight="600">pg pool · role "authenticated" + auth.uid()</text>
+
+  <!-- db -->
+  <path d="M20 356a12 6 0 0 1 12-6h416a12 6 0 0 1 12 6v94a12 6 0 0 1-12 6H32a12 6 0 0 1-12-6z" fill="#e8f1fc" stroke="#1e6fd0" stroke-width="2"/>
+  <ellipse cx="240" cy="352" rx="220" ry="5" fill="#cfe2fb" stroke="#1e6fd0" stroke-width="1.2"/>
+  <text x="34" y="376" font-size="12" font-weight="700" fill="#0d2a5c">PostgreSQL 17 — single source of truth (Render)</text>
+  <g font-size="9.4" fill="#1b2433">
+    <text x="34" y="394">• 23 application tables + auth / storage schema</text>
+    <text x="34" y="409">• Row-level security on every table</text>
+    <text x="34" y="424">• SECURITY DEFINER workflow functions + audit</text>
+    <text x="34" y="439">• Rule config v2026.1 · status transitions in SQL</text>
+    <text x="250" y="394">• Private document store (own folder only)</text>
+    <text x="250" y="409">• Hash-chained audit log per institution</text>
+    <text x="250" y="424">• bcrypt passwords (pgcrypto)</text>
+    <text x="250" y="439">• job_runs log for the daily reminder job</text>
+  </g>
+
+  <!-- external services -->
+  <rect x="480" y="324" width="180" height="138" rx="8" fill="#fff" stroke="#9aa3b2" stroke-dasharray="4 3"/>
+  <text x="570" y="342" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0d2a5c">External services</text>
+  <g font-size="9.3" fill="#1b2433">
+    <text x="492" y="361">• Google OAuth 2.0 (sign-in)</text>
+    <text x="492" y="377">• SMTP email (optional)</text>
+    <text x="492" y="393">• Anthropic Claude* (optional)</text>
+    <text x="492" y="409">• GitHub Actions: migrations,</text>
+    <text x="502" y="423">daily wake-up call</text>
+    <text x="492" y="441" fill="#5b6575" font-size="8.6">* only if ANTHROPIC_API_KEY</text>
+    <text x="502" y="454" fill="#5b6575" font-size="8.6">is set; advisory only</text>
+  </g>
+  <path d="M574 310v12" stroke="#6b7280" stroke-width="1.5" stroke-dasharray="3 2" marker-end="url(#ag)"/>
+</svg>
+<figcaption>Figure 1 — Deployment architecture. Front ends hold no keys; the API server keeps the database password, token signing key, Google secret and SMTP / Anthropic keys in environment variables.</figcaption>
+</figure>
+<h3>Architecture principles</h3>
+<ul>
+  <li><strong>The database decides permissions.</strong> Each API request runs in its own transaction as the PostgreSQL role <span class="mono">authenticated</span> with the caller's user id set, so the schema's grants and row-level security policies apply to every read and write.</li>
+  <li><strong>The server is authoritative.</strong> Clients never write tables. Every change goes through a <span class="mono">SECURITY DEFINER</span> function that checks identity, role, institution and the allowed status transition, then writes an audit event.</li>
+  <li><strong>Only granted functions are callable.</strong> The RPC gateway reads the list of functions granted to signed-in users from the database catalog (never a hard-coded list) and passes all values as query parameters.</li>
+  <li><strong>Two run modes for the institution app.</strong> <em>Server mode</em> (when <span class="mono">config.js</span> has <span class="mono">API_URL</span>) uses the real backend. <em>Demo mode</em> (empty <span class="mono">API_URL</span>) runs the same screens and rules on the device, so the app can be evaluated offline.</li>
+</ul>
+</section>
+
+<!-- ======================= 6 ======================= -->
+<section>
+<h2 class="sec" id="s6"><span class="n">6</span>Technology Stack</h2>
+<table class="avoid">
+  <thead><tr><th style="width:20%">Layer</th><th style="width:44%">Technology (version in the repository)</th><th>Purpose</th></tr></thead>
+  <tbody>
+    <tr><td class="k">Institution app</td><td>HTML5, CSS, plain JavaScript; PWA (service worker, web manifest); Capacitor 6 (<span class="mono">@capacitor/android</span>, filesystem, share)</td><td>Mobile-first institution portal; Android APK from the same code</td></tr>
+    <tr><td class="k">Staff portal</td><td>React 19, Vite 8, TypeScript, Tailwind CSS 4, Recharts 3, Motion 12, lucide-react</td><td>Officer portal and Admin console</td></tr>
+    <tr><td class="k">API server</td><td>Node.js ≥ 22.18 (Render runs 24), Express 5.2.1, helmet 8.2.0, cors 2.8.5, pg 8.23.0, nodemailer 10.0.16</td><td>Auth, RPC gateway, storage, live updates, scheduler, email</td></tr>
+    <tr><td class="k">Document reading</td><td>pdfjs-dist 4.10 (PDF text), tesseract.js 5.1 with bundled English data (OCR), <span class="mono">@anthropic-ai/sdk</span> 1.1.0 with model <span class="mono">claude-opus-5-5</span> (optional)</td><td>Read FDR advice and certificates; extract values with evidence</td></tr>
+    <tr><td class="k">Database</td><td>PostgreSQL 17 (14+ supported), pgcrypto, row-level security, PL/pgSQL functions</td><td>Data, rules, workflow, documents, audit</td></tr>
+    <tr><td class="k">Testing</td><td>embedded-postgres 17 (real PostgreSQL in tests), PGlite 0.2.17, puppeteer-core 23.11 driving Microsoft Edge</td><td>Database, API and browser end-to-end tests</td></tr>
+    <tr><td class="k">Hosting &amp; CI</td><td>Vercel (2 projects), Render (web service + PostgreSQL, Singapore), GitHub Actions</td><td>Deployment, automatic migrations, daily wake-up</td></tr>
+    <tr><td class="k">Design &amp; docs</td><td>draw.io diagrams, headless-browser rendering</td><td>Methodology and flow diagrams</td></tr>
+  </tbody>
+</table>
+</section>
+
+<!-- ======================= 7 ======================= -->
+<section>
+<h2 class="sec" id="s7"><span class="n">7</span>End-to-End Workflow</h2>
+<p>The figure below is the project's Technical Approach. It shows the seven stages from institution submission to dashboards and audit, plus the technology and security layers.</p>
+<figure>
+  <img src="assets/FDR_Vault_Technical_Approach.png" alt="FDR Vault Technical Approach: seven stages of the digital FDR lifecycle">
+  <figcaption>Figure 2 — Technical Approach: the digital FDR lifecycle in seven stages.</figcaption>
+</figure>
+<table>
+  <thead><tr><th style="width:4%" class="c">#</th><th style="width:24%">Stage</th><th>What happens</th></tr></thead>
+  <tbody>
+    <tr><td class="c">1</td><td class="k">Institution submission</td><td>The institution signs in (email, OTP or Google), enters FDR details, uploads the FDR advice (PDF / JPG / PNG) and submits a new FDR, renewal, replacement or lien-release request.</td></tr>
+    <tr><td class="c">2</td><td class="k">Reading + rule validation</td><td>The document is read (PDF text rules or OCR; Claude only if configured) and cross-checked against the entered data (GREEN / AMBER / RED, advisory). Server rules check amount, dates, 10-year tenure, AICTE lien and duplicates (SHA-256 and FDR number).</td></tr>
+    <tr><td class="c">3</td><td class="k">Bank verification</td><td>The issuing bank's official (own bank only) views the deposit, verifies it in the bank's CBS and enters the CBS lien reference. The FDR shows who confirmed it: bank, AICTE-recorded, or awaiting bank.</td></tr>
+    <tr><td class="c">4</td><td class="k">AICTE officer review</td><td>The scrutiny officer reviews the application and rule findings, then clears it, issues a deficiency notice (the institution replies) or rejects it, always with a written reason. The AICTE administrator gives final approval and decides FDR requests.</td></tr>
+    <tr><td class="c">5</td><td class="k">Lifecycle monitoring</td><td>Issue and maturity dates are tracked. A daily job from 07:00 IST sends in-app and email alerts at 180, 60 and 30 days before maturity and on maturity. Admins see the job status and can run it now.</td></tr>
+    <tr><td class="c">6</td><td class="k">Lien release</td><td>After maturity the institution requests release. Only a matured FDR with a recorded lien is eligible; the admin approves with the AICTE release order number, then the bank records the lien discharge with a CBS reference. The deposit is paid out by the bank; no money moves through the portal.</td></tr>
+    <tr><td class="c">7</td><td class="k">Dashboards, reports, audit</td><td>Role-wise dashboards with live counts and charts, five live reports (CSV), search and filters by institution, PID and bank, and a hash-chained audit trail.</td></tr>
+  </tbody>
+</table>
+</section>
+
+<!-- ======================= 8 ======================= -->
+<section>
+<h2 class="sec" id="s8"><span class="n">8</span>Institution App (Mobile / PWA / Android)</h2>
+<p>The institution app has five main tabs — <strong>Dashboard, Applications, FDRs, Alerts and Profile</strong> — plus the AI Regulatory Assistant and a built-in help guide.</p>
+<table>
+  <thead><tr><th style="width:22%">Screen</th><th>Features</th></tr></thead>
+  <tbody>
+    <tr><td class="k">Onboarding</td><td>Three swipeable slides (Skip / Next / Get Started); a looping slideshow of the AICTE New Delhi and Mumbai office photos (still when reduced motion is on); Privacy Policy, Help &amp; Support and Terms; shown once, replayable from Login.</td></tr>
+    <tr><td class="k">Login &amp; registration</td><td>Email and password with Remember me; sign-in with a 6-digit email code (valid 10 minutes); Google sign-in; password reset; one-tap demo login; self-registration of the institution (head of institution, PID, name, district, state; a new PID is issued if none is given, and the AICTE region follows the state).</td></tr>
+    <tr><td class="k">Dashboard</td><td>Live counts, quick actions, alerts, total FDR corpus under joint lien, recent activity.</td></tr>
+    <tr><td class="k">New application wizard</td><td>Institution → Programme → FDR → Documents, with live checks against AICTE norms; real uploads with progress, SHA-256 and page count; on-device document reading; server validation (dry run); review; e-sign (simulated Aadhaar eSign / DSC); submission with a server-issued number such as <span class="mono">APP-2026-EOA-00012</span> and a downloadable acknowledgement. Drafts are saved on the server.</td></tr>
+    <tr><td class="k">My Applications</td><td>Filters, search and drafts; status timeline; rule findings; documents opened through secure links; the official deficiency notice (print or PDF); a compliance response that creates a new version.</td></tr>
+    <tr><td class="k">FDRs</td><td>Register of the institution's deposits; new FDR with evidence; renewal or extension; replacement or bank change; lien-release request; pending states; who confirmed the lien (bank or AICTE); release steps up to the bank's discharge.</td></tr>
+    <tr><td class="k">Alerts</td><td>Notifications that refresh live from the server (Server-Sent Events), with links to the related record; mark one or all as read.</td></tr>
+    <tr><td class="k">Profile</td><td>Institution details (name and PID locked); contact and nodal officer; change password (signs out other sessions); Compliance &amp; Verification (rule matrix and simulated issuing-authority checks); activity log; grievance tickets; CSV reports (FDR register, applications, activity); AICTE handbooks and leadership; Help; About; Logout.</td></tr>
+    <tr><td class="k">FDR Vault Guide</td><td>A help chat inside the app with a curated knowledge base, a guided 5-minute demo tour and "Take me there" buttons. It uses no AI service and works offline.</td></tr>
+    <tr><td class="k">Across the app</td><td>English / हिन्दी switch (whole interface; institution data and legal notice text stay as issued); offline banner; loading states and double-tap protection; field-level server errors and retry; "unsaved changes" prompt on forms; accessible labels.</td></tr>
+    <tr><td class="k">Android app</td><td>Capacitor 6 build of the same code. Downloads (acknowledgement, FDR advice, CSV, deficiency notice) open in the system share sheet. Google blocks OAuth inside app WebViews, so the Android app offers email/password or OTP instead.</td></tr>
+  </tbody>
+</table>
+<div class="note"><b>Password rule (institution app):</b> at least 8 characters with an upper-case letter, a lower-case letter, a digit and a symbol. The shared demo institution account cannot change its password, so one evaluator cannot lock out the others.</div>
+</section>
+
+<!-- ======================= 9 ======================= -->
+<section>
+<h2 class="sec" id="s9"><span class="n">9</span>Application Workflow and Scrutiny</h2>
+<h3>Application types</h3>
+<table class="avoid">
+  <thead><tr><th style="width:40%">Type (code)</th><th style="width:21%">Number prefix</th><th>Extra fields required</th></tr></thead>
+  <tbody>
+    <tr><td class="k">New Programme <span class="mono">NEW_PROGRAMME</span></td><td><span class="mono">APP-yyyy-NEW-</span></td><td>Programme name</td></tr>
+    <tr><td class="k">Extension of Approval <span class="mono">EOA</span></td><td><span class="mono">APP-yyyy-EOA-</span></td><td>—</td></tr>
+    <tr><td class="k">Infrastructure Update <span class="mono">INFRASTRUCTURE_UPDATE</span></td><td><span class="mono">APP-yyyy-INFRA-</span></td><td>Description of the change</td></tr>
+    <tr><td class="k">Intake Variation <span class="mono">INTAKE_VARIATION</span></td><td><span class="mono">APP-yyyy-INTAKE-</span></td><td>Programme name</td></tr>
+    <tr><td class="k">Closure <span class="mono">CLOSURE</span></td><td><span class="mono">APP-yyyy-CLOSURE-</span></td><td>Closure reason and confirmation that liabilities are cleared</td></tr>
+  </tbody>
+</table>
+<p>Every application also needs the academic year (<span class="mono">yyyy-yy</span>), address, current and proposed intake, total students, faculty by cadre (total cannot be zero), built-up area, a deposit (an existing active FDR or a new one) and its documents. Each submission carries an <strong>idempotency key</strong>, so a retry after a time-out cannot create a duplicate.</p>
+<h3>Status workflow <span class="tag">enforced in SQL</span></h3>
+<figure>
+<svg viewBox="0 0 680 190" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
+  <defs><marker id="m2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#0d2a5c"/></marker></defs>
+  <g font-size="10" font-weight="700" text-anchor="middle">
+    <rect x="6" y="20" width="100" height="38" rx="19" fill="#e5effc" stroke="#1e6fd0" stroke-width="1.6"/><text x="56" y="43" fill="#0b3d91">SUBMITTED</text>
+    <rect x="175" y="20" width="128" height="38" rx="19" fill="#e5effc" stroke="#1e6fd0" stroke-width="1.6"/><text x="239" y="43" fill="#0b3d91">UNDER_SCRUTINY</text>
+    <rect x="372" y="20" width="138" height="38" rx="19" fill="#e6f5ea" stroke="#2e9e44" stroke-width="1.6"/><text x="441" y="43" fill="#1e7a33">SCRUTINY_CLEARED</text>
+    <rect x="579" y="20" width="95" height="38" rx="19" fill="#2e9e44"/><text x="626" y="43" fill="#fff">APPROVED</text>
+    <rect x="175" y="128" width="128" height="38" rx="19" fill="#fff3dc" stroke="#f39a1e" stroke-width="1.6"/><text x="239" y="151" fill="#9a5b00">DEFICIENCIES_NOTED</text>
+    <rect x="400" y="128" width="110" height="38" rx="19" fill="#d92d43"/><text x="455" y="151" fill="#fff">REJECTED</text>
+  </g>
+  <g stroke="#0d2a5c" stroke-width="1.6" fill="none">
+    <path d="M106 39H173" marker-end="url(#m2)"/>
+    <path d="M303 39H370" marker-end="url(#m2)"/>
+    <path d="M510 39H577" marker-end="url(#m2)"/>
+    <path d="M222 58V126" marker-end="url(#m2)"/>
+    <path d="M256 128V60" marker-end="url(#m2)"/>
+    <path d="M56 58V147H173" marker-end="url(#m2)"/>
+    <path d="M290 58V100H430V126" stroke="#b3172c" marker-end="url(#m2)"/>
+    <path d="M480 58V126" stroke="#b3172c" marker-end="url(#m2)"/>
+  </g>
+  <g font-size="8.6" fill="#1b2433" text-anchor="middle">
+    <text x="140" y="33">Officer / Admin</text>
+    <text x="337" y="33">Officer / Admin</text>
+    <text x="544" y="33" font-weight="700" fill="#1e7a33">Admin only</text>
+  </g>
+  <g font-size="8.6" fill="#1b2433">
+    <text x="214" y="88" text-anchor="end">deficiency notice ↓</text>
+    <text x="214" y="102" text-anchor="end">institution replies ↑</text>
+    <text x="64" y="141">notice before scrutiny</text>
+    <text x="298" y="95" fill="#b3172c">reject (Officer / Admin)</text>
+    <text x="486" y="96" fill="#b3172c">reject (Admin)</text>
+  </g>
+  <text x="340" y="184" text-anchor="middle" font-size="9" fill="#5b6575">Every decision needs a written rationale (at least 10 characters) and is saved in status_history and the audit log; the institution is notified.</text>
+</svg>
+<figcaption>Figure 3 — Application status transitions allowed for each role (function <span class="mono">_transition</span>).</figcaption>
+</figure>
+<h3>Scrutiny tools for officers</h3>
+<ul>
+  <li><strong>Scrutiny Committee Workbench</strong> in the Verification Center: application details, documents through signed links, rule findings, staff-only notes (stored in a table institutions cannot read).</li>
+  <li><strong>Finding override:</strong> a Warning or Critical finding can be overridden once, only with a justification (≥ 10 characters) and a handbook citation, and only while the application is undecided. Passed checks cannot be overridden.</li>
+  <li><strong>Deficiency notice</strong> generated as an official letter (print / PDF); the institution's compliance response creates a new version of the application and returns it to scrutiny.</li>
+  <li><strong>EoA approval letter</strong> template for approved applications, printable from the staff portal.</li>
+  <li>When the rule engine finds critical issues, the institution is notified that the findings will be reviewed by the Scrutiny Committee.</li>
+</ul>
+</section>
+
+<!-- ======================= 10 ======================= -->
+<section>
+<h2 class="sec" id="s10"><span class="n">10</span>Deterministic Rule Engine</h2>
+<p>Rules run on the server inside PostgreSQL (function <span class="mono">_evaluate</span>) when an application is validated (dry run) or submitted. Each finding records its rule code, clause label, severity (<span class="pill g">PASSED</span> <span class="pill a">WARNING</span> <span class="pill r">CRITICAL</span>), description, rule version and whether it is deterministic. If server validation is unavailable, the app blocks submission; a failed check is never treated as a pass.</p>
+<table>
+  <thead><tr><th style="width:21%">Rule</th><th style="width:15%">Clause label</th><th style="width:40%">What is checked</th><th>Result</th></tr></thead>
+  <tbody>
+    <tr><td class="k">RULE-CHECKLIST-01<br><span style="font-weight:400">Mandatory documents</span></td><td>Clause 2.4.1</td><td>All 7 mandatory categories present with non-zero size: Land title, Building NOC, Fire safety, FDR corpus, Affiliation, State NOC, Faculty cadre.</td><td><span class="pill r">CRITICAL</span> if any is missing</td></tr>
+    <tr><td class="k">RULE-EXPIRY-02<br><span style="font-weight:400">Certificate validity</span></td><td>Clause 3.1.2</td><td>Building NOC, Fire safety and Affiliation certificates valid for at least 183 days (about 6 months).</td><td><span class="pill r">CRITICAL</span> expired · <span class="pill a">WARNING</span> &lt; 183 days or undated</td></tr>
+    <tr><td class="k">RULE-PID-03<br><span style="font-weight:400">Identity / PID match</span></td><td>Clause 1.2.3</td><td>Names found in the documents match the institution registered under the PID. Run on the device from extracted text and stored as <em>advisory</em> (not deterministic).</td><td><span class="pill r">CRITICAL</span> (advisory) on mismatch</td></tr>
+    <tr><td class="k">RULE-DUPLICATE-HASH-04<br><span style="font-weight:400">Duplicate documents</span></td><td>Clause 4.8.1</td><td>SHA-256 of each file compared with every other institution's filings; same file uploaded under two categories.</td><td><span class="pill r">CRITICAL</span> other institution · <span class="pill a">WARNING</span> internal repeat</td></tr>
+    <tr><td class="k">RULE-CADRE-RATIO-05<br><span style="font-weight:400">Faculty and cadre</span></td><td>Appendix 7</td><td>Required faculty = ⌈students ÷ 20⌉ (SFR ≤ 1:20); cadre 1 : 2 : 6 → Professors ≥ ⌊required ÷ 9⌋, Associate Professors ≥ ⌊2 × required ÷ 9⌋.</td><td><span class="pill r">CRITICAL</span> SFR or Professors short · <span class="pill a">WARNING</span> Associates short</td></tr>
+    <tr><td class="k">RULE-BUILTUP-AREA-06<br><span style="font-weight:400">Built-up area</span></td><td>Appendix 4</td><td>Built-up area ≥ 5.5 sq. m per student.</td><td><span class="pill a">WARNING</span> if short</td></tr>
+    <tr><td class="k">RULE-FDR-CORPUS-07<br><span style="font-weight:400">FDR corpus and lien</span></td><td>Clause 6.2</td><td>Deposit ≥ the institution's required corpus (₹ lakh); tenure ≥ 10 years; not yet matured; joint lien in favour of AICTE; lien confirmed by the bank.</td><td><span class="pill r">CRITICAL</span> any failure · <span class="pill a">WARNING</span> lien awaiting bank</td></tr>
+  </tbody>
+</table>
+<h3>Rule configuration <span class="mono">v2026.1</span> <span class="tag">table rule_config, versioned</span></h3>
+<div class="cols2">
+<table>
+  <thead><tr><th>Parameter</th><th>Value</th></tr></thead>
+  <tbody>
+    <tr><td class="k">mandatory_docs</td><td>7 categories (above)</td></tr>
+    <tr><td class="k">expiry_docs</td><td>Building NOC, Fire safety, Affiliation</td></tr>
+    <tr><td class="k">min_cert_days</td><td>183</td></tr>
+    <tr><td class="k">max_sfr</td><td>20</td></tr>
+    <tr><td class="k">prof_divisor</td><td>9 (cadre 1 : 2 : 6)</td></tr>
+  </tbody>
+</table>
+<table>
+  <thead><tr><th>Parameter</th><th>Value</th></tr></thead>
+  <tbody>
+    <tr><td class="k">min_sqm_per_student</td><td>5.5</td></tr>
+    <tr><td class="k">fdr_tenure_years</td><td>10</td></tr>
+    <tr><td class="k">expiring_soon_days</td><td>180</td></tr>
+    <tr><td class="k">max_file_bytes</td><td>10,485,760 (10 MB)</td></tr>
+    <tr><td class="k">allowed_docs</td><td>7 mandatory + Bank letter, Affidavit, Other</td></tr>
+  </tbody>
+</table>
+</div>
+<h3>FDR field validation <span class="tag">function _check_fdr</span></h3>
+<ul>
+  <li>FDR / TDR number: letters, digits, <span class="mono">/</span> and <span class="mono">-</span>, at least 6 characters, and <strong>unique across the whole portal</strong>.</li>
+  <li>Bank and branch required; IFSC must match <span class="mono">AAAA0XXXXXX</span> (11 characters, e.g. SBIN0001234); amount greater than zero.</li>
+  <li>Issue date not in the future; maturity date after the issue date.</li>
+  <li>The joint lien holder is set by the server to <em>"Regional Officer, &lt;region&gt; Regional Office, AICTE"</em>; the institution cannot type it.</li>
+</ul>
+</section>
+
+<!-- ======================= 11 ======================= -->
+<section>
+<h2 class="sec" id="s11"><span class="n">11</span>Document Upload, Reading and Validation</h2>
+<h3>Upload and storage</h3>
+<ul>
+  <li>Accepted formats: <strong>PDF, JPG, PNG</strong>, up to <strong>10 MB</strong> per file. Each category can be uploaded once per application.</li>
+  <li>The file's <strong>SHA-256</strong> fingerprint and page count are computed on the device; the server re-checks the fingerprint format and that the file really exists in storage.</li>
+  <li>Files are stored privately in PostgreSQL under <span class="mono">&lt;institution_id&gt;/…</span>. Upload and read are allowed only in the institution's own folder; there is <strong>no update or delete</strong>, so evidence is immutable. Files are opened through short-lived signed links.</li>
+</ul>
+<h3>Reading ladder <span class="tag">free first, AI optional</span></h3>
+<table>
+  <thead><tr><th style="width:5%" class="c">#</th><th style="width:25%">Reader</th><th>How it works</th></tr></thead>
+  <tbody>
+    <tr><td class="c">1</td><td class="k">PDF text + fixed rules</td><td>pdf.js takes the PDF's own text; fixed rules find the FDR number, amount, issue and maturity dates, bank, depositor and lien holder, keeping the <strong>page and line</strong> of each value. Deterministic, no AI, no cost.</td></tr>
+    <tr><td class="c">2</td><td class="k">OCR (Tesseract)</td><td>For photos and scanned PDFs (page images stored as JPEG). Bundled English data, nothing downloaded at run time; about 1–2 s per page, one document at a time. Confidence below 70% counts as partly legible (AMBER). Can be switched off with <span class="mono">OCR_ENABLED=false</span>.</td></tr>
+    <tr><td class="c">3</td><td class="k">Claude (optional)</td><td>Only when <span class="mono">ANTHROPIC_API_KEY</span> is set on the server: model <span class="mono">claude-opus-5-5</span> reads the document and flags anomalies. A refusal or truncated answer is treated as an error, never as a silent pass. The result is <strong>advisory</strong>; the statutory rules still run in PostgreSQL.</td></tr>
+  </tbody>
+</table>
+<h3>Cross-checks against the form</h3>
+<p>The reader compares what it found with what the institution typed: <strong>institution name</strong> (similarity ≥ 60%), <strong>FDR number</strong>, <strong>deposit amount</strong>, <strong>issue and maturity dates</strong>, <strong>bank</strong> (similarity ≥ 50%), <strong>lien holder</strong> (must be AICTE), <strong>validity date</strong>, faculty counts by cadre, issuing authority and reference number. The outcome is shown as:</p>
+<p><span class="pill g">GREEN</span> checks passed &nbsp; <span class="pill a">AMBER</span> partly legible or needs manual review &nbsp; <span class="pill r">RED</span> mismatch or wrong document (for example, a different document placed in the FDR-advice slot)</p>
+<div class="note"><b>Where reading happens.</b> The application wizard and the AI Regulatory Assistant read documents. The plain "Submit New FDR" form records the deposit without reading the file. In the wizard, submission is never blocked by reading; in the Assistant, a RED document must be corrected and re-uploaded before submission.</div>
+</section>
+
+<!-- ======================= 12 ======================= -->
+<section>
+<h2 class="sec" id="s12"><span class="n">12</span>FDR Lifecycle Management</h2>
+<p>A deposit moves through the states below. Renewal, replacement and release are <strong>requests</strong> (<span class="mono">PENDING → APPROVED / REJECTED</span>): the deposit changes only after an AICTE administrator approves (<span class="mono">decide_fdr_request</span>) and, for a new or replacement deposit, after the bank endorses the lien (<span class="mono">bank_endorse_lien</span>).</p>
+<figure>
+<svg viewBox="0 0 680 292" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
+  <defs><marker id="m3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#0d2a5c"/></marker></defs>
+  <g text-anchor="middle">
+    <rect x="4" y="32" width="128" height="50" rx="10" fill="#fff3dc" stroke="#f39a1e" stroke-width="1.6"/><text x="68" y="53" font-size="10.5" font-weight="700" fill="#9a5b00">FDR submitted</text><text x="68" y="69" font-size="9" fill="#1b2433">lien pending</text>
+    <rect x="184" y="32" width="128" height="50" rx="10" fill="#e6f5ea" stroke="#2e9e44" stroke-width="1.6"/><text x="248" y="53" font-size="10.5" font-weight="700" fill="#1e7a33">Active</text><text x="248" y="69" font-size="9" fill="#1b2433">joint lien confirmed</text>
+    <rect x="364" y="32" width="128" height="50" rx="10" fill="#e5effc" stroke="#1e6fd0" stroke-width="1.6"/><text x="428" y="53" font-size="10.5" font-weight="700" fill="#0b3d91">Maturing</text><text x="428" y="69" font-size="9" fill="#1b2433">≤ 180 days left</text>
+    <rect x="544" y="32" width="132" height="50" rx="10" fill="#0d2a5c"/><text x="610" y="53" font-size="10.5" font-weight="700" fill="#fff">Matured</text><text x="610" y="69" font-size="9" fill="#cfe1ff">eligible for release</text>
+
+    <rect x="184" y="130" width="128" height="44" rx="10" fill="#fff" stroke="#1e6fd0" stroke-width="1.4" stroke-dasharray="4 2"/><text x="248" y="148" font-size="10" font-weight="700" fill="#0b3d91">Renewal request</text><text x="248" y="163" font-size="8.8" fill="#1b2433">by the institution</text>
+    <rect x="364" y="130" width="128" height="44" rx="10" fill="#fff" stroke="#1e6fd0" stroke-width="1.4" stroke-dasharray="4 2"/><text x="428" y="148" font-size="10" font-weight="700" fill="#0b3d91">Replacement request</text><text x="428" y="163" font-size="8.8" fill="#1b2433">by the institution</text>
+    <rect x="544" y="130" width="132" height="44" rx="10" fill="#fff" stroke="#1e6fd0" stroke-width="1.4" stroke-dasharray="4 2"/><text x="610" y="148" font-size="10" font-weight="700" fill="#0b3d91">Release request</text><text x="610" y="163" font-size="8.8" fill="#1b2433">by the institution</text>
+
+    <rect x="544" y="232" width="132" height="50" rx="10" fill="#f1e8fc" stroke="#7b2fd6" stroke-width="1.6"/><text x="610" y="253" font-size="10.5" font-weight="700" fill="#5a2399">Released</text><text x="610" y="269" font-size="8.8" fill="#1b2433">AICTE release order</text>
+    <rect x="364" y="232" width="128" height="50" rx="10" fill="#2e9e44"/><text x="428" y="253" font-size="10.5" font-weight="700" fill="#fff">Lien discharged</text><text x="428" y="269" font-size="8.8" fill="#eafbe9">bank's CBS reference</text>
+  </g>
+  <g stroke="#0d2a5c" stroke-width="1.6" fill="none">
+    <path d="M132 57H182" marker-end="url(#m3)"/>
+    <path d="M312 57H362" marker-end="url(#m3)"/>
+    <path d="M492 57H542" marker-end="url(#m3)"/>
+    <path d="M395 82L300 128" marker-end="url(#m3)"/>
+    <path d="M440 82V128" marker-end="url(#m3)"/>
+    <path d="M248 130V84" marker-end="url(#m3)"/>
+    <path d="M428 174V200H68V84" marker-end="url(#m3)"/>
+    <path d="M610 82V128" marker-end="url(#m3)"/>
+    <path d="M610 174V230" marker-end="url(#m3)"/>
+    <path d="M544 257H494" marker-end="url(#m3)"/>
+  </g>
+  <g font-size="8.8" fill="#1b2433" text-anchor="middle">
+    <text x="157" y="12" font-weight="600">bank endorses lien</text><text x="157" y="24" fill="#5b6575">CBS ref ≥ 6 chars</text>
+    <text x="337" y="12" font-weight="600">daily check 07:00 IST</text><text x="337" y="24" fill="#5b6575">alerts at 180 · 60 · 30 days</text>
+    <text x="517" y="12" font-weight="600">maturity date</text><text x="517" y="24" fill="#5b6575">alert on maturity</text>
+    <text x="519" y="251" font-weight="600">bank</text><text x="519" y="273" fill="#5b6575">records</text>
+  </g>
+  <g font-size="8.8" fill="#1b2433">
+    <text x="240" y="104" text-anchor="end" font-weight="600">admin approves:</text>
+    <text x="240" y="116" text-anchor="end" fill="#5b6575">new maturity, tenure +10 yrs</text>
+    <text x="76" y="214" font-weight="600">admin approves replacement:</text>
+    <text x="76" y="226" fill="#5b6575">new FDR details recorded, lien reset → bank endorses again</text>
+    <text x="602" y="200" text-anchor="end" font-weight="600">admin approves</text>
+    <text x="602" y="212" text-anchor="end" fill="#5b6575">+ release order no.</text>
+    <text x="8" y="252" font-size="9" fill="#0d2a5c" font-weight="700">Release only for a matured FDR with a recorded lien.</text>
+    <text x="8" y="266" font-size="9" fill="#5b6575">The bank pays out the deposit under its own process;</text>
+    <text x="8" y="279" font-size="9" fill="#5b6575">no money moves through the portal.</text>
+  </g>
+</svg>
+<figcaption>Figure 4 — FDR lifecycle state machine (migration <span class="mono">20261028000000_fdr_lifecycle.sql</span>).</figcaption>
+</figure>
+<h3>Bank confirmation of the joint lien</h3>
+<p>The bank official enters the CBS endorsement reference (at least 6 characters). The FDR then records who confirmed it, shown on every screen:</p>
+<table>
+  <thead><tr><th style="width:24%">Confirmation source</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td class="k">BANK_OFFICIAL</td><td>Confirmed on the portal by an official of the FDR's own bank (the strongest evidence).</td></tr>
+    <tr><td class="k">AICTE_RECORDED</td><td>Entered by an AICTE administrator from a bank token; the institution is told the bank has not confirmed it on the portal.</td></tr>
+    <tr><td class="k">DEMO_SIMULATED</td><td>Seeded demo record.</td></tr>
+    <tr><td class="k">UNRECORDED / PENDING</td><td>Older record without an endorsement on file / not yet confirmed.</td></tr>
+  </tbody>
+</table>
+<h3>Maturity reminders</h3>
+<ul>
+  <li>Job <span class="mono">run_daily_reminders</span> runs <strong>at most once per India date, from 07:00 IST</strong>, under a database lock so only one server runs it, and logs each run (trigger, FDRs checked, notifications created, error) in <span class="mono">job_runs</span>.</li>
+  <li>Every API server calls it at start-up and every 10 minutes, so a restart or a sleeping free instance catches up. A GitHub Action wakes the server at 07:05 IST and again at 08:35 IST.</li>
+  <li>For every active FDR with a confirmed lien: an alert at <strong>180, 60 and 30 days</strong> before maturity and <strong>on maturity</strong> ("eligible for lien release"). Alerts within 60 days are Critical, earlier ones are Warnings. Each alert is sent once per FDR, maturity date and window.</li>
+  <li>New reminders appear in-app and are <strong>emailed</strong> to the institution's active accounts (written to the server log when SMTP is not configured).</li>
+  <li>Administrators see the job's status and the last 10 runs in Settings and can press <strong>Run now</strong>.</li>
+</ul>
+<h3>Decisions on requests</h3>
+<ul>
+  <li>Every decision needs a reasoned note (≥ 10 characters). <strong>Renewal</strong> sets the new maturity date and adds 10 years to the tenure. <strong>Replacement</strong> records the new FDR number, bank, branch, IFSC, amount and maturity, keeps the old number, and resets the lien so the new bank must endorse it.</li>
+  <li><strong>Release</strong> needs the AICTE release order number (and date). The bank official can read the release order on their own bank's FDRs and then records the <strong>lien discharge</strong> with a CBS reference; the institution is told to contact the branch for payment.</li>
+</ul>
+</section>
+
+<!-- ======================= 13 ======================= -->
+<section>
+<h2 class="sec" id="s13"><span class="n">13</span>AI Regulatory Assistant</h2>
+<p>Dashboard → <strong>AI Regulatory Assistant</strong> guides an institution through one FDR request. It asks only what it needs (profile data is reused), shows where the request goes in the portal, builds a document checklist with the <strong>source</strong> of each item, checks every upload, fills the form from the documents with the page and line each value came from, and submits through the portal's existing functions <strong>only after the user confirms</strong>.</p>
+<figure>
+  <img src="assets/ai-agent-validation-flow.png" alt="AI agent flow: understand and plan, automated validation, review submit and track">
+  <figcaption>Figure 5 — Regulatory Assistant flow: understand &amp; plan → automated validation → review, submit &amp; track.</figcaption>
+</figure>
+<table>
+  <thead><tr><th style="width:27%">Request (workflow code)</th><th style="width:27%">Submitted through</th><th>Goes to</th></tr></thead>
+  <tbody>
+    <tr><td class="k">New FDR <span class="mono">NEW_FDR</span></td><td><span class="mono">submit_fdr</span></td><td>The issuing bank's official (lien endorsement), then AICTE officers</td></tr>
+    <tr><td class="k">Renewal <span class="mono">RENEW_FDR</span></td><td><span class="mono">request_fdr_renewal</span></td><td>AICTE administrator</td></tr>
+    <tr><td class="k">Replacement <span class="mono">REPLACE_FDR</span></td><td><span class="mono">request_fdr_renewal</span></td><td>AICTE administrator, then the new bank's official</td></tr>
+    <tr><td class="k">Lien release <span class="mono">RELEASE_FDR</span></td><td><span class="mono">request_lien_release</span></td><td>AICTE administrator</td></tr>
+    <tr><td class="k">Correction <span class="mono">CORRECT_FDR</span></td><td><span class="mono">raise_ticket</span></td><td>Helpdesk ticket for AICTE staff (no direct edit service)</td></tr>
+    <tr><td class="k">Compliance reply <span class="mono">RESPOND_DEFICIENCY</span></td><td><span class="mono">submit_compliance_response</span></td><td>The scrutiny officer who issued the notice</td></tr>
+    <tr><td class="k">Other <span class="mono">OTHER</span></td><td>— (no portal channel)</td><td>Packaged as <em>Ready for submission</em>; never marked as submitted</td></tr>
+  </tbody>
+</table>
+<h3>Regulatory honesty</h3>
+<ul>
+  <li>Sources and requirements live in the database and are maintained by administrators in <strong>Regulatory Sources</strong>. Each source is <span class="pill g">VERIFIED</span>, <span class="pill b">PORTAL_RULE</span>, <span class="pill a">UNVERIFIED</span> or <span class="pill r">OUTDATED</span>.</li>
+  <li>Only <em>Verified</em> and <em>Portal rule</em> requirements can block a submission; unverified ones are shown for human confirmation. The default catalog marks the AICTE handbook as <strong>Unverified</strong>; no clause is invented.</li>
+  <li>Blockers: a missing mandatory document, a RED document, a missing required form field or a value that conflicts with the document. AMBER documents and unverified requirements appear as warnings for manual review.</li>
+  <li>Without an AI key, uploads that cannot be read are AMBER and the user types the values (nothing is guessed); free-text requests are classified by keywords. Uses the same <span class="mono">ANTHROPIC_API_KEY</span> as document reading.</li>
+</ul>
+</section>
+
+<!-- ======================= 14 ======================= -->
+<section>
+<h2 class="sec" id="s14"><span class="n">14</span>Staff Portal: Officer Portal and Admin Console</h2>
+<p>One React build serves both portals; the address decides which one opens (<span class="mono">/officer</span> or <span class="mono">/admin</span>), and the root page lets the user choose. Each portal works only for its own roles (a signed-in user without the role is asked to register for it first), and the server enforces what each role may do.</p>
+<table>
+  <thead><tr><th style="width:20%">Module</th><th>What it provides</th><th class="c" style="width:7%">Admin</th><th class="c" style="width:8%">Officer</th><th class="c" style="width:7%">Bank</th></tr></thead>
+  <tbody>
+    <tr><td class="k">Dashboard</td><td>Application pipeline, "needs your attention", FDR status and maturity schedule charts</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c no">—</td></tr>
+    <tr><td class="k">Institutions</td><td>Institution directory with PID, region and records</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c no">—</td></tr>
+    <tr><td class="k">FDR Records</td><td>Register of deposits with lien and maturity status (bank officials: own bank only)</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td></tr>
+    <tr><td class="k">Verification Center</td><td>Scrutiny Committee Workbench, Uploaded Document Register, Bank CBS joint-lien status. Bank officials get the <em>Bank Official FDR Verification Portal</em>: endorse liens and record discharges of AICTE-released liens.</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td></tr>
+    <tr><td class="k">Renewals &amp; Replacements</td><td>Pending renewal and replacement requests; administrator decision with reasoned note</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c no">—</td></tr>
+    <tr><td class="k">Lien Release Requests</td><td>Release requests; approval with the AICTE release order number</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c no">—</td></tr>
+    <tr><td class="k">Reports &amp; Analytics</td><td>Five live reports with filters and CSV export (see below)</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c no">—</td></tr>
+    <tr><td class="k">Notifications</td><td>Staff notifications with unread badge</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td></tr>
+    <tr><td class="k">Audit Trail</td><td>Hash-chained audit events: actor, role, action, target, details</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c no">—</td></tr>
+    <tr><td class="k">User Management</td><td>Stakeholder accounts and access control, invitations (approved emails activate on first sign-in), registrations, enable / disable accounts</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c no">—</td></tr>
+    <tr><td class="k">Regulatory Sources</td><td>Sources and document requirements used by the AI Regulatory Assistant, with verification status</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c no">—</td></tr>
+    <tr><td class="k">Settings</td><td>Deterministic rule matrix, issuing-authority cross-verification gateways (simulated); daily reminder job status and Run now (admin only)</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c no">—</td></tr>
+  </tbody>
+</table>
+<p style="font-size:8.6pt;color:var(--muted)">The officer menu shows the same modules as the admin console; actions that need the ADMIN role (final approval, FDR request decisions, account changes) are refused by the database for other roles.</p>
+<h3>Live reports</h3>
+<table>
+  <thead><tr><th style="width:30%">Report</th><th>Contents</th></tr></thead>
+  <tbody>
+    <tr><td class="k">FDR register</td><td>All deposits with bank, amount, dates, lien status and confirmation source</td></tr>
+    <tr><td class="k">Pending verification</td><td>Deposits still awaiting the bank's lien confirmation</td></tr>
+    <tr><td class="k">Missing or incomplete documents</td><td>Applications without all mandatory documents</td></tr>
+    <tr><td class="k">Approaching or past maturity</td><td>Deposits inside the 180-day window or already matured</td></tr>
+    <tr><td class="k">Requests awaiting action</td><td>Pending renewal / replacement / release requests, and approved releases still awaiting the bank's discharge</td></tr>
+  </tbody>
+</table>
+<p>Reports are built from current records, filtered by institution (name or PID) and bank, and exported as CSV. The CSV writer quotes every cell and neutralises formula characters, preventing spreadsheet formula injection.</p>
+</section>
+
+<!-- ======================= 15 ======================= -->
+<section>
+<h2 class="sec" id="s15"><span class="n">15</span>Security and Data Protection</h2>
+<div class="cols2">
+  <div class="card"><h4>Access control</h4><ul>
+    <li>Role checks inside every workflow function; status transitions allowed per role in SQL.</li>
+    <li>Row-level security: an institution reads only its own rows; a URL or id of another institution returns nothing.</li>
+    <li>Bank isolation: bank officials see and act only on their own bank's FDRs.</li>
+    <li>Staff-only review notes live in a separate table institutions cannot read.</li>
+  </ul></div>
+  <div class="card"><h4>Authentication &amp; sessions</h4><ul>
+    <li>Passwords hashed with bcrypt (pgcrypto, cost 10).</li>
+    <li>Access tokens valid 1 hour, refreshed automatically with rotating refresh tokens (30 days); only token hashes are stored.</li>
+    <li>Logout or a revoked session works immediately; changing the password signs out other sessions.</li>
+    <li>With "Remember me" off, the session is kept only for the browser tab.</li>
+  </ul></div>
+  <div class="card"><h4>Abuse protection</h4><ul>
+    <li>Rate limits: sign-in 10 per 10 min per email and 30 per IP; one OTP or reset email per minute; 5 code attempts per 10 min; sign-up 10 per hour per IP; Assistant 120 calls per minute per user.</li>
+    <li>Email links and Google sign-in return only to the configured front ends; CORS allow-list.</li>
+    <li>helmet security headers; Vercel adds nosniff, X-Frame-Options DENY and a strict referrer policy.</li>
+  </ul></div>
+  <div class="card"><h4>Integrity &amp; evidence</h4><ul>
+    <li>Audit log append-only and hash-chained per institution (<span class="mono">prev_hash → sha256_hash</span>).</li>
+    <li>Documents immutable (no update or delete), private, opened with short-lived signed links.</li>
+    <li>Cross-institution SHA-256 duplicate detection on the server.</li>
+    <li>Idempotent submissions; every status change saved in status history.</li>
+  </ul></div>
+  <div class="card"><h4>Secrets</h4><ul>
+    <li>Front ends contain no keys; the API server reads every secret from environment variables.</li>
+    <li>In server mode no institution records are stored on the device.</li>
+  </ul></div>
+  <div class="card"><h4>Safe AI use</h4><ul>
+    <li>AI and OCR output is advisory only; statutory rules decide.</li>
+    <li>An AI refusal or truncated output is an error, never a pass.</li>
+    <li>AI service down → manual review (AMBER), never a silent approval.</li>
+  </ul></div>
+</div>
+</section>
+
+<!-- ======================= 16 ======================= -->
+<section>
+<h2 class="sec" id="s16"><span class="n">16</span>Database Design</h2>
+<p>PostgreSQL holds 29 tables: 23 in the <span class="mono">public</span> schema plus 4 authentication and 2 storage tables provided by the platform layer (<span class="mono">server/db/000_platform.sql</span>).</p>
+<table>
+  <thead><tr><th style="width:22%">Area</th><th>Tables</th></tr></thead>
+  <tbody>
+    <tr><td class="k">Identity &amp; access</td><td><span class="mono">auth.users</span>, <span class="mono">auth.identities</span>, <span class="mono">auth.sessions</span>, <span class="mono">auth.one_time_tokens</span>, <span class="mono">profiles</span>, <span class="mono">user_invites</span>, <span class="mono">registration_requests</span></td></tr>
+    <tr><td class="k">Institutions &amp; applications</td><td><span class="mono">institutions</span>, <span class="mono">applications</span>, <span class="mono">application_drafts</span>, <span class="mono">application_documents</span>, <span class="mono">findings</span>, <span class="mono">scrutiny</span>, <span class="mono">review_notes</span>, <span class="mono">status_history</span>, <span class="mono">compliance_responses</span></td></tr>
+    <tr><td class="k">Security deposits</td><td><span class="mono">fdrs</span>, <span class="mono">fdr_requests</span></td></tr>
+    <tr><td class="k">Rules &amp; sources</td><td><span class="mono">rule_config</span>, <span class="mono">regulatory_sources</span>, <span class="mono">document_requirements</span></td></tr>
+    <tr><td class="k">Regulatory Assistant</td><td><span class="mono">assistant_sessions</span>, <span class="mono">assistant_documents</span></td></tr>
+    <tr><td class="k">Operations</td><td><span class="mono">notifications</span>, <span class="mono">tickets</span>, <span class="mono">audit_events</span>, <span class="mono">job_runs</span></td></tr>
+    <tr><td class="k">Document storage</td><td><span class="mono">storage.buckets</span>, <span class="mono">storage.objects</span> (private bucket <span class="mono">institution-documents</span>)</td></tr>
+  </tbody>
+</table>
+<h3>Schema migrations</h3>
+<table>
+  <thead><tr><th style="width:40%">File</th><th>Adds</th></tr></thead>
+  <tbody>
+    <tr><td class="k">20261022000000_institution_portal.sql</td><td>Core schema, RLS, rule engine, institution functions, storage policies</td></tr>
+    <tr><td class="k">20261022000001_google_signin.sql</td><td>Google sign-in linking</td></tr>
+    <tr><td class="k">20261022000002_staff_portal.sql</td><td>Bank RLS, finding overrides, staff invitations</td></tr>
+    <tr><td class="k">20261024000000_self_registration.sql</td><td>Self-registration for every role; first Google sign-in completes details</td></tr>
+    <tr><td class="k">20261024000001_multi_role.sql</td><td>One account with several roles (<span class="mono">profiles.roles[]</span>)</td></tr>
+    <tr><td class="k">20261027000000_regulatory_assistant.sql</td><td>Assistant sessions, documents, sources and requirements</td></tr>
+    <tr><td class="k">20261028000000_fdr_lifecycle.sql</td><td>Reminder job and job log, lien confirmation source, release order, bank discharge</td></tr>
+  </tbody>
+</table>
+<p style="font-size:8.6pt">The migrations run on standalone PostgreSQL between <span class="mono">server/db/000_platform.sql</span> (roles <span class="mono">anon</span> / <span class="mono">authenticated</span> / <span class="mono">service_role</span>, <span class="mono">auth.users</span>, <span class="mono">auth.uid()</span>, storage tables), <span class="mono">900_postgres_compat.sql</span> (server-job recognition, change notifications) and <span class="mono">910_india_time.sql</span> (dates in Asia/Kolkata). To change the schema, a new migration file is added; applied files are never edited.</p>
+<h3>Server functions (RPC)</h3>
+<table>
+  <thead><tr><th style="width:50%">Institution app</th><th>Staff portals</th></tr></thead>
+  <tbody><tr>
+    <td><span class="mono">get_portal_state</span>, <span class="mono">submit_application</span> (dry run or submit), <span class="mono">save_draft</span>, <span class="mono">delete_draft</span>, <span class="mono">submit_compliance_response</span>, <span class="mono">submit_fdr</span>, <span class="mono">request_fdr_renewal</span>, <span class="mono">request_lien_release</span>, <span class="mono">mark_notifications_read</span>, <span class="mono">raise_ticket</span>, <span class="mono">update_institution_profile</span>, <span class="mono">update_contact_details</span>, <span class="mono">complete_registration</span>, <span class="mono">log_client_event</span></td>
+    <td><span class="mono">review_start</span>, <span class="mono">review_request_clarification</span>, <span class="mono">review_override_finding</span>, <span class="mono">review_record_decision</span>, <span class="mono">bank_endorse_lien</span>, <span class="mono">bank_discharge_lien</span>, <span class="mono">decide_fdr_request</span>, <span class="mono">admin_invite_staff</span>, <span class="mono">admin_invite_user</span>, <span class="mono">admin_link_user</span>, <span class="mono">admin_set_user_status</span>, <span class="mono">admin_reject_registration</span>, <span class="mono">admin_save_source</span>, <span class="mono">admin_save_requirement</span>, <span class="mono">admin_regulatory_catalog</span>, <span class="mono">run_daily_reminders</span>, <span class="mono">reminder_job_status</span>, <span class="mono">generate_expiry_reminders</span></td>
+  </tr></tbody>
+</table>
+</section>
+
+<!-- ======================= 17 ======================= -->
+<section>
+<h2 class="sec" id="s17"><span class="n">17</span>API Reference</h2>
+<p>All endpoints are served by the API server. Except for <span class="mono">/health</span>, sign-up/sign-in and signed file links, every call needs a bearer access token.</p>
+<table>
+  <thead><tr><th style="width:9%">Method</th><th style="width:36%">Path</th><th>Purpose</th></tr></thead>
+  <tbody>
+    <tr><td>GET</td><td class="k">/health</td><td>Health check (also used by Render and the wake-up workflow)</td></tr>
+    <tr><td>POST</td><td class="k">/auth/signup</td><td>Create an account (email confirmation when SMTP is set)</td></tr>
+    <tr><td>POST</td><td class="k">/auth/token</td><td>Sign in with password, or exchange a refresh token</td></tr>
+    <tr><td>POST</td><td class="k">/auth/otp · /auth/verify</td><td>Send and verify a 6-digit sign-in code</td></tr>
+    <tr><td>POST</td><td class="k">/auth/recover</td><td>Send a password-reset email</td></tr>
+    <tr><td>GET</td><td class="k">/auth/verify</td><td>Open an email confirmation or reset link</td></tr>
+    <tr><td>POST</td><td class="k">/auth/exchange</td><td>Exchange a one-time code for a session (after Google or email links)</td></tr>
+    <tr><td>GET · PUT</td><td class="k">/auth/user</td><td>Read the signed-in user; change the password</td></tr>
+    <tr><td>POST</td><td class="k">/auth/logout</td><td>End the session (access and refresh tokens refused afterwards)</td></tr>
+    <tr><td>GET</td><td class="k">/auth/authorize · /auth/callback</td><td>Google OAuth 2.0 sign-in</td></tr>
+    <tr><td>POST</td><td class="k">/rpc/:fn</td><td>Call a database function granted to signed-in users</td></tr>
+    <tr><td>GET</td><td class="k">/data/:view</td><td>Read a permitted view (filtered by row-level security)</td></tr>
+    <tr><td>POST</td><td class="k">/storage/object/:bucket/*path</td><td>Upload a document into the caller's own folder</td></tr>
+    <tr><td>POST</td><td class="k">/storage/sign/:bucket/*path</td><td>Create a short-lived signed link</td></tr>
+    <tr><td>GET</td><td class="k">/storage/signed/:bucket/*path</td><td>Download through a signed link</td></tr>
+    <tr><td>POST</td><td class="k">/functions/analyze-document</td><td>Read a document and cross-check it with the form</td></tr>
+    <tr><td>GET</td><td class="k">/events</td><td>Live updates (Server-Sent Events, ping every 25 s)</td></tr>
+    <tr><td>GET</td><td class="k">/assistant/catalog · /assistant/sessions</td><td>Regulatory catalog; the institution's assistant sessions</td></tr>
+    <tr><td>POST</td><td class="k">/assistant/sessions[/:id/…]</td><td>Start a session; <span class="mono">answer</span>, <span class="mono">messages</span>, <span class="mono">documents</span> (upload / remove), <span class="mono">form</span>, <span class="mono">review</span>, <span class="mono">package</span>, <span class="mono">submit</span></td></tr>
+    <tr><td>POST</td><td class="k">/assistant/classify</td><td>Classify a free-text request</td></tr>
+  </tbody>
+</table>
+</section>
+
+<!-- ======================= 18 ======================= -->
+<section>
+<h2 class="sec" id="s18"><span class="n">18</span>Deployment and DevOps</h2>
+<table>
+  <thead><tr><th style="width:22%">Piece</th><th style="width:30%">Host</th><th>Build / start</th></tr></thead>
+  <tbody>
+    <tr><td class="k">Institution app</td><td>Vercel project (repo root)</td><td><span class="mono">node scripts/build-www.mjs</span> → <span class="mono">www/</span>; <span class="mono">AICTE_API_URL</span> is written into <span class="mono">config.js</span></td></tr>
+    <tr><td class="k">Staff portal</td><td>Vercel project (root <span class="mono">web-portal</span>)</td><td><span class="mono">vite build</span>; <span class="mono">VITE_API_URL</span> points to the API</td></tr>
+    <tr><td class="k">API server</td><td>Render web service <span class="mono">fdr-vault-api</span> (Singapore)</td><td><span class="mono">npm ci --omit=dev</span>; start <span class="mono">node server/migrate.mjs --seed --reset-test-data &amp;&amp; node server/index.mjs</span>; health check <span class="mono">/health</span></td></tr>
+    <tr><td class="k">Database</td><td>Render PostgreSQL 17 <span class="mono">fdr-vault-db</span></td><td>Migrations applied on every deploy; on an <em>empty</em> database the 4 demo accounts and DITS Delhi are created; data is never deleted</td></tr>
+    <tr><td class="k">Android APK</td><td>Built locally</td><td><span class="mono">npm run android:sync</span>, then Gradle <span class="mono">assembleDebug</span></td></tr>
+  </tbody>
+</table>
+<h3>GitHub Actions</h3>
+<ul>
+  <li><strong>Migrate database</strong> (<span class="mono">db-migrate.yml</span>): on push to <span class="mono">main</span> that changes migrations, applies them to production using the <span class="mono">DATABASE_URL</span> secret (skipped with a notice if the secret is missing).</li>
+  <li><strong>Wake API for daily reminders</strong> (<span class="mono">wake-api.yml</span>): calls <span class="mono">/health</span> at 07:05 and 08:35 IST so the free instance is awake for the day's reminder run.</li>
+</ul>
+<h3>Server configuration (environment variables)</h3>
+<table>
+  <thead><tr><th style="width:34%">Variable</th><th>Purpose</th></tr></thead>
+  <tbody>
+    <tr><td class="k">DATABASE_URL, DATABASE_SSL, DB_POOL_SIZE</td><td>PostgreSQL connection</td></tr>
+    <tr><td class="k">PUBLIC_URL, PORT</td><td>API address used in email links and the Google redirect URI</td></tr>
+    <tr><td class="k">JWT_SECRET, ACCESS_TOKEN_TTL_SECONDS, REFRESH_TOKEN_TTL_DAYS</td><td>Token signing key (≥ 32 characters) and lifetimes (default 3600 s / 30 days)</td></tr>
+    <tr><td class="k">ALLOWED_ORIGINS</td><td>Front ends allowed to call the API (both Vercel sites and the Android app)</td></tr>
+    <tr><td class="k">SMTP_HOST, SMTP_PORT, SMTP_SECURE, SMTP_USER, SMTP_PASS, MAIL_FROM</td><td>Email for confirmations, sign-in codes, resets and reminders (optional)</td></tr>
+    <tr><td class="k">GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET</td><td>Google sign-in</td></tr>
+    <tr><td class="k">ANTHROPIC_API_KEY</td><td>Optional Claude document reading</td></tr>
+    <tr><td class="k">RUN_SCHEDULER, OCR_ENABLED</td><td>Daily reminder scheduler; free OCR on / off</td></tr>
+  </tbody>
+</table>
+<h3>Run locally</h3>
+<table>
+  <thead><tr><th style="width:46%">Command</th><th>Result</th></tr></thead>
+  <tbody>
+    <tr><td class="k">npm install</td><td>Install server and test dependencies</td></tr>
+    <tr><td class="k">npm run db:migrate -- --seed --reset-test-data</td><td>Schema + the 4 demo accounts (use <span class="mono">--seed</span> alone for the full sample dataset)</td></tr>
+    <tr><td class="k">npm run db:demo-data</td><td>Add demo records to every portal (safe to run again)</td></tr>
+    <tr><td class="k">npm run server</td><td>API on http://localhost:8787</td></tr>
+    <tr><td class="k">npm run serve</td><td>Institution app on http://localhost:8765</td></tr>
+    <tr><td class="k">cd web-portal &amp;&amp; npm run dev</td><td>Staff portal on http://localhost:5180</td></tr>
+  </tbody>
+</table>
+</section>
+
+<!-- ======================= 19 ======================= -->
+<section>
+<h2 class="sec" id="s19"><span class="n">19</span>Testing and Quality Assurance</h2>
+<p>The back-end suites below were run for this document on <strong>30 October 2026</strong> against the current code; all <strong>348 checks passed</strong>. They use a real PostgreSQL 17 (embedded) and the real API over HTTP; the AI tests use a fake Claude client, so they cost nothing.</p>
+<table>
+  <thead><tr><th style="width:22%">Suite</th><th class="c" style="width:9%">Checks</th><th class="c" style="width:9%">Result</th><th>Covers</th></tr></thead>
+  <tbody>
+    <tr><td class="k">npm run test:db</td><td class="c">96</td><td class="c yes">Pass</td><td>All migrations and seed under RLS: roles, Google sign-in, staff portal, self-registration, multi-role, account disabling</td></tr>
+    <tr><td class="k">npm run test:server</td><td class="c">56</td><td class="c yes">Pass</td><td>Auth (password, confirmation, OTP, reset, refresh, logout, Google), RPC permissions, RLS, storage, live updates, AI function, India time, scheduled job</td></tr>
+    <tr><td class="k">npm run test:assistant</td><td class="c">66</td><td class="c yes">Pass</td><td>Regulatory Assistant end to end: new FDR, missing / conflicting documents, unverified requirements, other institutions, no channel, renewal, compliance reply, RLS</td></tr>
+    <tr><td class="k">npm run test:lifecycle</td><td class="c">73</td><td class="c yes">Pass</td><td>Reminder job and catch-up, bank confirmation source, release order, bank discharge, password change, logout, disabled accounts</td></tr>
+    <tr><td class="k">npm run test:read-pdf</td><td class="c">22</td><td class="c yes">Pass</td><td>Free reading: PDF text rules, dates, amounts, evidence, OCR of photos and scans, damaged files</td></tr>
+    <tr><td class="k">npm run test:reports</td><td class="c">18</td><td class="c yes">Pass</td><td>Five live reports, filters by bank and PID, CSV quoting and formula neutralisation</td></tr>
+    <tr><td class="k">npm run test:ai</td><td class="c">17</td><td class="c yes">Pass</td><td>AI document reader: wrong document type, images, refusals and truncated output as errors</td></tr>
+    <tr><td class="k" style="background:var(--sky)">Total</td><td class="c" style="background:var(--sky)"><b>348</b></td><td class="c yes" style="background:var(--sky)">Pass</td><td style="background:var(--sky)">7 suites</td></tr>
+  </tbody>
+</table>
+<h3>Browser end-to-end suites</h3>
+<p>These drive Microsoft Edge with puppeteer-core against the demo build or a test server (<span class="mono">npm run e2e:server</span> on port 8790, staff test server on 3100). They were last run in full on 28 October 2026 and were not re-run for this document:</p>
+<table>
+  <thead><tr><th style="width:30%">Suite</th><th>Covers</th></tr></thead>
+  <tbody>
+    <tr><td class="k">test:e2e:demo</td><td>Full institution walkthrough in demo mode</td></tr>
+    <tr><td class="k">test:e2e:onboarding</td><td>Layout at 320–430 px, slideshow motion, skip / next, legal links, image fallbacks</td></tr>
+    <tr><td class="k">test:e2e:navigation</td><td>Back and Refresh controls, unsaved-form protection, phone-width layout</td></tr>
+    <tr><td class="k">test:e2e:guide</td><td>FDR Vault Guide: answers, "Take me there", demo tour, fit on the phone screen</td></tr>
+    <tr><td class="k">test:e2e:assistant</td><td>Assistant in the browser: chat, checklist, uploads, form, review, submit</td></tr>
+    <tr><td class="k">test:e2e:server</td><td>App against the real server: auth, RLS, uploads, AI reading, validation, idempotency, workflow, expiry</td></tr>
+    <tr><td class="k">test:e2e:staff</td><td>Staff portal: sign-in rules, scrutiny, deficiency notice, override, final approval, FDR request, invites, bank lien</td></tr>
+    <tr><td class="k">tests/e2e/hindi.e2e.cjs</td><td>Hindi interface: untranslated-string report per screen, layout at narrow widths, language switching</td></tr>
+  </tbody>
+</table>
+</section>
+
+<!-- ======================= 20 ======================= -->
+<section class="newpage">
+<h2 class="sec first" id="s20"><span class="n">20</span>Evaluator Demo Guide</h2>
+<p>Each login screen has one-click demo buttons. All four demo accounts use the password <strong>Sih@2026Demo</strong>.</p>
+<table>
+  <thead><tr><th style="width:38%">Account</th><th style="width:30%">Signs in at</th><th>Role</th></tr></thead>
+  <tbody>
+    <tr><td class="k">sih_demo.institution@example.com</td><td>Institution app</td><td>INSTITUTION — DITS Delhi (PID 1-10928371)</td></tr>
+    <tr><td class="k">sih_demo.officer@example.com</td><td>Officer portal <span class="mono">/officer</span></td><td>REVIEWER (scrutiny officer)</td></tr>
+    <tr><td class="k">sih_demo.bank@example.com</td><td>Officer portal <span class="mono">/officer</span></td><td>BANK_OFFICIAL — State Bank of India</td></tr>
+    <tr><td class="k">sih_demo.admin@example.com</td><td>Admin console <span class="mono">/admin</span></td><td>ADMIN</td></tr>
+  </tbody>
+</table>
+<h3>Suggested 7-step tour <span class="tag">also inside the app's Guide</span></h3>
+<ol class="steps">
+  <li><strong>Sign in as the institution</strong> at fdr-vault.vercel.app with the demo button.</li>
+  <li><strong>Look at the dashboard</strong>: counts, alerts, FDR corpus under lien, recent activity.</li>
+  <li><strong>Submit an application</strong>: choose a type, fill the wizard, upload documents, review and e-sign (simulated).</li>
+  <li><strong>See the rule findings</strong> on the new application (Passed / Warning / Critical with clause labels).</li>
+  <li><strong>Review as the AICTE officer</strong> at <span class="mono">/officer</span>: start scrutiny, issue a deficiency notice or clear the application.</li>
+  <li><strong>Confirm the FDR as the bank</strong> at <span class="mono">/officer</span> with the bank demo account: enter a CBS lien reference.</li>
+  <li><strong>Give final approval as admin</strong> at <span class="mono">/admin</span>, decide an FDR request, and open Reports and the Audit Trail.</li>
+</ol>
+<div class="note"><b>Demo data.</b> <span class="mono">npm run db:demo-data</span> fills every portal with sample records: 7 institutions, 14 applications (every status and type, including a deficiency notice to answer), 15 FDRs (active, expiring, matured, released, and 3 SBI FDRs awaiting the bank's lien endorsement), pending renewal / replacement / release requests, compliance replies, tickets, notifications, staff invites and audit entries. In <em>demo mode</em> (no server) the app also accepts <span class="mono">principal@dits-delhi.edu.in / Dits@2026</span>, <span class="mono">director@bce-bangalore.edu.in / Bce@2026</span> and <span class="mono">dean@pat-pune.ac.in / Pat@2026</span>.</div>
+</section>
+
+<!-- ======================= 21 ======================= -->
+<section>
+<h2 class="sec" id="s21"><span class="n">21</span>Simulated Features and Current Limitations</h2>
+<p>The prototype is honest about what is real and what is simulated. Simulated features are clearly labelled in the app.</p>
+<h3>Simulated by design</h3>
+<ul>
+  <li><strong>Aadhaar e-Sign and DSC token signing</strong>, until an eSign Service Provider (ESP) is integrated.</li>
+  <li><strong>Issuing-authority checks</strong> (DTE, University, Fire, NBA, bank CBS) shown in Compliance &amp; Verification and Settings.</li>
+  <li><strong>AI document summaries in demo mode</strong>, and in server mode until <span class="mono">ANTHROPIC_API_KEY</span> is set (the free PDF-text and OCR readers work without it).</li>
+</ul>
+<h3>Current limitations</h3>
+<table>
+  <thead><tr><th style="width:32%">Area</th><th>Limitation</th></tr></thead>
+  <tbody>
+    <tr><td class="k">Bank integration</td><td>No live connection to bank CBS: the bank official types the CBS reference. A bank can confirm a lien; there is no "discrepancy" outcome.</td></tr>
+    <tr><td class="k">AICTE systems</td><td>No API integration with existing AICTE portals; Government SSO (SAML) is hidden on the standalone server.</td></tr>
+    <tr><td class="k">Regulatory catalog</td><td>The AICTE handbook source is Unverified until an administrator records the section and excerpt.</td></tr>
+    <tr><td class="k">Reminders</td><td>Alerts at 180 / 60 / 30 days and on maturity; no overdue flag or escalation after maturity.</td></tr>
+    <tr><td class="k">Reports</td><td>Export is CSV only; notices and letters print to PDF from the browser.</td></tr>
+    <tr><td class="k">Encryption</td><td>Data is protected in transit (HTTPS) and by access control; there is no application-level encryption at rest beyond the host's defaults.</td></tr>
+    <tr><td class="k">Registration</td><td>Self-registration is open for every role so evaluators can try each portal; production should restrict staff roles to invitations.</td></tr>
+    <tr><td class="k">Hosting</td><td>Free-tier Render instance (sleeps when idle) and free PostgreSQL plan; not sized for production traffic.</td></tr>
+    <tr><td class="k">Android</td><td>Debug APK only; Google sign-in is not available inside the Android WebView (email/password and OTP work).</td></tr>
+  </tbody>
+</table>
+</section>
+
+<!-- ======================= 22 ======================= -->
+<section>
+<h2 class="sec" id="s22"><span class="n">22</span>Future Scope</h2>
+<div class="cols2">
+  <div class="card"><h4>Integrations</h4><ul>
+    <li>Bank CBS APIs for automatic lien marking, confirmation and discharge.</li>
+    <li>Licensed eSign ESP (Aadhaar eSign) and DSC.</li>
+    <li>AICTE approval portal and single sign-on.</li>
+    <li>Issuing-authority checks (DTE, University, Fire, NBA) through official APIs.</li>
+  </ul></div>
+  <div class="card"><h4>Workflow</h4><ul>
+    <li>Overdue flags and escalation after maturity; SMS alerts.</li>
+    <li>Bank "discrepancy" outcome with a reason.</li>
+    <li>Verified clause catalog maintained with AICTE.</li>
+    <li>PDF and Excel report exports; scheduled report emails.</li>
+  </ul></div>
+  <div class="card"><h4>Security &amp; operations</h4><ul>
+    <li>Encryption at rest for documents; key management.</li>
+    <li>Invitation-only staff roles; two-factor sign-in for staff.</li>
+    <li>Production hosting in an Indian government cloud region, backups and monitoring.</li>
+  </ul></div>
+  <div class="card"><h4>Reach</h4><ul>
+    <li>Signed Play Store release of the Android app.</li>
+    <li>More Indian languages beyond English and Hindi.</li>
+    <li>Analytics on deposit trends across regions.</li>
+  </ul></div>
+</div>
+</section>
+
+<!-- ======================= 23 ======================= -->
+<section>
+<h2 class="sec" id="s23"><span class="n">23</span>Repository Structure</h2>
+<table>
+  <thead><tr><th style="width:36%">Path</th><th>Contents</th></tr></thead>
+  <tbody>
+    <tr><td class="k">index.html, styles.css</td><td>Institution app shell and mobile design system</td></tr>
+    <tr><td class="k">app.js</td><td>Screens, router, client-side rule preview, forms and flows</td></tr>
+    <tr><td class="k">assistant.js, assistant-rules.js</td><td>AI Regulatory Assistant screens and its shared rules</td></tr>
+    <tr><td class="k">backend.js, api-client.js, config.js</td><td>Backend layer (server or on-device demo store), API client, API address</td></tr>
+    <tr><td class="k">guide.js, i18n.js, data.js</td><td>FDR Vault Guide, English / Hindi text, demo dataset</td></tr>
+    <tr><td class="k">sw.js, manifest.webmanifest, icons</td><td>PWA files and assets</td></tr>
+    <tr><td class="k">server/</td><td>API server: <span class="mono">index</span>, <span class="mono">app</span>, <span class="mono">auth</span>, <span class="mono">api</span>, <span class="mono">assistant</span>, <span class="mono">db</span>, <span class="mono">migrate</span>, <span class="mono">mail</span>, <span class="mono">ocr</span>, <span class="mono">read-pdf</span>, <span class="mono">tokens</span>; <span class="mono">db/*.sql</span> platform layer</td></tr>
+    <tr><td class="k">supabase/migrations/</td><td>Schema, RLS, functions and storage policies (folder name kept for history; no Supabase needed)</td></tr>
+    <tr><td class="k">supabase/functions/analyze-document/</td><td>Document reading and cross-checks used by the API server</td></tr>
+    <tr><td class="k">supabase/seed.sql, supabase/scripts/</td><td>Seed data, demo-data loader, test-data reset</td></tr>
+    <tr><td class="k">web-portal/</td><td>Staff portal (React + Vite): officer portal and admin console</td></tr>
+    <tr><td class="k">android/, capacitor.config.json, dist/</td><td>Android project and the built APK</td></tr>
+    <tr><td class="k">tests/, supabase/tests/</td><td>Database, API and browser test suites, test servers</td></tr>
+    <tr><td class="k">docs/</td><td>Demo test cases and the AI-agent validation flow diagram</td></tr>
+    <tr><td class="k">.github/workflows/, render.yaml, vercel.json, .env.example</td><td>CI, deployment and configuration templates</td></tr>
+  </tbody>
+</table>
+</section>
+
+<!-- ======================= A ======================= -->
+<section>
+<h2 class="sec" id="sA"><span class="n">A</span>Appendix: Glossary</h2>
+<table>
+  <thead><tr><th style="width:18%">Term</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td class="k">AICTE</td><td>All India Council for Technical Education, the regulator that approves technical institutions</td></tr>
+    <tr><td class="k">AI-IRVP</td><td>AICTE Intelligent Regulatory Validation Platform, the platform FDR Vault prototypes</td></tr>
+    <tr><td class="k">APH</td><td>Approval Process Handbook, AICTE's norms and procedure for approvals</td></tr>
+    <tr><td class="k">FDR / TDR</td><td>Fixed / Term Deposit Receipt, the security deposit held under joint lien</td></tr>
+    <tr><td class="k">Joint lien</td><td>A bank's mark on a deposit so it cannot be withdrawn without AICTE's consent</td></tr>
+    <tr><td class="k">CBS</td><td>Core Banking System, where the bank records the lien and its discharge</td></tr>
+    <tr><td class="k">IFSC</td><td>Indian Financial System Code identifying a bank branch (11 characters)</td></tr>
+    <tr><td class="k">PID</td><td>Permanent institution ID issued by AICTE</td></tr>
+    <tr><td class="k">EoA</td><td>Extension of Approval for the next academic year</td></tr>
+    <tr><td class="k">SFR</td><td>Student–Faculty Ratio (norm ≤ 1 : 20)</td></tr>
+    <tr><td class="k">RLS</td><td>Row-level security: database rules that limit which rows each user can see or change</td></tr>
+    <tr><td class="k">RPC</td><td>Remote procedure call: the app calls a named database function through the API</td></tr>
+    <tr><td class="k">PWA</td><td>Progressive Web App: a website that installs and works like a phone app</td></tr>
+    <tr><td class="k">OCR</td><td>Optical character recognition: reading text from photos and scans</td></tr>
+    <tr><td class="k">SSE</td><td>Server-Sent Events: the server pushes live updates to the browser</td></tr>
+    <tr><td class="k">SHA-256</td><td>A fingerprint of a file; identical files have identical fingerprints</td></tr>
+    <tr><td class="k">OTP</td><td>One-time password: the 6-digit sign-in code sent by email</td></tr>
+  </tbody>
+</table>
+<div class="note ok" style="margin-top:12pt"><b>Team Prime Developers · Smart India Hackathon 2026.</b> FDR Vault — AICTE Intelligent Regulatory Validation Platform. Live at fdr-vault.vercel.app · Source at github.com/Mrityun-G/FDR-Vault-</div>
+</section>
+
+</body>
+</html>
