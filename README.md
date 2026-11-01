@@ -1,4 +1,4 @@
-
+Official Government Linkage application!
 # AICTE Institution Portal — Mobile App (PWA) + Node.js / PostgreSQL backend
 Government Application
 This is the mobile version of the **Institution (Applicant) portal** of the
